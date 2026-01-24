@@ -52,6 +52,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { prisma } = await import('@/lib/prisma')
     const userId = request.headers.get('x-user-id')
     const { id } = await params
     const body = await request.json()
@@ -147,6 +148,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { prisma } = await import('@/lib/prisma')
     const userId = request.headers.get('x-user-id')
     const { id } = await params
 
