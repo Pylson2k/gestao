@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 
 // GET - Get single quote
 export async function GET(
@@ -7,6 +6,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { prisma } = await import('@/lib/prisma')
     const userId = request.headers.get('x-user-id')
     const { id } = await params
 

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 
 export async function POST(request: NextRequest) {
   try {
-    // Dynamic import to avoid build issues
+    // Dynamic imports to avoid build issues
+    const { prisma } = await import('@/lib/prisma')
     const { compare, hash } = await import('bcryptjs')
     
     const { userId, currentPassword, newPassword } = await request.json()

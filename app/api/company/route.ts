@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 
 // GET - Get company settings
 export async function GET(request: NextRequest) {
   try {
+    const { prisma } = await import('@/lib/prisma')
     const userId = request.headers.get('x-user-id')
 
     if (!userId) {
@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
 // PUT - Update company settings
 export async function PUT(request: NextRequest) {
   try {
+    const { prisma } = await import('@/lib/prisma')
     const userId = request.headers.get('x-user-id')
 
     if (!userId) {

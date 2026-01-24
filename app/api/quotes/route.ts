@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 
 // GET - List all quotes for a user
 export async function GET(request: NextRequest) {
   try {
+    const { prisma } = await import('@/lib/prisma')
     const userId = request.headers.get('x-user-id')
     const searchParams = request.nextUrl.searchParams
     const status = searchParams.get('status')
@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
 // POST - Create new quote
 export async function POST(request: NextRequest) {
   try {
+    const { prisma } = await import('@/lib/prisma')
     const userId = request.headers.get('x-user-id')
 
     if (!userId) {
