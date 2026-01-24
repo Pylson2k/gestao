@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import bcrypt from 'bcryptjs'
+import { compare } from 'bcryptjs'
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const passwordMatch = await bcrypt.compare(password, user.password)
+    const passwordMatch = await compare(password, user.password)
 
     if (!passwordMatch) {
       return NextResponse.json(
