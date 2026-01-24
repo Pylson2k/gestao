@@ -4,8 +4,9 @@ import React from "react"
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { AuthProvider, useAuth } from '@/contexts/auth-context'
+import { useAuth } from '@/contexts/auth-context'
 import { QuotesProvider } from '@/contexts/quotes-context'
+import { CompanyProvider } from '@/contexts/company-context'
 import { Sidebar } from '@/components/dashboard/sidebar'
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
@@ -52,10 +53,10 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   return (
-    <AuthProvider>
+    <CompanyProvider>
       <QuotesProvider>
         <DashboardContent>{children}</DashboardContent>
       </QuotesProvider>
-    </AuthProvider>
+    </CompanyProvider>
   )
 }

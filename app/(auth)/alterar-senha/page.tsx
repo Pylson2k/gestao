@@ -56,7 +56,8 @@ export default function ChangePasswordPage() {
     if (result.success) {
       setSuccess(true)
       setTimeout(() => {
-        router.push('/dashboard')
+        // Redirect to login so user can login with new password
+        router.push('/login')
       }, 2000)
     } else {
       setError(result.error || 'Erro ao alterar senha')
@@ -106,7 +107,7 @@ export default function ChangePasswordPage() {
                   </div>
                 </div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">Senha Alterada com Sucesso!</h3>
-                <p className="text-sm text-muted-foreground">Redirecionando para o sistema...</p>
+                <p className="text-sm text-muted-foreground">Redirecionando para o login. Use sua nova senha para entrar.</p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">

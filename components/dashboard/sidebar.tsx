@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   FileText,
   History,
+  Settings,
   LogOut,
   Menu,
   X,
@@ -20,6 +21,7 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Novo Orcamento', href: '/dashboard/novo-orcamento', icon: FileText },
   { name: 'Historico', href: '/dashboard/historico', icon: History },
+  { name: 'Configuracoes', href: '/dashboard/configuracoes', icon: Settings },
 ]
 
 export function Sidebar() {

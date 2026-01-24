@@ -5,12 +5,13 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useQuotes } from '@/contexts/quotes-context'
 import { useAuth } from '@/contexts/auth-context'
+import { useCompany } from '@/contexts/company-context'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
   generateQuotePDF,
-  openPrintWindow,
+  downloadPDF,
   generateWhatsAppMessage,
   openWhatsApp,
 } from '@/lib/pdf-generator'
@@ -18,7 +19,7 @@ import { cn } from '@/lib/utils'
 import {
   ArrowLeft,
   FileText,
-  Printer,
+  Download,
   MessageCircle,
   Edit,
   Trash2,
@@ -45,6 +46,7 @@ export default function QuoteDetailPage({
   const router = useRouter()
   const { getQuoteById, updateQuote, deleteQuote } = useQuotes()
   const { user } = useAuth()
+  const { settings: companySettings } = useCompany()
 
   const quote = getQuoteById(id)
 
@@ -65,9 +67,10 @@ export default function QuoteDetailPage({
   const StatusIcon = status.icon
   const formattedDate = new Date(quote.createdAt).toLocaleDateString('pt-BR')
 
-  const handlePrint = () => {
-    const html = generateQuotePDF(quote, user)
-    openPrintWindow(html)
+  const handleDownloadPDF = async () => {
+    const html = generateQuotePDF(quote, companySettings)
+    const filename = `orcamento-${quote.number.replace(/\s+/g, '-')}.pdf`
+    await downloadPDF(html, filename)
   }
 
   const handleWhatsApp = () => {
@@ -111,9 +114,9 @@ export default function QuoteDetailPage({
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={handlePrint}>
-            <Printer className="w-4 h-4 mr-2" />
-            Imprimir PDF
+          <Button variant="outline" onClick={handleDownloadPDF}>
+            <Download className="w-4 h-4 mr-2" />
+            Baixar PDF
           </Button>
           <Button onClick={handleWhatsApp} className="bg-accent hover:bg-accent/90">
             <MessageCircle className="w-4 h-4 mr-2" />

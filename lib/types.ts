@@ -48,3 +48,14 @@ export interface AuthState {
   isAuthenticated: boolean
   isLoading: boolean
 }
+
+export interface CompanySettings {
+  name: string
+  logo?: string // Base64 ou URL da imagem
+  phone: string
+  email: string
+  address: string
+  cnpj?: string
+  website?: string
+  additionalInfo?: string
+}

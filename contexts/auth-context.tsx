@@ -3,50 +3,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
 import type { User, AuthState } from '@/lib/types'
 
-// Pre-defined users with temporary passwords
-interface StoredUser {
-  id: string
-  username: string
-  name: string
-  password: string
-  mustChangePassword: boolean
-}
-
-const STORAGE_KEY = 'servipro_users'
-
-// Initial users with temporary passwords
-const initialUsers: StoredUser[] = [
-  {
-    id: '1',
-    username: 'gustavo',
-    name: 'Gustavo',
-    password: 'gustavo123',
-    mustChangePassword: true,
-  },
-  {
-    id: '2',
-    username: 'giovanni',
-    name: 'Giovanni',
-    password: 'giovanni123',
-    mustChangePassword: true,
-  },
-]
-
-function getStoredUsers(): StoredUser[] {
-  if (typeof window === 'undefined') return initialUsers
-  const stored = localStorage.getItem(STORAGE_KEY)
-  if (!stored) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(initialUsers))
-    return initialUsers
-  }
-  return JSON.parse(stored)
-}
-
-function saveUsers(users: StoredUser[]) {
-  if (typeof window === 'undefined') return
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(users))
-}
-
 interface AuthContextType extends AuthState {
   login: (username: string, password: string) => Promise<{ success: boolean; mustChangePassword?: boolean }>
   logout: () => void
@@ -63,99 +19,99 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Check for existing session on mount
   useEffect(() => {
-    const sessionData = sessionStorage.getItem('servipro_session')
-    if (sessionData) {
-      const session = JSON.parse(sessionData)
-      setUser(session.user)
-      setMustChangePassword(session.mustChangePassword)
+    const checkSession = async () => {
+      const userId = sessionStorage.getItem('servipro_user_id')
+      if (userId) {
+        try {
+          const response = await fetch('/api/auth/session', {
+            headers: {
+              'x-user-id': userId,
+            },
+          })
+          if (response.ok) {
+            const data = await response.json()
+            setUser(data.user)
+            setMustChangePassword(data.mustChangePassword)
+          } else {
+            sessionStorage.removeItem('servipro_user_id')
+          }
+        } catch (error) {
+          console.error('Session check error:', error)
+          sessionStorage.removeItem('servipro_user_id')
+        }
+      }
     }
+    checkSession()
   }, [])
 
   const login = useCallback(async (username: string, password: string): Promise<{ success: boolean; mustChangePassword?: boolean }> => {
     setIsLoading(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 800))
-    
-    const users = getStoredUsers()
-    const foundUser = users.find(
-      (u) => u.username.toLowerCase() === username.toLowerCase() && u.password === password
-    )
-    
-    if (foundUser) {
-      const loggedUser: User = {
-        id: foundUser.id,
-        name: foundUser.name,
-        email: `${foundUser.username}@servipro.com`,
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        setUser(data.user)
+        setMustChangePassword(data.mustChangePassword)
+        sessionStorage.setItem('servipro_user_id', data.user.id)
+        setIsLoading(false)
+        return { success: true, mustChangePassword: data.mustChangePassword }
+      } else {
+        setIsLoading(false)
+        return { success: false }
       }
-      setUser(loggedUser)
-      setMustChangePassword(foundUser.mustChangePassword)
-      
-      // Save session
-      sessionStorage.setItem('servipro_session', JSON.stringify({
-        user: loggedUser,
-        mustChangePassword: foundUser.mustChangePassword,
-      }))
-      
+    } catch (error) {
+      console.error('Login error:', error)
       setIsLoading(false)
-      return { success: true, mustChangePassword: foundUser.mustChangePassword }
+      return { success: false }
     }
-    
-    setIsLoading(false)
-    return { success: false }
   }, [])
 
   const changePassword = useCallback(async (currentPassword: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
     if (!user) return { success: false, error: 'Usuario nao autenticado' }
     
     setIsLoading(true)
-    await new Promise((resolve) => setTimeout(resolve, 800))
-    
-    const users = getStoredUsers()
-    const userIndex = users.findIndex((u) => u.id === user.id)
-    
-    if (userIndex === -1) {
+    try {
+      const response = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          currentPassword,
+          newPassword,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        setMustChangePassword(false)
+        setIsLoading(false)
+        return { success: true }
+      } else {
+        setIsLoading(false)
+        return { success: false, error: data.error || 'Erro ao alterar senha' }
+      }
+    } catch (error) {
+      console.error('Change password error:', error)
       setIsLoading(false)
-      return { success: false, error: 'Usuario nao encontrado' }
+      return { success: false, error: 'Erro ao alterar senha' }
     }
-    
-    // Verify current password
-    if (users[userIndex].password !== currentPassword) {
-      setIsLoading(false)
-      return { success: false, error: 'Senha atual incorreta' }
-    }
-    
-    // Validate new password
-    if (newPassword.length < 6) {
-      setIsLoading(false)
-      return { success: false, error: 'A nova senha deve ter pelo menos 6 caracteres' }
-    }
-    
-    if (newPassword === currentPassword) {
-      setIsLoading(false)
-      return { success: false, error: 'A nova senha deve ser diferente da atual' }
-    }
-    
-    // Update password
-    users[userIndex].password = newPassword
-    users[userIndex].mustChangePassword = false
-    saveUsers(users)
-    
-    setMustChangePassword(false)
-    
-    // Update session
-    sessionStorage.setItem('servipro_session', JSON.stringify({
-      user,
-      mustChangePassword: false,
-    }))
-    
-    setIsLoading(false)
-    return { success: true }
   }, [user])
 
   const logout = useCallback(() => {
     setUser(null)
     setMustChangePassword(false)
-    sessionStorage.removeItem('servipro_session')
+    sessionStorage.removeItem('servipro_user_id')
   }, [])
 
   return (

@@ -1,0 +1,107 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Seed configuration
+// Run with: npm run db:seed
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String   @id @default(cuid())
+  username          String   @unique
+  name              String
+  email             String   @unique
+  password          String
+  phone             String?
+  company           String?
+  mustChangePassword Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  quotes            Quote[]
+  
+  @@map("users")
+}
+
+model Client {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  address   String
+  email     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  quotes    Quote[]
+  
+  @@map("clients")
+}
+
+model Quote {
+  id          String   @id @default(cuid())
+  number      String   @unique
+  userId      String
+  clientId    String
+  subtotal    Float
+  discount    Float    @default(0)
+  total       Float
+  observations String?
+  status      String   @default("draft") // draft, sent, approved, rejected
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  services    ServiceItem[]
+  materials   MaterialItem[]
+  
+  @@map("quotes")
+}
+
+model ServiceItem {
+  id        String   @id @default(cuid())
+  quoteId   String
+  name      String
+  quantity  Int
+  unitPrice Float
+  
+  quote     Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  
+  @@map("service_items")
+}
+
+model MaterialItem {
+  id        String   @id @default(cuid())
+  quoteId   String
+  name      String
+  quantity  Int
+  unitPrice Float
+  
+  quote     Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  
+  @@map("material_items")
+}
+
+model CompanySettings {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  name           String
+  logo           String?   @db.Text
+  phone          String
+  email          String
+  address        String
+  cnpj           String?
+  website        String?
+  additionalInfo String?   @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  @@map("company_settings")
+}

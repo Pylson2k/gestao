@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatsCard } from '@/components/dashboard/stats-card'
 import { QuoteCard } from '@/components/dashboard/quote-card'
-import { calculateMonthlyRevenue } from '@/lib/mock-data'
+import { calculateMonthlyRevenue } from '@/lib/utils'
 import { Plus, DollarSign, FileText, CheckCircle, Clock } from 'lucide-react'
 
 export default function DashboardPage() {

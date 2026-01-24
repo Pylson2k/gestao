@@ -1,6 +1,6 @@
-import type { Quote, User } from './types'
+import type { Quote, User, CompanySettings } from './types'
 
-export function generateQuotePDF(quote: Quote, user: User | null) {
+export function generateQuotePDF(quote: Quote, companySettings: CompanySettings) {
   const formattedDate = new Date(quote.createdAt).toLocaleDateString('pt-BR')
 
   const servicesTotal = quote.services.reduce(
@@ -62,10 +62,17 @@ export function generateQuotePDF(quote: Quote, user: User | null) {
           padding-bottom: 20px;
           border-bottom: 2px solid #3b82f6;
         }
+        .header > div:first-child {
+          display: flex;
+          align-items: flex-start;
+          gap: 20px;
+          flex: 1;
+        }
         .logo {
           font-size: 24px;
           font-weight: bold;
           color: #3b82f6;
+          margin-bottom: 8px;
         }
         .quote-info {
           text-align: right;
@@ -162,11 +169,18 @@ export function generateQuotePDF(quote: Quote, user: User | null) {
     </head>
     <body>
       <div class="header">
-        <div>
-          <div class="logo">${user?.company || 'ServiPro'}</div>
-          <p style="margin: 4px 0; color: #6b7280; font-size: 14px;">${user?.name || ''}</p>
-          <p style="margin: 4px 0; color: #6b7280; font-size: 14px;">${user?.phone || ''}</p>
-          <p style="margin: 4px 0; color: #6b7280; font-size: 14px;">${user?.email || ''}</p>
+        <div style="display: flex; align-items: flex-start; gap: 20px;">
+          ${companySettings.logo ? `
+            <img src="${companySettings.logo}" alt="Logo" style="max-width: 120px; max-height: 80px; object-fit: contain;" />
+          ` : ''}
+          <div>
+            <div class="logo">${companySettings.name || 'ServiPro'}</div>
+            ${companySettings.phone ? `<p style="margin: 4px 0; color: #6b7280; font-size: 14px;">${companySettings.phone}</p>` : ''}
+            ${companySettings.email ? `<p style="margin: 4px 0; color: #6b7280; font-size: 14px;">${companySettings.email}</p>` : ''}
+            ${companySettings.address ? `<p style="margin: 4px 0; color: #6b7280; font-size: 14px;">${companySettings.address}</p>` : ''}
+            ${companySettings.cnpj ? `<p style="margin: 4px 0; color: #6b7280; font-size: 14px;">CNPJ: ${companySettings.cnpj}</p>` : ''}
+            ${companySettings.website ? `<p style="margin: 4px 0; color: #6b7280; font-size: 14px;">${companySettings.website}</p>` : ''}
+          </div>
         </div>
         <div class="quote-info">
           <div class="quote-number">${quote.number}</div>
@@ -273,7 +287,8 @@ export function generateQuotePDF(quote: Quote, user: User | null) {
 
       <div class="footer">
         <p>Orcamento gerado em ${formattedDate} | Valido por 15 dias</p>
-        <p>Documento gerado por ServiPro</p>
+        ${companySettings.additionalInfo ? `<p>${companySettings.additionalInfo}</p>` : ''}
+        <p>Documento gerado por ${companySettings.name || 'ServiPro'}</p>
       </div>
     </body>
     </html>
@@ -291,6 +306,34 @@ export function openPrintWindow(html: string) {
     setTimeout(() => {
       printWindow.print()
     }, 250)
+  }
+}
+
+export async function downloadPDF(html: string, filename: string = 'orcamento.pdf') {
+  // Dynamic import to avoid SSR issues
+  const html2pdfModule = await import('html2pdf.js')
+  const html2pdf = html2pdfModule.default || html2pdfModule
+  
+  // Create a temporary container
+  const element = document.createElement('div')
+  element.innerHTML = html
+  document.body.appendChild(element)
+  
+  // Configure options
+  const opt = {
+    margin: [10, 10, 10, 10],
+    filename: filename,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+  }
+  
+  try {
+    // Generate and download PDF
+    await html2pdf().set(opt).from(element).save()
+  } finally {
+    // Clean up
+    document.body.removeChild(element)
   }
 }
 
