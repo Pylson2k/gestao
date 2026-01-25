@@ -46,9 +46,22 @@ export async function POST(request: NextRequest) {
     const { prisma } = await import('@/lib/prisma')
     const { compare } = await import('bcryptjs')
 
+    // Debug: verificar se DATABASE_URL está disponível
+    if (!process.env.DATABASE_URL) {
+      console.error('❌ DATABASE_URL não encontrada no ambiente de runtime!')
+      return NextResponse.json(
+        { error: 'Erro de configuração do servidor' },
+        { status: 500 }
+      )
+    }
+
+    console.log('🔍 Tentando buscar usuário:', username.toLowerCase())
+    
     const user = await prisma.user.findUnique({
       where: { username: username.toLowerCase() },
     })
+    
+    console.log('👤 Usuário encontrado:', user ? user.username : 'não encontrado')
 
     if (!user) {
       return NextResponse.json(
