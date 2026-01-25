@@ -1,14 +1,18 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/contexts/auth-context'
+import { Button } from '@/components/ui/button'
 import {
   Zap,
   LayoutDashboard,
   FileText,
   History,
   Settings,
+  User,
+  LogOut,
   Menu,
   X,
 } from 'lucide-react'
@@ -19,11 +23,19 @@ const navigation = [
   { name: 'Novo Orcamento', href: '/dashboard/novo-orcamento', icon: FileText },
   { name: 'Historico', href: '/dashboard/historico', icon: History },
   { name: 'Configuracoes', href: '/dashboard/configuracoes', icon: Settings },
+  { name: 'Perfil', href: '/dashboard/perfil', icon: User },
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+  const { user, logout } = useAuth()
   const [mobileOpen, setMobileOpen] = useState(false)
+
+  const handleLogout = () => {
+    logout()
+    router.push('/login')
+  }
 
   return (
     <>
@@ -83,6 +95,28 @@ export function Sidebar() {
           })}
         </nav>
 
+        {/* User section */}
+        <div className="p-4 border-t border-sidebar-border">
+          <div className="flex items-center gap-3 mb-4 px-2">
+            <div className="w-9 h-9 rounded-full bg-sidebar-accent flex items-center justify-center">
+              <span className="text-sm font-medium">
+                {user?.name?.charAt(0).toUpperCase() || 'U'}
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{user?.name || 'Usuario'}</p>
+              <p className="text-xs text-sidebar-foreground/60 truncate">{user?.email}</p>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+            onClick={handleLogout}
+          >
+            <LogOut className="w-5 h-5 mr-3" />
+            Sair
+          </Button>
+        </div>
       </aside>
     </>
   )

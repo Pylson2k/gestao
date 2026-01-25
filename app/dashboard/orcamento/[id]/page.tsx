@@ -13,6 +13,7 @@ import {
   downloadPDF,
   generateWhatsAppMessage,
   openWhatsApp,
+  openViewWindow,
 } from '@/lib/pdf-generator'
 import { cn } from '@/lib/utils'
 import {
@@ -27,6 +28,7 @@ import {
   CheckCircle,
   XCircle,
   Clock,
+  Eye,
 } from 'lucide-react'
 
 const statusConfig = {
@@ -79,6 +81,11 @@ export default function QuoteDetailPage({
     }
   }
 
+  const handleViewQuote = () => {
+    const html = generateQuotePDF(quote, companySettings)
+    openViewWindow(html)
+  }
+
   const handleDelete = () => {
     if (confirm('Tem certeza que deseja excluir este orcamento?')) {
       deleteQuote(quote.id)
@@ -112,6 +119,10 @@ export default function QuoteDetailPage({
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={handleViewQuote}>
+            <Eye className="w-4 h-4 mr-2" />
+            Visualizar Orcamento
+          </Button>
           <Button variant="outline" onClick={handleDownloadPDF}>
             <Download className="w-4 h-4 mr-2" />
             Baixar PDF
@@ -272,6 +283,12 @@ export default function QuoteDetailPage({
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-3">
+            <Link href="/dashboard">
+              <Button className="bg-primary hover:bg-primary/90">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Voltar ao Dashboard
+              </Button>
+            </Link>
             {quote.status !== 'approved' && (
               <Button
                 variant="outline"

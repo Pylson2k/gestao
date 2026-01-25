@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getMemoryQuoteById, updateMemoryQuote, deleteMemoryQuote } from '@/lib/emergency-store'
+import { getDbUserId } from '@/lib/user-mapping'
 
 // GET - Get single quote
 export async function GET(
@@ -31,10 +32,13 @@ export async function GET(
 
     const { prisma } = await import('@/lib/prisma')
 
+    // Mapear userId da autenticação para ID do banco
+    const dbUserId = await getDbUserId(userId)
+
     const quote = await prisma.quote.findFirst({
       where: {
         id,
-        userId,
+        userId: dbUserId,
       },
       include: {
         client: true,
@@ -104,9 +108,12 @@ export async function PUT(
 
     const { prisma } = await import('@/lib/prisma')
 
+    // Mapear userId da autenticação para ID do banco
+    const dbUserId = await getDbUserId(userId)
+
     // Verify ownership
     const existingQuote = await prisma.quote.findFirst({
-      where: { id, userId },
+      where: { id, userId: dbUserId },
     })
 
     if (!existingQuote) {
@@ -213,9 +220,12 @@ export async function DELETE(
 
     const { prisma } = await import('@/lib/prisma')
 
+    // Mapear userId da autenticação para ID do banco
+    const dbUserId = await getDbUserId(userId)
+
     // Verify ownership
     const quote = await prisma.quote.findFirst({
-      where: { id, userId },
+      where: { id, userId: dbUserId },
     })
 
     if (!quote) {

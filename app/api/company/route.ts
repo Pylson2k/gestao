@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCompanySettings, updateCompanySettings } from '@/lib/emergency-store'
+import { getDbUserId } from '@/lib/user-mapping'
 
 // GET - Get company settings
 export async function GET(request: NextRequest) {
@@ -20,15 +21,18 @@ export async function GET(request: NextRequest) {
 
     const { prisma } = await import('@/lib/prisma')
 
+    // Mapear userId da autenticação para ID do banco
+    const dbUserId = await getDbUserId(userId)
+
     let settings = await prisma.companySettings.findUnique({
-      where: { userId },
+      where: { userId: dbUserId },
     })
 
     // Create default if doesn't exist
     if (!settings) {
       settings = await prisma.companySettings.create({
         data: {
-          userId,
+          userId: dbUserId,
           name: 'ServiPro',
           phone: '',
           email: '',
@@ -67,8 +71,11 @@ export async function PUT(request: NextRequest) {
 
     const { prisma } = await import('@/lib/prisma')
 
+    // Mapear userId da autenticação para ID do banco
+    const dbUserId = await getDbUserId(userId)
+
     const settings = await prisma.companySettings.upsert({
-      where: { userId },
+      where: { userId: dbUserId },
       update: {
         name: body.name,
         logo: body.logo,
@@ -80,7 +87,7 @@ export async function PUT(request: NextRequest) {
         additionalInfo: body.additionalInfo,
       },
       create: {
-        userId,
+        userId: dbUserId,
         name: body.name || 'ServiPro',
         logo: body.logo,
         phone: body.phone || '',

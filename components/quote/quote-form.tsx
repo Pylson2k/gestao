@@ -87,26 +87,53 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
     }
   }
 
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
+    setIsSubmitting(true)
 
-    const quoteData = {
-      client: { ...client, id: client.id || Date.now().toString() },
-      services: services.filter((s) => s.name.trim()),
-      materials: materials.filter((m) => m.name.trim()),
-      subtotal,
-      discount,
-      total,
-      observations,
-      status: 'draft' as const,
-    }
+    try {
+      // Validações básicas
+      if (!client.name || !client.phone || !client.address) {
+        setError('Preencha todos os dados do cliente')
+        setIsSubmitting(false)
+        return
+      }
 
-    if (initialData) {
-      await updateQuote(initialData.id, quoteData)
-      router.push(`/dashboard/orcamento/${initialData.id}`)
-    } else {
-      const newQuote = await addQuote(quoteData)
-      router.push(`/dashboard/orcamento/${newQuote.id}`)
+      const validServices = services.filter((s) => s && s.name && s.name.trim() && s.quantity > 0 && s.unitPrice > 0)
+      const validMaterials = materials.filter((m) => m && m.name && m.name.trim() && m.quantity > 0 && m.unitPrice > 0)
+
+      if (validServices.length === 0 && validMaterials.length === 0) {
+        setError('Adicione pelo menos um servico ou material com nome, quantidade e preco validos')
+        setIsSubmitting(false)
+        return
+      }
+
+      const quoteData = {
+        client: { ...client, id: client.id || Date.now().toString() },
+        services: validServices,
+        materials: validMaterials,
+        subtotal,
+        discount,
+        total,
+        observations,
+        status: 'draft' as const,
+      }
+
+      if (initialData) {
+        await updateQuote(initialData.id, quoteData)
+        router.push(`/dashboard/orcamento/${initialData.id}`)
+      } else {
+        const newQuote = await addQuote(quoteData)
+        router.push(`/dashboard/orcamento/${newQuote.id}`)
+      }
+    } catch (err: any) {
+      console.error('Error creating quote:', err)
+      setError(err.message || 'Erro ao criar orcamento. Tente novamente.')
+      setIsSubmitting(false)
     }
   }
 
@@ -279,16 +306,23 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
         </Card>
       </div>
 
+      {/* Error Message */}
+      {error && (
+        <div className="p-4 rounded-md bg-destructive/10 text-destructive text-sm border border-destructive/20">
+          {error}
+        </div>
+      )}
+
       {/* Actions */}
       <div className="flex justify-end gap-3">
         <Link href="/dashboard">
-          <Button type="button" variant="outline">
+          <Button type="button" variant="outline" disabled={isSubmitting}>
             Cancelar
           </Button>
         </Link>
-        <Button type="submit">
+        <Button type="submit" disabled={isSubmitting}>
           <Save className="w-4 h-4 mr-2" />
-          {initialData ? 'Salvar Alteracoes' : 'Criar Orcamento'}
+          {isSubmitting ? 'Salvando...' : initialData ? 'Salvar Alteracoes' : 'Criar Orcamento'}
         </Button>
       </div>
     </form>

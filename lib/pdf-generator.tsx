@@ -309,6 +309,31 @@ export function openPrintWindow(html: string) {
   }
 }
 
+export function openViewWindow(html: string) {
+  const viewWindow = window.open('', '_blank', 'width=900,height=700,scrollbars=yes,resizable=yes')
+  if (!viewWindow) {
+    alert('Por favor, permita pop-ups para visualizar o orcamento')
+    return
+  }
+
+  try {
+    viewWindow.document.open('text/html', 'replace')
+    viewWindow.document.write(html)
+    viewWindow.document.close()
+    
+    // Aguardar o conteúdo ser renderizado
+    setTimeout(() => {
+      if (viewWindow && !viewWindow.closed) {
+        viewWindow.focus()
+      }
+    }, 100)
+  } catch (error) {
+    console.error('Erro ao abrir janela de visualização:', error)
+    viewWindow.close()
+    alert('Erro ao visualizar o orcamento. Tente novamente.')
+  }
+}
+
 export async function downloadPDF(html: string, filename: string = 'orcamento.pdf') {
   // Dynamic import to avoid SSR issues
   const html2pdfModule = await import('html2pdf.js')

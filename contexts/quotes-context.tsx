@@ -2,9 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
 import type { Quote, Client, ServiceItem, MaterialItem } from '@/lib/types'
-
-// Usar o primeiro usuário do banco como padrão
-const DEFAULT_USER_ID = 'aee2fe1b-6157-4f33-ba45-cc45a210ec2e' // ID do usuário gustavo
+import { useAuth } from './auth-context'
 
 interface QuotesContextType {
   quotes: Quote[]
@@ -19,14 +17,20 @@ interface QuotesContextType {
 const QuotesContext = createContext<QuotesContextType | undefined>(undefined)
 
 export function QuotesProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth()
   const [quotes, setQuotes] = useState<Quote[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   const fetchQuotes = useCallback(async () => {
+    if (!user?.id) {
+      setIsLoading(false)
+      return
+    }
+
     try {
       const response = await fetch('/api/quotes', {
         headers: {
-          'x-user-id': DEFAULT_USER_ID,
+          'x-user-id': user.id,
         },
       })
 
@@ -70,19 +74,25 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [user?.id])
 
   useEffect(() => {
-    fetchQuotes()
-  }, [fetchQuotes])
+    if (user?.id) {
+      fetchQuotes()
+    }
+  }, [fetchQuotes, user?.id])
 
   const addQuote = useCallback(async (quoteData: Omit<Quote, 'id' | 'number' | 'createdAt' | 'userId'>): Promise<Quote> => {
+    if (!user?.id) {
+      throw new Error('Usuario nao autenticado')
+    }
+
     try {
       const response = await fetch('/api/quotes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': DEFAULT_USER_ID,
+          'x-user-id': user.id,
         },
         body: JSON.stringify({
           client: quoteData.client,
@@ -97,8 +107,10 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Erro ao criar orcamento')
+        const errorData = await response.json()
+        const errorMessage = errorData.error || errorData.details?.message || 'Erro ao criar orcamento'
+        console.error('API Error:', errorData)
+        throw new Error(errorMessage)
       }
 
       const data = await response.json()
@@ -141,15 +153,19 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
       console.error('Add quote error:', error)
       throw error
     }
-  }, [])
+  }, [user?.id])
 
   const updateQuote = useCallback(async (id: string, quoteData: Partial<Quote>) => {
+    if (!user?.id) {
+      throw new Error('Usuario nao autenticado')
+    }
+
     try {
       const response = await fetch(`/api/quotes/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': DEFAULT_USER_ID,
+          'x-user-id': user.id,
         },
         body: JSON.stringify(quoteData),
       })
@@ -200,14 +216,18 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
       console.error('Update quote error:', error)
       throw error
     }
-  }, [])
+  }, [user?.id])
 
   const deleteQuote = useCallback(async (id: string) => {
+    if (!user?.id) {
+      throw new Error('Usuario nao autenticado')
+    }
+
     try {
       const response = await fetch(`/api/quotes/${id}`, {
         method: 'DELETE',
         headers: {
-          'x-user-id': DEFAULT_USER_ID,
+          'x-user-id': user.id,
         },
       })
 
@@ -221,7 +241,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
       console.error('Delete quote error:', error)
       throw error
     }
-  }, [])
+  }, [user?.id])
 
   const getQuoteById = useCallback(
     (id: string) => quotes.find((quote) => quote.id === id),
