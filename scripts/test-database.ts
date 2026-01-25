@@ -10,6 +10,8 @@ import { PrismaClient } from '@prisma/client'
 async function testConnection() {
   console.log('🔍 Testando conexão com o banco de dados...\n')
 
+  let prisma: PrismaClient | null = null
+
   try {
     // Verificar se DATABASE_URL está configurada
     if (!process.env.DATABASE_URL) {
@@ -33,7 +35,7 @@ async function testConnection() {
     }
 
     // Criar PrismaClient APÓS verificar DATABASE_URL
-    const prisma = new PrismaClient()
+    prisma = new PrismaClient()
 
     console.log('✅ DATABASE_URL encontrada')
     const host = dbUrl.match(/@([^:]+)/)?.[1] || 'N/A'
