@@ -87,7 +87,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     const quoteData = {
@@ -102,10 +102,10 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
     }
 
     if (initialData) {
-      updateQuote(initialData.id, quoteData)
+      await updateQuote(initialData.id, quoteData)
       router.push(`/dashboard/orcamento/${initialData.id}`)
     } else {
-      const newQuote = addQuote(quoteData)
+      const newQuote = await addQuote(quoteData)
       router.push(`/dashboard/orcamento/${newQuote.id}`)
     }
   }
