@@ -319,18 +319,18 @@ export async function downloadPDF(html: string, filename: string = 'orcamento.pd
   element.innerHTML = html
   document.body.appendChild(element)
   
-  // Configure options
+  // Configure options - using type assertion to satisfy Html2PdfOptions
   const opt = {
     margin: [10, 10, 10, 10] as [number, number, number, number],
     filename: filename,
-    image: { type: 'jpeg', quality: 0.98 },
+    image: { type: 'jpeg' as const, quality: 0.98 },
     html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
   }
   
   try {
     // Generate and download PDF
-    await html2pdf().set(opt).from(element).save()
+    await html2pdf().set(opt as any).from(element).save()
   } finally {
     // Clean up
     document.body.removeChild(element)
