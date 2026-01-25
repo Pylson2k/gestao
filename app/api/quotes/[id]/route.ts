@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getMemoryQuoteById, updateMemoryQuote, deleteMemoryQuote } from '@/lib/emergency-store'
 
 // GET - Get single quote
 export async function GET(
@@ -6,7 +7,6 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { prisma } = await import('@/lib/prisma')
     const userId = request.headers.get('x-user-id')
     const { id } = await params
 
@@ -16,6 +16,20 @@ export async function GET(
         { status: 401 }
       )
     }
+
+    // Se não tem DATABASE_URL, usa modo de emergência
+    if (!process.env.DATABASE_URL) {
+      const quote = getMemoryQuoteById(id)
+      if (!quote || quote.userId !== userId) {
+        return NextResponse.json(
+          { error: 'Orcamento nao encontrado' },
+          { status: 404 }
+        )
+      }
+      return NextResponse.json(quote)
+    }
+
+    const { prisma } = await import('@/lib/prisma')
 
     const quote = await prisma.quote.findFirst({
       where: {
@@ -39,6 +53,12 @@ export async function GET(
     return NextResponse.json(quote)
   } catch (error) {
     console.error('Get quote error:', error)
+    // Fallback
+    const { id } = await params
+    const quote = getMemoryQuoteById(id)
+    if (quote) {
+      return NextResponse.json(quote)
+    }
     return NextResponse.json(
       { error: 'Erro ao buscar orcamento' },
       { status: 500 }
@@ -52,7 +72,6 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { prisma } = await import('@/lib/prisma')
     const userId = request.headers.get('x-user-id')
     const { id } = await params
     const body = await request.json()
@@ -63,6 +82,27 @@ export async function PUT(
         { status: 401 }
       )
     }
+
+    // Se não tem DATABASE_URL, usa modo de emergência
+    if (!process.env.DATABASE_URL) {
+      const existing = getMemoryQuoteById(id)
+      if (!existing || existing.userId !== userId) {
+        return NextResponse.json(
+          { error: 'Orcamento nao encontrado' },
+          { status: 404 }
+        )
+      }
+      
+      const updated = updateMemoryQuote(id, {
+        ...body,
+        client: body.client ? { ...existing.client, ...body.client } : existing.client,
+        services: body.services || existing.services,
+        materials: body.materials || existing.materials,
+      })
+      return NextResponse.json(updated)
+    }
+
+    const { prisma } = await import('@/lib/prisma')
 
     // Verify ownership
     const existingQuote = await prisma.quote.findFirst({
@@ -148,7 +188,6 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { prisma } = await import('@/lib/prisma')
     const userId = request.headers.get('x-user-id')
     const { id } = await params
 
@@ -158,6 +197,21 @@ export async function DELETE(
         { status: 401 }
       )
     }
+
+    // Se não tem DATABASE_URL, usa modo de emergência
+    if (!process.env.DATABASE_URL) {
+      const existing = getMemoryQuoteById(id)
+      if (!existing || existing.userId !== userId) {
+        return NextResponse.json(
+          { error: 'Orcamento nao encontrado' },
+          { status: 404 }
+        )
+      }
+      deleteMemoryQuote(id)
+      return NextResponse.json({ success: true })
+    }
+
+    const { prisma } = await import('@/lib/prisma')
 
     // Verify ownership
     const quote = await prisma.quote.findFirst({
