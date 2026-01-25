@@ -15,6 +15,7 @@ import {
   LogOut,
   Menu,
   X,
+  DollarSign,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -22,6 +23,7 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Novo Orcamento', href: '/dashboard/novo-orcamento', icon: FileText },
   { name: 'Historico', href: '/dashboard/historico', icon: History },
+  { name: 'Faturamento', href: '/dashboard/faturamento', icon: DollarSign },
   { name: 'Configuracoes', href: '/dashboard/configuracoes', icon: Settings },
   { name: 'Perfil', href: '/dashboard/perfil', icon: User },
 ]

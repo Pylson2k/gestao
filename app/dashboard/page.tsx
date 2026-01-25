@@ -48,7 +48,7 @@ export default function DashboardPage() {
           title="Faturamento do Mes"
           value={formattedRevenue}
           icon={DollarSign}
-          description="Orcamentos aprovados"
+          description="Servicos finalizados"
           iconClassName="bg-accent/10 text-accent"
         />
         <StatsCard

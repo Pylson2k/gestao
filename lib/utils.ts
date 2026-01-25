@@ -13,11 +13,19 @@ export function calculateMonthlyRevenue(quotes: Quote[]): number {
 
   return quotes
     .filter((quote) => {
-      const quoteDate = new Date(quote.createdAt)
+      // Apenas serviços finalizados (completed)
+      if (quote.status !== 'completed') {
+        return false
+      }
+
+      // Usar serviceCompletedAt se disponível, senão usar createdAt
+      const completionDate = quote.serviceCompletedAt 
+        ? new Date(quote.serviceCompletedAt) 
+        : new Date(quote.createdAt)
+
       return (
-        quote.status === 'approved' &&
-        quoteDate.getMonth() === currentMonth &&
-        quoteDate.getFullYear() === currentYear
+        completionDate.getMonth() === currentMonth &&
+        completionDate.getFullYear() === currentYear
       )
     })
     .reduce((sum, quote) => sum + quote.total, 0)
