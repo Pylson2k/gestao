@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useExpenses } from '@/contexts/expenses-context'
+import { useEmployees } from '@/contexts/employees-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -23,9 +24,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Plus, Trash2, Edit, DollarSign, Calendar, FileText } from 'lucide-react'
+import { Plus, Trash2, Edit, DollarSign, Calendar, FileText, Download } from 'lucide-react'
 import type { Expense, ExpenseCategory } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { exportExpensesToCSV } from '@/lib/export-utils'
 
 const categoryLabels: Record<ExpenseCategory, string> = {
   material: 'Compra de Material',
@@ -47,6 +49,7 @@ const categoryColors: Record<ExpenseCategory, string> = {
 
 export default function DespesasPage() {
   const { expenses, addExpense, updateExpense, deleteExpense, isLoading } = useExpenses()
+  const { employees } = useEmployees()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
   const [formData, setFormData] = useState({
@@ -55,6 +58,7 @@ export default function DespesasPage() {
     amount: '',
     date: new Date().toISOString().split('T')[0],
     observations: '',
+    employeeId: '',
   })
 
   const [filterCategory, setFilterCategory] = useState<string>('all')
@@ -85,6 +89,7 @@ export default function DespesasPage() {
       amount: '',
       date: new Date().toISOString().split('T')[0],
       observations: '',
+      employeeId: '',
     })
     setIsDialogOpen(true)
   }
@@ -98,6 +103,7 @@ export default function DespesasPage() {
         amount: expense.amount.toString(),
         date: new Date(expense.date).toISOString().split('T')[0],
         observations: expense.observations || '',
+        employeeId: expense.employeeId || '',
       })
     } else {
       setEditingExpense(null)
@@ -107,6 +113,7 @@ export default function DespesasPage() {
         amount: '',
         date: new Date().toISOString().split('T')[0],
         observations: '',
+        employeeId: '',
       })
     }
     setIsDialogOpen(true)
@@ -121,6 +128,7 @@ export default function DespesasPage() {
       amount: '',
       date: new Date().toISOString().split('T')[0],
       observations: '',
+      employeeId: '',
     })
   }
 
@@ -139,22 +147,21 @@ export default function DespesasPage() {
     }
 
     try {
+      const expenseData = {
+        category: formData.category as ExpenseCategory,
+        description: formData.description,
+        amount,
+        date: new Date(formData.date),
+        observations: formData.observations || undefined,
+        employeeId: (formData.category === 'vale_funcionario' || formData.category === 'pagamento_funcionario') && formData.employeeId
+          ? formData.employeeId
+          : undefined,
+      }
+
       if (editingExpense) {
-        await updateExpense(editingExpense.id, {
-          category: formData.category as ExpenseCategory,
-          description: formData.description,
-          amount,
-          date: new Date(formData.date),
-          observations: formData.observations || undefined,
-        })
+        await updateExpense(editingExpense.id, expenseData)
       } else {
-        await addExpense({
-          category: formData.category as ExpenseCategory,
-          description: formData.description,
-          amount,
-          date: new Date(formData.date),
-          observations: formData.observations || undefined,
-        })
+        await addExpense(expenseData)
       }
       handleCloseDialog()
     } catch (error: any) {
@@ -188,14 +195,23 @@ export default function DespesasPage() {
           <h1 className="text-2xl font-bold text-foreground">Despesas</h1>
           <p className="text-muted-foreground">Gerencie todas as despesas da empresa</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={handleOpenDialogForNew} className="gap-2">
-              <Plus className="w-4 h-4" />
-              Nova Despesa
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => exportExpensesToCSV(filteredExpenses)}
+            disabled={filteredExpenses.length === 0}
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Exportar CSV
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={handleOpenDialogForNew} className="gap-2">
+                <Plus className="w-4 h-4" />
+                Nova Despesa
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>{editingExpense ? 'Editar Despesa' : 'Nova Despesa'}</DialogTitle>
               <DialogDescription>
@@ -255,6 +271,28 @@ export default function DespesasPage() {
                 />
               </div>
 
+              {(formData.category === 'vale_funcionario' || formData.category === 'pagamento_funcionario') && (
+                <div className="space-y-2">
+                  <Label htmlFor="employeeId">Funcionário</Label>
+                  <Select
+                    value={formData.employeeId}
+                    onValueChange={(value) => setFormData({ ...formData, employeeId: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o funcionário (opcional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Nenhum (geral)</SelectItem>
+                      {employees.filter(emp => emp.isActive).map((employee) => (
+                        <SelectItem key={employee.id} value={employee.id}>
+                          {employee.name} {employee.position ? `(${employee.position})` : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="observations">Observações</Label>
                 <Textarea
@@ -275,8 +313,9 @@ export default function DespesasPage() {
                 </Button>
               </div>
             </form>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Total Card */}

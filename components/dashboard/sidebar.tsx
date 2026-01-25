@@ -19,6 +19,9 @@ import {
   Receipt,
   BarChart3,
   Shield,
+  Users,
+  UserCircle,
+  Wrench,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -27,6 +30,9 @@ const navigation = [
   { name: 'Novo Orcamento', href: '/dashboard/novo-orcamento', icon: FileText },
   { name: 'Historico', href: '/dashboard/historico', icon: History },
   { name: 'Faturamento', href: '/dashboard/faturamento', icon: DollarSign },
+  { name: 'Clientes', href: '/dashboard/clientes', icon: UserCircle },
+  { name: 'Servicos', href: '/dashboard/servicos', icon: Wrench },
+  { name: 'Funcionarios', href: '/dashboard/funcionarios', icon: Users },
   { name: 'Despesas', href: '/dashboard/despesas', icon: Receipt },
   { name: 'Relatorios Financeiros', href: '/dashboard/relatorios-financeiros', icon: BarChart3 },
   { name: 'Auditoria', href: '/dashboard/auditoria', icon: Shield },

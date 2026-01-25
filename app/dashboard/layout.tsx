@@ -7,6 +7,9 @@ import { useAuth } from '@/contexts/auth-context'
 import { QuotesProvider } from '@/contexts/quotes-context'
 import { CompanyProvider } from '@/contexts/company-context'
 import { ExpensesProvider } from '@/contexts/expenses-context'
+import { EmployeesProvider } from '@/contexts/employees-context'
+import { ClientsProvider } from '@/contexts/clients-context'
+import { ServicesProvider } from '@/contexts/services-context'
 import { Sidebar } from '@/components/dashboard/sidebar'
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
@@ -50,7 +53,13 @@ export default function DashboardLayout({
     <CompanyProvider>
       <QuotesProvider>
         <ExpensesProvider>
-          <DashboardContent>{children}</DashboardContent>
+          <EmployeesProvider>
+            <ClientsProvider>
+              <ServicesProvider>
+                <DashboardContent>{children}</DashboardContent>
+              </ServicesProvider>
+            </ClientsProvider>
+          </EmployeesProvider>
         </ExpensesProvider>
       </QuotesProvider>
     </CompanyProvider>

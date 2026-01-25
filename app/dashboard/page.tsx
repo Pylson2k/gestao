@@ -1,8 +1,10 @@
 'use client'
 
+import { useMemo } from 'react'
 import Link from 'next/link'
 import { useQuotes } from '@/contexts/quotes-context'
 import { useExpenses } from '@/contexts/expenses-context'
+import { useAuth } from '@/contexts/auth-context'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { StatsCard } from '@/components/dashboard/stats-card'
@@ -17,18 +19,35 @@ import {
   Receipt,
   LayoutDashboard,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  AlertCircle
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export default function DashboardPage() {
   const { quotes } = useQuotes()
   const { expenses } = useExpenses()
+  const { user } = useAuth()
+
+  // Função para obter saudação baseada no horário
+  const getGreeting = () => {
+    const hour = new Date().getHours()
+    if (hour >= 5 && hour < 12) {
+      return 'Bom dia'
+    } else if (hour >= 12 && hour < 18) {
+      return 'Boa tarde'
+    } else {
+      return 'Boa noite'
+    }
+  }
+
+  const greeting = getGreeting()
+  const userName = user?.name || 'Usuário'
 
   const monthlyRevenue = calculateMonthlyRevenue(quotes)
   const totalQuotes = quotes.length
   const approvedQuotes = quotes.filter((q) => q.status === 'approved').length
-  const pendingQuotes = quotes.filter((q) => q.status === 'sent' || q.status === 'draft').length
+  const draftOrSentQuotes = quotes.filter((q) => q.status === 'sent' || q.status === 'draft').length
   
   // Calcular despesas do mês
   const now = new Date()
@@ -48,6 +67,18 @@ export default function DashboardPage() {
 
   const recentQuotes = quotes.slice(0, 5)
 
+  // Orçamentos pendentes (enviados há mais de 3 dias)
+  const overduePendingQuotes = useMemo(() => {
+    const threeDaysAgo = new Date()
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3)
+    
+    return quotes.filter(q => {
+      if (q.status !== 'sent') return false
+      const sentDate = new Date(q.createdAt)
+      return sentDate < threeDaysAgo
+    })
+  }, [quotes])
+
   const formattedRevenue = monthlyRevenue.toLocaleString('pt-BR', {
     style: 'currency',
     currency: 'BRL',
@@ -65,6 +96,30 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      {/* Alertas */}
+      {overduePendingQuotes.length > 0 && (
+        <Card className="border-orange-500/20 bg-orange-500/5">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-orange-500" />
+              <div className="flex-1">
+                <p className="font-semibold text-foreground">
+                  {overduePendingQuotes.length} orçamento(s) pendente(s)
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Orçamentos enviados há mais de 3 dias sem resposta
+                </p>
+              </div>
+              <Link href="/dashboard/historico?status=sent">
+                <Button variant="outline" size="sm">
+                  Ver Pendentes
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Quick Actions - Cards grandes para PWA */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Link href="/dashboard/novo-orcamento">
@@ -120,7 +175,7 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">
-            Olá, Usuário
+            {greeting}, {userName}!
           </h1>
           <p className="text-muted-foreground">Gerencie seus orçamentos e acompanhe seu faturamento</p>
         </div>

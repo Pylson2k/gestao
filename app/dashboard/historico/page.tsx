@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import type { Quote } from '@/lib/types'
+import { exportQuotesToCSV } from '@/lib/export-utils'
 import {
   ArrowLeft,
   Search,
@@ -25,6 +26,7 @@ import {
   ChevronRight,
   Calendar,
   Plus,
+  Download,
 } from 'lucide-react'
 
 const statusConfig = {
@@ -89,12 +91,22 @@ export default function HistoryPage() {
             <p className="text-muted-foreground">{filteredQuotes.length} orcamento(s) encontrado(s)</p>
           </div>
         </div>
-        <Link href="/dashboard/novo-orcamento">
-          <Button className="gap-2">
-            <Plus className="w-4 h-4" />
-            Novo Orcamento
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => exportQuotesToCSV(filteredQuotes)}
+            disabled={filteredQuotes.length === 0}
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Exportar CSV
           </Button>
-        </Link>
+          <Link href="/dashboard/novo-orcamento">
+            <Button className="gap-2">
+              <Plus className="w-4 h-4" />
+              Novo Orcamento
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}

@@ -43,6 +43,15 @@ export async function GET(request: NextRequest) {
 
     const expenses = await prisma.expense.findMany({
       where,
+      include: {
+        employee: {
+          select: {
+            id: true,
+            name: true,
+            position: true,
+          },
+        },
+      },
       orderBy: {
         date: 'desc',
       },
@@ -106,6 +115,7 @@ export async function POST(request: NextRequest) {
         amount: parseFloat(amount),
         date: new Date(date),
         observations: observations || null,
+        employeeId: body.employeeId || null,
       },
     })
 

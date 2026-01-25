@@ -70,14 +70,54 @@ export type ExpenseCategory =
   | 'vale_gustavo' 
   | 'vale_giovanni'
 
+export interface Employee {
+  id: string
+  userId: string
+  name: string
+  cpf?: string | null
+  phone?: string | null
+  email?: string | null
+  position?: string | null
+  hireDate?: string | Date | null
+  isActive: boolean
+  observations?: string | null
+  createdAt: string | Date
+  updatedAt: string | Date
+}
+
+export interface Service {
+  id: string
+  userId: string
+  name: string
+  description?: string | null
+  unitPrice: number
+  unit: string
+  isActive: boolean
+  createdAt: string | Date
+  updatedAt: string | Date
+}
+
 export interface Expense {
   id: string
   userId: string
   category: ExpenseCategory
   description: string
   amount: number
-  date: Date
-  observations?: string
-  createdAt: Date
-  updatedAt: Date
+  date: string | Date
+  observations?: string | null
+  employeeId?: string | null
+  createdAt: string | Date
+  updatedAt: string | Date
+}
+
+export interface Service {
+  id: string
+  userId: string
+  name: string
+  description?: string | null
+  unitPrice: number
+  unit: string
+  isActive: boolean
+  createdAt: string | Date
+  updatedAt: string | Date
 }

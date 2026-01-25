@@ -106,6 +106,7 @@ export async function PUT(
     }
     if (body.date !== undefined) updateData.date = new Date(body.date)
     if (body.observations !== undefined) updateData.observations = body.observations || null
+    if (body.employeeId !== undefined) updateData.employeeId = body.employeeId || null
 
     const expense = await prisma.expense.update({
       where: { id },

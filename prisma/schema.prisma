@@ -27,6 +27,8 @@ model User {
   quotes            Quote[]
   expenses          Expense[]
   auditLogs         AuditLog[]
+  employees         Employee[]
+  services          Service[]
   
   @@map("users")
 }
@@ -109,6 +111,42 @@ model CompanySettings {
   @@map("company_settings")
 }
 
+model Employee {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  cpf         String?
+  phone       String?
+  email       String?
+  position    String?  // Cargo
+  hireDate    DateTime?
+  isActive    Boolean  @default(true)
+  observations String?   @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expenses    Expense[]
+  
+  @@map("employees")
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?  @db.Text
+  unitPrice   Float
+  unit        String  @default("unidade") // unidade, hora, m², etc
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("services")
+}
+
 model Expense {
   id          String   @id @default(cuid())
   userId      String
@@ -117,10 +155,12 @@ model Expense {
   amount      Float
   date        DateTime
   observations String?   @db.Text
+  employeeId  String?  // Relação opcional com funcionário
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  employee    Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
   
   @@map("expenses")
 }

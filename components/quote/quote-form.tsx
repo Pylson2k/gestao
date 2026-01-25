@@ -5,15 +5,24 @@ import React from "react"
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuotes, calculateQuoteTotals } from '@/contexts/quotes-context'
+import { useClients } from '@/contexts/clients-context'
+import { useServices } from '@/contexts/services-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { ServiceItemRow } from './service-item-row'
 import { MaterialItemRow } from './material-item-row'
 import type { Client, ServiceItem, MaterialItem, Quote } from '@/lib/types'
-import { Plus, Save, ArrowLeft } from 'lucide-react'
+import { Plus, Save, ArrowLeft, UserCircle } from 'lucide-react'
 import Link from 'next/link'
 
 interface QuoteFormProps {
@@ -23,6 +32,11 @@ interface QuoteFormProps {
 export function QuoteForm({ initialData }: QuoteFormProps) {
   const router = useRouter()
   const { addQuote, updateQuote } = useQuotes()
+  const { clients } = useClients()
+  const { services: catalogServices } = useServices()
+  const [selectedClientId, setSelectedClientId] = useState<string>(
+    initialData?.client?.id || ''
+  )
 
   const [client, setClient] = useState<Client>(
     initialData?.client || {
@@ -32,6 +46,26 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
       address: '',
     }
   )
+
+  const handleClientSelect = (clientId: string) => {
+    if (clientId === 'new') {
+      setSelectedClientId('')
+      setClient({ id: '', name: '', phone: '', address: '' })
+      return
+    }
+
+    const selectedClient = clients.find(c => c.id === clientId)
+    if (selectedClient) {
+      setSelectedClientId(clientId)
+      setClient({
+        id: selectedClient.id,
+        name: selectedClient.name,
+        phone: selectedClient.phone,
+        address: selectedClient.address,
+        email: selectedClient.email,
+      })
+    }
+  }
 
   const [services, setServices] = useState<ServiceItem[]>(
     initialData?.services || [{ id: '1', name: '', quantity: 1, unitPrice: 0 }]
@@ -160,6 +194,32 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
           <CardTitle className="text-lg">Dados do Cliente</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {!initialData && clients.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="clientSelect">Selecionar Cliente Existente</Label>
+              <Select value={selectedClientId || 'new'} onValueChange={handleClientSelect}>
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="Selecione um cliente ou crie um novo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="new">
+                    <div className="flex items-center gap-2">
+                      <Plus className="w-4 h-4" />
+                      Novo Cliente
+                    </div>
+                  </SelectItem>
+                  {clients.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name} - {c.phone}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Ou <Link href="/dashboard/clientes" className="text-primary hover:underline">cadastre um novo cliente</Link> antes de criar o orçamento
+              </p>
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="clientName">Nome</Label>
@@ -170,6 +230,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
                 onChange={(e) => setClient({ ...client, name: e.target.value })}
                 required
                 className="bg-background"
+                disabled={!!selectedClientId && selectedClientId !== 'new'}
               />
             </div>
             <div className="space-y-2">
@@ -181,6 +242,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
                 onChange={(e) => setClient({ ...client, phone: e.target.value })}
                 required
                 className="bg-background"
+                disabled={!!selectedClientId && selectedClientId !== 'new'}
               />
             </div>
           </div>
@@ -193,8 +255,23 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
               onChange={(e) => setClient({ ...client, address: e.target.value })}
               required
               className="bg-background"
+              disabled={!!selectedClientId && selectedClientId !== 'new'}
             />
           </div>
+          {client.email !== undefined && (
+            <div className="space-y-2">
+              <Label htmlFor="clientEmail">Email (opcional)</Label>
+              <Input
+                id="clientEmail"
+                type="email"
+                placeholder="email@exemplo.com"
+                value={client.email || ''}
+                onChange={(e) => setClient({ ...client, email: e.target.value })}
+                className="bg-background"
+                disabled={!!selectedClientId && selectedClientId !== 'new'}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -202,10 +279,46 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
       <Card className="border-border">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg">Servicos</CardTitle>
-          <Button type="button" variant="outline" size="sm" onClick={addService}>
-            <Plus className="w-4 h-4 mr-2" />
-            Adicionar
-          </Button>
+          <div className="flex gap-2">
+            {catalogServices.length > 0 && (
+              <Select
+                onValueChange={(serviceId) => {
+                  const selectedService = catalogServices.find(s => s.id === serviceId)
+                  if (selectedService) {
+                    const newService: ServiceItem = {
+                      id: Date.now().toString(),
+                      name: selectedService.name,
+                      quantity: 1,
+                      unitPrice: selectedService.unitPrice,
+                    }
+                    setServices([...services, newService])
+                  }
+                }}
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Adicionar do catálogo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {catalogServices.map((service) => (
+                    <SelectItem key={service.id} value={service.id}>
+                      {service.name} - {service.unitPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}/{service.unit}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <Button type="button" variant="outline" size="sm" onClick={addService}>
+              <Plus className="w-4 h-4 mr-2" />
+              Adicionar Manual
+            </Button>
+            {catalogServices.length === 0 && (
+              <Link href="/dashboard/servicos">
+                <Button type="button" variant="outline" size="sm">
+                  Cadastrar Serviços
+                </Button>
+              </Link>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="hidden sm:grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground px-1">
