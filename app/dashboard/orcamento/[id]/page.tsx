@@ -4,7 +4,6 @@ import { use } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useQuotes } from '@/contexts/quotes-context'
-import { useAuth } from '@/contexts/auth-context'
 import { useCompany } from '@/contexts/company-context'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -45,7 +44,6 @@ export default function QuoteDetailPage({
   const { id } = use(params)
   const router = useRouter()
   const { getQuoteById, updateQuote, deleteQuote } = useQuotes()
-  const { user } = useAuth()
   const { settings: companySettings } = useCompany()
 
   const quote = getQuoteById(id)

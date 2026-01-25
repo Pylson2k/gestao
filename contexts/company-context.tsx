@@ -2,7 +2,9 @@
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
 import type { CompanySettings } from '@/lib/types'
-import { useAuth } from './auth-context'
+
+// Usar o primeiro usuário do banco como padrão
+const DEFAULT_USER_ID = 'aee2fe1b-6157-4f33-ba45-cc45a210ec2e' // ID do usuário gustavo
 
 const defaultSettings: CompanySettings = {
   name: 'ServiPro',
@@ -22,20 +24,14 @@ interface CompanyContextType {
 const CompanyContext = createContext<CompanyContextType | undefined>(undefined)
 
 export function CompanyProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth()
   const [settings, setSettings] = useState<CompanySettings>(defaultSettings)
   const [isLoading, setIsLoading] = useState(true)
 
   const fetchSettings = useCallback(async () => {
-    if (!user?.id) {
-      setIsLoading(false)
-      return
-    }
-
     try {
       const response = await fetch('/api/company', {
         headers: {
-          'x-user-id': user.id,
+          'x-user-id': DEFAULT_USER_ID,
         },
       })
 
@@ -57,23 +53,19 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }, [user?.id])
+  }, [])
 
   useEffect(() => {
     fetchSettings()
   }, [fetchSettings])
 
   const updateSettings = useCallback(async (newSettings: Partial<CompanySettings>) => {
-    if (!user?.id) {
-      throw new Error('Usuario nao autenticado')
-    }
-
     try {
       const response = await fetch('/api/company', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': user.id,
+          'x-user-id': DEFAULT_USER_ID,
         },
         body: JSON.stringify({
           ...settings,
@@ -101,7 +93,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       console.error('Update settings error:', error)
       throw error
     }
-  }, [user?.id, settings])
+  }, [settings])
 
   const updateLogo = useCallback(async (logoBase64: string) => {
     await updateSettings({ logo: logoBase64 })

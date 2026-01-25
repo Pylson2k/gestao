@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { useAuth } from '@/contexts/auth-context'
 import { useQuotes } from '@/contexts/quotes-context'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -11,7 +10,6 @@ import { calculateMonthlyRevenue } from '@/lib/utils'
 import { Plus, DollarSign, FileText, CheckCircle, Clock } from 'lucide-react'
 
 export default function DashboardPage() {
-  const { user } = useAuth()
   const { quotes } = useQuotes()
 
   const monthlyRevenue = calculateMonthlyRevenue(quotes)
@@ -32,7 +30,7 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">
-            Ola, {user?.name?.split(' ')[0] || 'Usuario'}
+            Ola, Usuario
           </h1>
           <p className="text-muted-foreground">Gerencie seus orcamentos e acompanhe seu faturamento</p>
         </div>

@@ -2,7 +2,6 @@ import React from "react"
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
-import { AuthProvider } from '@/contexts/auth-context'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -39,9 +38,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={`font-sans antialiased`}>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        {children}
         <Analytics />
       {/* v0 – built-with badge */}
   <div dangerouslySetInnerHTML={{ __html: `<div id="v0-built-with-button-26ca3b7f-3c73-4179-b554-2a43cee70ba8" style="
