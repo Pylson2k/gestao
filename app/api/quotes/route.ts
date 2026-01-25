@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getMemoryQuotes, addMemoryQuote } from '@/lib/emergency-store'
 import { getDbUserId } from '@/lib/user-mapping'
+import { createAuditLog, getRequestMetadata } from '@/lib/audit-log'
 
 // GET - List all quotes for a user
 export async function GET(request: NextRequest) {
@@ -217,6 +218,25 @@ export async function POST(request: NextRequest) {
         services: true,
         materials: true,
       },
+    })
+
+    // Log de auditoria
+    const metadata = getRequestMetadata(request)
+    await createAuditLog({
+      userId,
+      action: 'create_quote',
+      entityType: 'quote',
+      entityId: quote.id,
+      description: `Orçamento ${quote.number} criado - Cliente: ${client.name} - Total: R$ ${quote.total.toFixed(2)}`,
+      newValue: {
+        number: quote.number,
+        client: client.name,
+        total: quote.total,
+        subtotal: quote.subtotal,
+        discount: quote.discount,
+        status: quote.status,
+      },
+      ...metadata,
     })
 
     return NextResponse.json(quote, { status: 201 })

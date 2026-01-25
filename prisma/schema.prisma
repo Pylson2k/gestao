@@ -25,6 +25,8 @@ model User {
   updatedAt         DateTime @updatedAt
   
   quotes            Quote[]
+  expenses          Expense[]
+  auditLogs         AuditLog[]
   
   @@map("users")
 }
@@ -105,4 +107,41 @@ model CompanySettings {
   updatedAt      DateTime @updatedAt
   
   @@map("company_settings")
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  userId      String
+  category    String   // material, combustivel, vale_funcionario, pagamento_funcionario, vale_gustavo, vale_giovanni
+  description String
+  amount      Float
+  date        DateTime
+  observations String?   @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("expenses")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String
+  action      String   // create_quote, update_quote, delete_quote, create_expense, update_expense, delete_expense, change_status, change_discount, change_total
+  entityType  String   // quote, expense
+  entityId    String
+  description String
+  oldValue    String?  @db.Text  // JSON com valores antigos
+  newValue    String?  @db.Text  // JSON com valores novos
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
 }

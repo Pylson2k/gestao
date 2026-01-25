@@ -61,3 +61,23 @@ export interface CompanySettings {
   website?: string
   additionalInfo?: string
 }
+
+export type ExpenseCategory = 
+  | 'material' 
+  | 'combustivel' 
+  | 'vale_funcionario' 
+  | 'pagamento_funcionario' 
+  | 'vale_gustavo' 
+  | 'vale_giovanni'
+
+export interface Expense {
+  id: string
+  userId: string
+  category: ExpenseCategory
+  description: string
+  amount: number
+  date: Date
+  observations?: string
+  createdAt: Date
+  updatedAt: Date
+}

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
 import { QuotesProvider } from '@/contexts/quotes-context'
 import { CompanyProvider } from '@/contexts/company-context'
+import { ExpensesProvider } from '@/contexts/expenses-context'
 import { Sidebar } from '@/components/dashboard/sidebar'
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
@@ -48,7 +49,9 @@ export default function DashboardLayout({
   return (
     <CompanyProvider>
       <QuotesProvider>
-        <DashboardContent>{children}</DashboardContent>
+        <ExpensesProvider>
+          <DashboardContent>{children}</DashboardContent>
+        </ExpensesProvider>
       </QuotesProvider>
     </CompanyProvider>
   )

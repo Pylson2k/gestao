@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getMemoryQuoteById, updateMemoryQuote, deleteMemoryQuote } from '@/lib/emergency-store'
 import { getDbUserId } from '@/lib/user-mapping'
+import { createAuditLog, getRequestMetadata } from '@/lib/audit-log'
 
 // GET - Get single quote
 export async function GET(
@@ -293,6 +294,14 @@ export async function PUT(
       serviceStartedAtValue: updateData.serviceStartedAt,
     })
 
+    // Buscar valores antigos antes da atualização para auditoria
+    const oldQuote = await prisma.quote.findUnique({
+      where: { id },
+      include: {
+        client: true,
+      },
+    })
+
     const quote = await prisma.quote.update({
       where: { id },
       data: updateData,
@@ -302,6 +311,76 @@ export async function PUT(
         materials: true,
       },
     })
+
+    // Log de auditoria - detectar mudanças importantes
+    const metadata = getRequestMetadata(request)
+    const changes: string[] = []
+    
+    if (body.status !== undefined && oldQuote && oldQuote.status !== body.status) {
+      changes.push(`Status: ${oldQuote.status} → ${body.status}`)
+      await createAuditLog({
+        userId,
+        action: 'change_quote_status',
+        entityType: 'quote',
+        entityId: id,
+        description: `Status do orçamento ${oldQuote.number} alterado de "${oldQuote.status}" para "${body.status}"`,
+        oldValue: { status: oldQuote.status },
+        newValue: { status: body.status },
+        ...metadata,
+      })
+    }
+
+    if (body.discount !== undefined && oldQuote && oldQuote.discount !== body.discount) {
+      changes.push(`Desconto: R$ ${oldQuote.discount.toFixed(2)} → R$ ${body.discount.toFixed(2)}`)
+      await createAuditLog({
+        userId,
+        action: 'change_quote_discount',
+        entityType: 'quote',
+        entityId: id,
+        description: `Desconto do orçamento ${oldQuote.number} alterado de R$ ${oldQuote.discount.toFixed(2)} para R$ ${body.discount.toFixed(2)}`,
+        oldValue: { discount: oldQuote.discount, total: oldQuote.total },
+        newValue: { discount: body.discount, total: quote.total },
+        ...metadata,
+      })
+    }
+
+    if (body.total !== undefined && oldQuote && oldQuote.total !== body.total) {
+      changes.push(`Total: R$ ${oldQuote.total.toFixed(2)} → R$ ${body.total.toFixed(2)}`)
+      await createAuditLog({
+        userId,
+        action: 'change_quote_total',
+        entityType: 'quote',
+        entityId: id,
+        description: `Total do orçamento ${oldQuote.number} alterado de R$ ${oldQuote.total.toFixed(2)} para R$ ${body.total.toFixed(2)}`,
+        oldValue: { total: oldQuote.total },
+        newValue: { total: body.total },
+        ...metadata,
+      })
+    }
+
+    // Log genérico de atualização se houver outras mudanças
+    if (changes.length === 0 && (body.client || body.services || body.materials || body.observations !== undefined)) {
+      await createAuditLog({
+        userId,
+        action: 'update_quote',
+        entityType: 'quote',
+        entityId: id,
+        description: `Orçamento ${oldQuote?.number || id} atualizado`,
+        oldValue: oldQuote ? {
+          subtotal: oldQuote.subtotal,
+          discount: oldQuote.discount,
+          total: oldQuote.total,
+          status: oldQuote.status,
+        } : undefined,
+        newValue: {
+          subtotal: quote.subtotal,
+          discount: quote.discount,
+          total: quote.total,
+          status: quote.status,
+        },
+        ...metadata,
+      })
+    }
 
     return NextResponse.json(quote)
   } catch (error: any) {
@@ -368,8 +447,53 @@ export async function DELETE(
       )
     }
 
+    // Buscar dados antes de excluir para auditoria
+    const quoteToDelete = await prisma.quote.findUnique({
+      where: { id },
+      include: {
+        client: true,
+      },
+    })
+
+    // Validação adicional: não permitir exclusão de orçamentos finalizados sem confirmação extra
+    if (quoteToDelete && quoteToDelete.status === 'completed') {
+      // Log de tentativa de exclusão de orçamento finalizado (ação suspeita)
+      const metadata = getRequestMetadata(request)
+      await createAuditLog({
+        userId,
+        action: 'delete_quote',
+        entityType: 'quote',
+        entityId: id,
+        description: `⚠️ TENTATIVA DE EXCLUSÃO DE ORÇAMENTO FINALIZADO - ${quoteToDelete.number} - Cliente: ${quoteToDelete.client.name} - Total: R$ ${quoteToDelete.total.toFixed(2)}`,
+        oldValue: {
+          number: quoteToDelete.number,
+          client: quoteToDelete.client.name,
+          total: quoteToDelete.total,
+          status: quoteToDelete.status,
+        },
+        ...metadata,
+      })
+    }
+
     await prisma.quote.delete({
       where: { id },
+    })
+
+    // Log de auditoria para exclusão
+    const metadata = getRequestMetadata(request)
+    await createAuditLog({
+      userId,
+      action: 'delete_quote',
+      entityType: 'quote',
+      entityId: id,
+      description: `Orçamento ${quoteToDelete?.number || id} EXCLUÍDO - Cliente: ${quoteToDelete?.client.name || 'N/A'} - Total: R$ ${quoteToDelete?.total.toFixed(2) || '0.00'}`,
+      oldValue: quoteToDelete ? {
+        number: quoteToDelete.number,
+        client: quoteToDelete.client.name,
+        total: quoteToDelete.total,
+        status: quoteToDelete.status,
+      } : undefined,
+      ...metadata,
     })
 
     return NextResponse.json({ success: true })

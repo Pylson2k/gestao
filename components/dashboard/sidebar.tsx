@@ -16,6 +16,9 @@ import {
   Menu,
   X,
   DollarSign,
+  Receipt,
+  BarChart3,
+  Shield,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -24,6 +27,9 @@ const navigation = [
   { name: 'Novo Orcamento', href: '/dashboard/novo-orcamento', icon: FileText },
   { name: 'Historico', href: '/dashboard/historico', icon: History },
   { name: 'Faturamento', href: '/dashboard/faturamento', icon: DollarSign },
+  { name: 'Despesas', href: '/dashboard/despesas', icon: Receipt },
+  { name: 'Relatorios Financeiros', href: '/dashboard/relatorios-financeiros', icon: BarChart3 },
+  { name: 'Auditoria', href: '/dashboard/auditoria', icon: Shield },
   { name: 'Configuracoes', href: '/dashboard/configuracoes', icon: Settings },
   { name: 'Perfil', href: '/dashboard/perfil', icon: User },
 ]
