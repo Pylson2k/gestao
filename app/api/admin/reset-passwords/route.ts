@@ -10,6 +10,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 401 })
     }
 
+    // Verificar se DATABASE_URL existe
+    if (!process.env.DATABASE_URL) {
+      return NextResponse.json({ 
+        error: 'DATABASE_URL não configurada no Vercel. Vá em Settings > Environment Variables e adicione DATABASE_URL com a URL do seu banco PostgreSQL.',
+        hasDbUrl: false 
+      }, { status: 500 })
+    }
+
     // Dynamic imports para Prisma 7.3.0
     const { PrismaClient } = await import('@prisma/client')
     const { hash } = await import('bcryptjs')
@@ -62,10 +70,15 @@ export async function POST(request: Request) {
         { username: 'giovanni', password: 'giovanni123' },
       ],
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Reset error:', error)
     return NextResponse.json(
-      { error: 'Erro ao resetar senhas', details: String(error) },
+      { 
+        error: 'Erro ao resetar senhas', 
+        details: error?.message || String(error),
+        code: error?.code,
+        hint: 'Verifique se DATABASE_URL está configurada corretamente no Vercel'
+      },
       { status: 500 }
     )
   }

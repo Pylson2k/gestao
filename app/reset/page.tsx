@@ -21,7 +21,7 @@ export default function ResetPage() {
         setMessage('Senhas resetadas! Use: gustavo / gustavo123')
       } else {
         setStatus('error')
-        setMessage(data.error || 'Erro ao resetar')
+        setMessage(JSON.stringify(data, null, 2))
       }
     } catch (error) {
       setStatus('error')
@@ -63,8 +63,9 @@ export default function ResetPage() {
           
           {status === 'error' && (
             <div className="space-y-4">
-              <div className="p-4 bg-red-100 text-red-800 rounded-md">
-                <p>Erro: {message}</p>
+              <div className="p-4 bg-red-100 text-red-800 rounded-md text-sm">
+                <p className="font-bold mb-2">Erro:</p>
+                <pre className="whitespace-pre-wrap break-words">{message}</pre>
               </div>
               <Button onClick={handleReset} variant="outline" className="w-full">
                 Tentar Novamente
