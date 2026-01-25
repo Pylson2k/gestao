@@ -1,10 +1,11 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { useQuotes } from '@/contexts/quotes-context'
 import { useExpenses } from '@/contexts/expenses-context'
 import { useAuth } from '@/contexts/auth-context'
+import { useCashClosings } from '@/contexts/cash-closings-context'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { StatsCard } from '@/components/dashboard/stats-card'
@@ -28,6 +29,7 @@ export default function DashboardPage() {
   const { quotes } = useQuotes()
   const { expenses } = useExpenses()
   const { user } = useAuth()
+  const { lastClosing } = useCashClosings()
 
   // Função para obter saudação baseada no horário
   const getGreeting = () => {
@@ -44,6 +46,41 @@ export default function DashboardPage() {
   const greeting = getGreeting()
   const userName = user?.name || 'Usuário'
 
+  // Data de início: último fechamento ou início do mês atual
+  const startDate = useMemo(() => {
+    if (lastClosing) {
+      return new Date(lastClosing.endDate)
+    }
+    const now = new Date()
+    return new Date(now.getFullYear(), now.getMonth(), 1)
+  }, [lastClosing])
+
+  // Calcular receita desde o último fechamento
+  const revenueSinceLastClosing = useMemo(() => {
+    return quotes
+      .filter((quote) => {
+        if (quote.status !== 'completed') return false
+        const completionDate = quote.serviceCompletedAt 
+          ? new Date(quote.serviceCompletedAt) 
+          : new Date(quote.createdAt)
+        return completionDate >= startDate
+      })
+      .reduce((sum, quote) => sum + quote.total, 0)
+  }, [quotes, startDate])
+
+  // Calcular despesas desde o último fechamento
+  const expensesSinceLastClosing = useMemo(() => {
+    return expenses
+      .filter((expense) => {
+        const expenseDate = new Date(expense.date)
+        return expenseDate >= startDate
+      })
+      .reduce((sum, expense) => sum + expense.amount, 0)
+  }, [expenses, startDate])
+
+  const monthlyProfit = revenueSinceLastClosing - expensesSinceLastClosing
+
+  // Manter cálculos mensais para os cards de estatísticas
   const monthlyRevenue = calculateMonthlyRevenue(quotes)
   const totalQuotes = quotes.length
   const approvedQuotes = quotes.filter((q) => q.status === 'approved').length
@@ -62,8 +99,6 @@ export default function DashboardPage() {
       )
     })
     .reduce((sum, expense) => sum + expense.amount, 0)
-  
-  const monthlyProfit = monthlyRevenue - monthlyExpenses
 
   const recentQuotes = quotes.slice(0, 5)
 

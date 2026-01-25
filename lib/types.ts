@@ -65,6 +65,8 @@ export interface CompanySettings {
 export type ExpenseCategory = 
   | 'material' 
   | 'combustivel' 
+  | 'almoco'
+  | 'almoco_funcionario'
   | 'vale_funcionario' 
   | 'pagamento_funcionario' 
   | 'vale_gustavo' 
@@ -110,14 +112,19 @@ export interface Expense {
   updatedAt: string | Date
 }
 
-export interface Service {
+export type PeriodType = 'semanal' | 'quinzenal' | 'mensal'
+
+export interface CashClosing {
   id: string
   userId: string
-  name: string
-  description?: string | null
-  unitPrice: number
-  unit: string
-  isActive: boolean
+  periodType: PeriodType
+  startDate: string | Date
+  endDate: string | Date
+  totalProfit: number
+  gustavoProfit: number
+  giovanniProfit: number
+  totalRevenue: number
+  totalExpenses: number
+  observations?: string | null
   createdAt: string | Date
-  updatedAt: string | Date
 }

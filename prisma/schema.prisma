@@ -29,6 +29,7 @@ model User {
   auditLogs         AuditLog[]
   employees         Employee[]
   services          Service[]
+  cashClosings      CashClosing[]
   
   @@map("users")
 }
@@ -145,6 +146,26 @@ model Service {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@map("services")
+}
+
+model CashClosing {
+  id              String   @id @default(cuid())
+  userId          String
+  periodType      String   // semanal, quinzenal, mensal
+  startDate       DateTime
+  endDate         DateTime
+  totalProfit     Float    // Lucro líquido total
+  gustavoProfit   Float    // 50% para Gustavo
+  giovanniProfit  Float    // 50% para Giovanni
+  totalRevenue    Float    // Receita total do período
+  totalExpenses    Float    // Despesas total do período
+  observations    String?  @db.Text
+  createdAt       DateTime @default(now())
+  
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, endDate])
+  @@map("cash_closings")
 }
 
 model Expense {

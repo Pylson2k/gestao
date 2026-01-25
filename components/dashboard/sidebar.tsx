@@ -22,6 +22,8 @@ import {
   Users,
   UserCircle,
   Wrench,
+  Wallet,
+  Calendar,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -33,6 +35,8 @@ const navigation = [
   { name: 'Clientes', href: '/dashboard/clientes', icon: UserCircle },
   { name: 'Servicos', href: '/dashboard/servicos', icon: Wrench },
   { name: 'Funcionarios', href: '/dashboard/funcionarios', icon: Users },
+  { name: 'Fechamento de Caixa', href: '/dashboard/fechamento-caixa', icon: Wallet },
+  { name: 'Relatorios de Fechamentos', href: '/dashboard/relatorios-fechamentos', icon: Calendar },
   { name: 'Despesas', href: '/dashboard/despesas', icon: Receipt },
   { name: 'Relatorios Financeiros', href: '/dashboard/relatorios-financeiros', icon: BarChart3 },
   { name: 'Auditoria', href: '/dashboard/auditoria', icon: Shield },

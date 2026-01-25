@@ -30,8 +30,10 @@ import { cn } from '@/lib/utils'
 import { exportExpensesToCSV } from '@/lib/export-utils'
 
 const categoryLabels: Record<ExpenseCategory, string> = {
-  material: 'Compra de Material',
+  material: 'Material',
   combustivel: 'Combustível',
+  almoco: 'Almoço',
+  almoco_funcionario: 'Almoço para Funcionário',
   vale_funcionario: 'Vale para Funcionários',
   pagamento_funcionario: 'Pagamento de Funcionários',
   vale_gustavo: 'Vale Gustavo',
@@ -41,6 +43,8 @@ const categoryLabels: Record<ExpenseCategory, string> = {
 const categoryColors: Record<ExpenseCategory, string> = {
   material: 'bg-blue-500/10 text-blue-500',
   combustivel: 'bg-orange-500/10 text-orange-500',
+  almoco: 'bg-pink-500/10 text-pink-500',
+  almoco_funcionario: 'bg-rose-500/10 text-rose-500',
   vale_funcionario: 'bg-purple-500/10 text-purple-500',
   pagamento_funcionario: 'bg-red-500/10 text-red-500',
   vale_gustavo: 'bg-green-500/10 text-green-500',
@@ -153,7 +157,7 @@ export default function DespesasPage() {
         amount,
         date: new Date(formData.date),
         observations: formData.observations || undefined,
-        employeeId: (formData.category === 'vale_funcionario' || formData.category === 'pagamento_funcionario') && formData.employeeId
+        employeeId: (formData.category === 'vale_funcionario' || formData.category === 'pagamento_funcionario' || formData.category === 'almoco_funcionario') && formData.employeeId
           ? formData.employeeId
           : undefined,
       }
@@ -271,7 +275,7 @@ export default function DespesasPage() {
                 />
               </div>
 
-              {(formData.category === 'vale_funcionario' || formData.category === 'pagamento_funcionario') && (
+              {(formData.category === 'vale_funcionario' || formData.category === 'pagamento_funcionario' || formData.category === 'almoco_funcionario') && (
                 <div className="space-y-2">
                   <Label htmlFor="employeeId">Funcionário</Label>
                   <Select

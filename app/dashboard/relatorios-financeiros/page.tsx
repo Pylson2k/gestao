@@ -65,8 +65,10 @@ export default function RelatoriosFinanceirosPage() {
   // Despesas por categoria
   const expensesByCategory = useMemo(() => {
     const categoryLabels: Record<string, string> = {
-      material: 'Compra de Material',
+      material: 'Material',
       combustivel: 'Combustível',
+      almoco: 'Almoço',
+      almoco_funcionario: 'Almoço para Funcionário',
       vale_funcionario: 'Vale para Funcionários',
       pagamento_funcionario: 'Pagamento de Funcionários',
       vale_gustavo: 'Vale Gustavo',
