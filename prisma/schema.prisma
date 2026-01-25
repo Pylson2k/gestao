@@ -52,7 +52,9 @@ model Quote {
   discount    Float    @default(0)
   total       Float
   observations String?
-  status      String   @default("draft") // draft, sent, approved, rejected
+  status      String   @default("draft") // draft, sent, approved, rejected, in_progress, completed, cancelled
+  serviceStartedAt   DateTime?
+  serviceCompletedAt DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   

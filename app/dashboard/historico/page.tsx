@@ -32,6 +32,9 @@ const statusConfig = {
   sent: { label: 'Enviado', className: 'bg-primary/10 text-primary' },
   approved: { label: 'Aprovado', className: 'bg-accent/10 text-accent' },
   rejected: { label: 'Rejeitado', className: 'bg-destructive/10 text-destructive' },
+  in_progress: { label: 'Em Servico', className: 'bg-blue-500/10 text-blue-500' },
+  completed: { label: 'Finalizado', className: 'bg-green-500/10 text-green-500' },
+  cancelled: { label: 'Cancelado', className: 'bg-orange-500/10 text-orange-500' },
 }
 
 export default function HistoryPage() {

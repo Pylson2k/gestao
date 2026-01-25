@@ -39,7 +39,9 @@ export interface Quote {
   total: number
   observations?: string
   createdAt: Date
-  status: 'draft' | 'sent' | 'approved' | 'rejected'
+  status: 'draft' | 'sent' | 'approved' | 'rejected' | 'in_progress' | 'completed' | 'cancelled'
+  serviceStartedAt?: Date
+  serviceCompletedAt?: Date
   userId: string
 }
 
