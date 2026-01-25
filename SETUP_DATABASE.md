@@ -1,6 +1,18 @@
 # 🗄️ Guia Completo: Configurar Banco de Dados PostgreSQL
 
-## Passo 1: Criar Banco de Dados Gratuito no Neon
+Este guia vai te ajudar a configurar um banco de dados PostgreSQL real e funcional para o sistema ServiPro.
+
+## 📋 Pré-requisitos
+
+- Node.js instalado
+- npm ou yarn instalado
+- Conta no Neon (gratuita) OU PostgreSQL local instalado
+
+---
+
+## 🚀 Opção 1: Banco de Dados na Nuvem (Neon) - RECOMENDADO
+
+### Passo 1: Criar Banco de Dados Gratuito no Neon
 
 ### 1.1. Acesse o Neon
 1. Abra: **https://neon.tech**
@@ -26,7 +38,16 @@
 
 ---
 
-## Passo 2: Configurar no Vercel
+### Passo 2: Configurar Localmente (Desenvolvimento)
+
+1. Crie um arquivo `.env` na raiz do projeto
+2. Adicione a seguinte linha (substitua pela sua connection string):
+   ```env
+   DATABASE_URL="postgresql://usuario:senha@ep-xxx-xxx.us-east-2.aws.neon.tech/gestao?sslmode=require"
+   ```
+3. Salve o arquivo
+
+### Passo 3: Configurar no Vercel (Produção)
 
 ### 2.1. Acessar Configurações
 1. Acesse: **https://vercel.com/dashboard**
@@ -44,57 +65,147 @@
 
 ---
 
-## Passo 3: Criar as Tabelas no Banco
+---
 
-### 3.1. Opção A: Via Vercel (Recomendado)
+## 🖥️ Opção 2: Banco de Dados Local (PostgreSQL)
 
-Após adicionar a variável `DATABASE_URL` no Vercel:
+### Passo 1: Instalar PostgreSQL
 
-1. Vá em **"Deployments"**
-2. Clique nos **3 pontinhos** do último deploy
-3. Clique em **"Redeploy"**
-4. Aguarde o deploy terminar
+**Windows:**
+1. Baixe o instalador em: https://www.postgresql.org/download/windows/
+2. Execute o instalador e siga as instruções
+3. Anote a senha do usuário `postgres` que você configurou
 
-O sistema vai criar as tabelas automaticamente na primeira execução!
-
-### 3.2. Opção B: Via Terminal Local (Alternativa)
-
-Se você tem o banco configurado localmente:
-
+**macOS:**
 ```bash
-# Gerar Prisma Client
-npm run db:generate
-
-# Criar as tabelas no banco
-npm run db:push
-
-# (Opcional) Popular com usuários iniciais
-npm run db:seed
+brew install postgresql@15
+brew services start postgresql@15
 ```
+
+**Linux (Ubuntu/Debian):**
+```bash
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+sudo systemctl start postgresql
+```
+
+### Passo 2: Criar Banco de Dados
+
+1. Abra o terminal/command prompt
+2. Conecte ao PostgreSQL:
+   ```bash
+   psql -U postgres
+   ```
+3. Crie o banco de dados:
+   ```sql
+   CREATE DATABASE servipro;
+   ```
+4. Saia do psql:
+   ```sql
+   \q
+   ```
+
+### Passo 3: Configurar Connection String
+
+1. Crie um arquivo `.env` na raiz do projeto
+2. Adicione (ajuste conforme sua configuração):
+   ```env
+   DATABASE_URL="postgresql://postgres:SUA_SENHA@localhost:5432/servipro"
+   ```
+3. Substitua `SUA_SENHA` pela senha do PostgreSQL
+4. Salve o arquivo
 
 ---
 
+## 📦 Passo 4: Instalar Dependências e Configurar
+
+### 4.1. Instalar Dependências
+
+```bash
+npm install
+```
+
+### 4.2. Gerar Prisma Client
+
+```bash
+npm run db:generate
+```
+
+### 4.3. Criar as Tabelas no Banco
+
+```bash
+npm run db:push
+```
+
+Este comando vai:
+- ✅ Criar todas as tabelas necessárias
+- ✅ Configurar relacionamentos
+- ✅ Aplicar índices e constraints
+
+### 4.4. Criar Usuários Iniciais (Opcional)
+
+```bash
+npm run db:seed
+```
+
+Isso criará dois usuários de teste:
+- **Usuário:** `gustavo` | **Senha:** `gustavo123`
+- **Usuário:** `giovanni` | **Senha:** `giovanni123`
+
+### 4.5. Testar Conexão
+
+```bash
+npx tsx scripts/test-database.ts
+```
+
+Este script vai:
+- ✅ Verificar se a conexão está funcionando
+- ✅ Listar todas as tabelas criadas
+- ✅ Mostrar estatísticas do banco
+
+---
+
+## Passo 5: Verificar se Funcionou
+
+
 ## Passo 4: Verificar se Funcionou
 
-### 4.1. Testar Reset de Senhas
-1. Acesse: `https://SEU-DOMINIO.vercel.app/reset`
-2. Clique em **"Resetar Senhas"**
-3. Deve aparecer: **"Senhas resetadas com sucesso!"**
+### 5.1. Testar Localmente
 
-### 4.2. Fazer Login
-1. Acesse: `https://SEU-DOMINIO.vercel.app/login`
-2. Use:
+1. Inicie o servidor de desenvolvimento:
+   ```bash
+   npm run dev
+   ```
+
+2. Acesse: `http://localhost:3000/login`
+
+3. Faça login com:
    - **Usuário:** `gustavo`
    - **Senha:** `gustavo123`
 
-### 4.3. Verificar no Neon
-1. Volte no **Neon Dashboard**
+4. Se conseguir fazer login, o banco está funcionando! ✅
+
+### 5.2. Verificar no Banco de Dados
+
+**Neon (Nuvem):**
+1. Acesse o **Neon Dashboard**
 2. Clique em **"SQL Editor"**
 3. Execute:
    ```sql
    SELECT * FROM users;
    ```
 4. Deve aparecer os usuários criados!
+
+**PostgreSQL Local:**
+```bash
+psql -U postgres -d servipro
+```
+
+Depois execute:
+```sql
+SELECT * FROM users;
+\q
+```
 
 ---
 
@@ -110,17 +221,33 @@ Agora seu sistema está usando um banco de dados real:
 
 ## 🔧 Troubleshooting
 
-### Erro: "Connection refused"
-- Verifique se a `DATABASE_URL` está correta no Vercel
-- Certifique-se que copiou a string completa
+### Erro: "DATABASE_URL não está configurada"
+- ✅ Certifique-se de ter criado o arquivo `.env` na raiz do projeto
+- ✅ Verifique se a variável `DATABASE_URL` está presente
+- ✅ Não deixe espaços antes ou depois do `=`
+
+### Erro: "Connection refused" ou "Can't reach database server"
+- ✅ Verifique se o servidor PostgreSQL está rodando (local)
+- ✅ Verifique se a `DATABASE_URL` está correta
+- ✅ Certifique-se que copiou a string completa (sem quebras de linha)
+- ✅ Para Neon, verifique se o projeto não está pausado
 
 ### Erro: "Table doesn't exist"
-- Faça um redeploy no Vercel
-- Ou execute `npm run db:push` localmente
+- ✅ Execute `npm run db:push` para criar as tabelas
+- ✅ Verifique se o Prisma Client foi gerado: `npm run db:generate`
 
 ### Erro: "Authentication failed"
-- Verifique se a senha na connection string está correta
-- Gere uma nova connection string no Neon se necessário
+- ✅ Verifique se a senha na connection string está correta
+- ✅ Para Neon, gere uma nova connection string se necessário
+- ✅ Para local, verifique a senha do usuário `postgres`
+
+### Erro: "Database does not exist"
+- ✅ Certifique-se de ter criado o banco de dados
+- ✅ Verifique se o nome do banco na `DATABASE_URL` está correto
+
+### Erro: "Prisma Client not generated"
+- ✅ Execute `npm run db:generate`
+- ✅ Verifique se todas as dependências foram instaladas: `npm install`
 
 ---
 

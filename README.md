@@ -106,6 +106,8 @@ O sistema usa Prisma ORM com PostgreSQL. O schema inclui:
 - `npm run db:push` - Aplica schema ao banco
 - `npm run db:migrate` - Cria migration
 - `npm run db:seed` - Popula banco com dados iniciais
+- `npm run db:test` - Testa conexão com o banco
+- `npm run db:setup` - Setup completo do banco
 
 ## 📝 Notas Importantes
 
