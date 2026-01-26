@@ -25,6 +25,7 @@ import {
   Wallet,
   Calendar,
   CreditCard,
+  AlertTriangle,
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useCompany } from '@/contexts/company-context'
@@ -35,6 +36,7 @@ const navigation = [
   { name: 'Historico', href: '/dashboard/historico', icon: History },
   { name: 'Faturamento', href: '/dashboard/faturamento', icon: DollarSign },
   { name: 'Pagamentos', href: '/dashboard/pagamentos', icon: CreditCard },
+  { name: 'Inadimplentes', href: '/dashboard/inadimplentes', icon: AlertTriangle },
   { name: 'Clientes', href: '/dashboard/clientes', icon: UserCircle },
   { name: 'Servicos', href: '/dashboard/servicos', icon: Wrench },
   { name: 'Funcionarios', href: '/dashboard/funcionarios', icon: Users },
