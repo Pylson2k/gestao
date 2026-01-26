@@ -22,7 +22,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import { Plus, Trash2, Edit, DollarSign, Calendar, FileText, Download } from 'lucide-react'
 import type { Expense, ExpenseCategory } from '@/lib/types'
@@ -208,115 +207,135 @@ export default function DespesasPage() {
             <Download className="w-4 h-4 mr-2" />
             Exportar CSV
           </Button>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={handleOpenDialogForNew} className="gap-2">
-                <Plus className="w-4 h-4" />
-                Nova Despesa
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>{editingExpense ? 'Editar Despesa' : 'Nova Despesa'}</DialogTitle>
-              <DialogDescription>
-                {editingExpense ? 'Atualize os dados da despesa' : 'Adicione uma nova despesa ao sistema'}
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="category">Categoria *</Label>
-                <Select
-                  value={formData.category}
-                  onValueChange={(value) => setFormData({ ...formData, category: value as ExpenseCategory })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a categoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(categoryLabels).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Descrição *</Label>
-                <Input
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Ex: Compra de material para obra X"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="amount">Valor (R$) *</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  placeholder="0.00"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="date">Data *</Label>
-                <Input
-                  id="date"
-                  type="date"
-                  value={formData.date}
-                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                />
-              </div>
-
-              {(formData.category === 'vale_funcionario' || formData.category === 'pagamento_funcionario' || formData.category === 'almoco_funcionario') && (
+          <Button onClick={handleOpenDialogForNew} className="gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30">
+            <Plus className="w-4 h-4" />
+            Nova Despesa
+          </Button>
+          
+          <Dialog open={isDialogOpen} onOpenChange={(open) => {
+            if (!open) {
+              handleCloseDialog()
+            }
+          }}>
+            <DialogContent className="max-w-md sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-bold tracking-tight">
+                  {editingExpense ? 'Editar Despesa' : 'Nova Despesa'}
+                </DialogTitle>
+                <DialogDescription>
+                  {editingExpense ? 'Atualize os dados da despesa' : 'Adicione uma nova despesa ao sistema'}
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="employeeId">Funcionário</Label>
+                  <Label htmlFor="category" className="font-medium">Categoria *</Label>
                   <Select
-                    value={formData.employeeId}
-                    onValueChange={(value) => setFormData({ ...formData, employeeId: value })}
+                    value={formData.category}
+                    onValueChange={(value) => setFormData({ ...formData, category: value as ExpenseCategory })}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o funcionário (opcional)" />
+                    <SelectTrigger className="bg-background">
+                      <SelectValue placeholder="Selecione a categoria" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Nenhum (geral)</SelectItem>
-                      {employees.filter(emp => emp.isActive).map((employee) => (
-                        <SelectItem key={employee.id} value={employee.id}>
-                          {employee.name} {employee.position ? `(${employee.position})` : ''}
+                      {Object.entries(categoryLabels).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-              )}
 
-              <div className="space-y-2">
-                <Label htmlFor="observations">Observações</Label>
-                <Textarea
-                  id="observations"
-                  value={formData.observations}
-                  onChange={(e) => setFormData({ ...formData, observations: e.target.value })}
-                  placeholder="Observações adicionais (opcional)"
-                  rows={3}
-                />
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description" className="font-medium">Descrição *</Label>
+                  <Input
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Ex: Compra de material para obra X"
+                    className="bg-background"
+                    autoComplete="off"
+                  />
+                </div>
 
-              <div className="flex gap-2 justify-end">
-                <Button type="button" variant="outline" onClick={handleCloseDialog}>
-                  Cancelar
-                </Button>
-                <Button type="submit">
-                  {editingExpense ? 'Atualizar' : 'Adicionar'}
-                </Button>
-              </div>
-            </form>
+                <div className="space-y-2">
+                  <Label htmlFor="amount" className="font-medium">Valor (R$) *</Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    value={formData.amount}
+                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                    placeholder="0.00"
+                    className="bg-background"
+                    autoComplete="off"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="date" className="font-medium">Data *</Label>
+                  <Input
+                    id="date"
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    className="bg-background"
+                  />
+                </div>
+
+                {(formData.category === 'vale_funcionario' || formData.category === 'pagamento_funcionario' || formData.category === 'almoco_funcionario') && (
+                  <div className="space-y-2">
+                    <Label htmlFor="employeeId" className="font-medium">Funcionário</Label>
+                    <Select
+                      value={formData.employeeId}
+                      onValueChange={(value) => setFormData({ ...formData, employeeId: value })}
+                    >
+                      <SelectTrigger className="bg-background">
+                        <SelectValue placeholder="Selecione o funcionário (opcional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Nenhum (geral)</SelectItem>
+                        {employees.filter(emp => emp.isActive).map((employee) => (
+                          <SelectItem key={employee.id} value={employee.id}>
+                            {employee.name} {employee.position ? `(${employee.position})` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="observations" className="font-medium">Observações</Label>
+                  <Textarea
+                    id="observations"
+                    value={formData.observations}
+                    onChange={(e) => setFormData({ ...formData, observations: e.target.value })}
+                    placeholder="Observações adicionais (opcional)"
+                    rows={3}
+                    className="bg-background resize-none"
+                    autoComplete="off"
+                  />
+                </div>
+
+                <div className="flex gap-2 justify-end pt-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={handleCloseDialog}
+                    className="rounded-xl"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button 
+                    type="submit"
+                    className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30"
+                  >
+                    {editingExpense ? 'Atualizar' : 'Adicionar'}
+                  </Button>
+                </div>
+              </form>
             </DialogContent>
           </Dialog>
         </div>
