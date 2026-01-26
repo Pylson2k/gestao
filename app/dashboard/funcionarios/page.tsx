@@ -138,19 +138,19 @@ export default function FuncionariosPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Users className="w-6 h-6" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2">
+            <Users className="w-6 h-6 sm:w-5 sm:h-5" />
             Funcionários
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm sm:text-base mt-1">
             Gerencie o cadastro de funcionários e seus gastos
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button
             variant="outline"
             onClick={() => exportEmployeesToCSV(employees)}
@@ -258,11 +258,11 @@ export default function FuncionariosPage() {
                   Funcionário ativo
                 </Label>
               </div>
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={handleCloseDialog}>
+              <div className="flex flex-col sm:flex-row justify-end gap-2">
+                <Button type="button" variant="outline" onClick={handleCloseDialog} className="min-h-[48px] text-base sm:text-sm touch-manipulation w-full sm:w-auto">
                   Cancelar
                 </Button>
-                <Button type="submit">
+                <Button type="submit" className="min-h-[48px] text-base sm:text-sm touch-manipulation w-full sm:w-auto">
                   {editingEmployee ? 'Atualizar' : 'Criar'}
                 </Button>
               </div>
@@ -275,37 +275,37 @@ export default function FuncionariosPage() {
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total de Funcionários</p>
-                <p className="text-2xl font-bold">{employees.length}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm sm:text-base text-muted-foreground">Total de Funcionários</p>
+                <p className="text-2xl sm:text-3xl font-bold">{employees.length}</p>
               </div>
-              <Users className="w-8 h-8 text-muted-foreground" />
+              <Users className="w-8 h-8 sm:w-7 sm:h-7 text-muted-foreground shrink-0 ml-3" />
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Funcionários Ativos</p>
-                <p className="text-2xl font-bold text-green-500">{activeEmployees}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm sm:text-base text-muted-foreground">Funcionários Ativos</p>
+                <p className="text-2xl sm:text-3xl font-bold text-green-500">{activeEmployees}</p>
               </div>
-              <CheckCircle className="w-8 h-8 text-green-500" />
+              <CheckCircle className="w-8 h-8 sm:w-7 sm:h-7 text-green-500 shrink-0 ml-3" />
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Funcionários Inativos</p>
-                <p className="text-2xl font-bold text-red-500">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm sm:text-base text-muted-foreground">Funcionários Inativos</p>
+                <p className="text-2xl sm:text-3xl font-bold text-red-500">
                   {employees.length - activeEmployees}
                 </p>
               </div>
-              <XCircle className="w-8 h-8 text-red-500" />
+              <XCircle className="w-8 h-8 sm:w-7 sm:h-7 text-red-500 shrink-0 ml-3" />
             </div>
           </CardContent>
         </Card>
@@ -313,20 +313,21 @@ export default function FuncionariosPage() {
 
       {/* Filters */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label>Buscar</Label>
+              <Label className="text-sm sm:text-base">Buscar</Label>
               <Input
                 placeholder="Nome, cargo ou CPF..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                className="min-h-[48px] text-base sm:text-sm"
               />
             </div>
             <div className="space-y-2">
-              <Label>Status</Label>
+              <Label className="text-sm sm:text-base">Status</Label>
               <select
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-base sm:text-sm min-h-[48px]"
                 value={filterActive}
                 onChange={(e) => setFilterActive(e.target.value)}
               >

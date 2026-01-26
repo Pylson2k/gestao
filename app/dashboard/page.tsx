@@ -131,25 +131,25 @@ export default function DashboardPage() {
   })
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Alertas */}
       {overduePendingQuotes.length > 0 && (
         <Card className="border-2 border-orange-300/50 bg-gradient-to-r from-orange-50/80 via-white to-orange-50/40 shadow-lg animate-pulse">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-orange-500/20">
-                <AlertCircle className="w-6 h-6 text-orange-600" />
+          <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+              <div className="p-3 rounded-xl bg-orange-500/20 shrink-0">
+                <AlertCircle className="w-6 h-6 sm:w-5 sm:h-5 text-orange-600" />
               </div>
-              <div className="flex-1">
-                <p className="font-bold text-foreground text-lg mb-1">
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-foreground text-base sm:text-lg mb-1">
                   {overduePendingQuotes.length} orçamento(s) pendente(s)
                 </p>
                 <p className="text-sm text-muted-foreground font-medium">
                   Orçamentos enviados há mais de 3 dias sem resposta
                 </p>
               </div>
-              <Link href="/dashboard/historico?status=sent">
-                <Button variant="outline" size="sm" className="rounded-xl border-2 hover:bg-orange-50">
+              <Link href="/dashboard/historico?status=sent" className="w-full sm:w-auto">
+                <Button variant="outline" className="rounded-xl border-2 hover:bg-orange-50 w-full sm:w-auto min-h-[48px] text-base sm:text-sm touch-manipulation">
                   Ver Pendentes
                 </Button>
               </Link>
@@ -210,12 +210,12 @@ export default function DashboardPage() {
       </div>
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
             {greeting}, {userName}!
           </h1>
-          <p className="text-muted-foreground">Gerencie seus orçamentos e acompanhe seu faturamento</p>
+          <p className="text-muted-foreground text-sm sm:text-base mt-1">Gerencie seus orçamentos e acompanhe seu faturamento</p>
         </div>
       </div>
 
@@ -259,27 +259,27 @@ export default function DashboardPage() {
             ? "border-green-200/50 bg-gradient-to-br from-green-50/80 via-white to-green-50/40" 
             : "border-red-200/50 bg-gradient-to-br from-red-50/80 via-white to-red-50/40"
         )}>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Lucro Líquido Total</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm sm:text-base font-medium text-muted-foreground mb-2">Lucro Líquido Total</p>
                 <p className={cn(
-                  "text-3xl font-bold tracking-tight",
+                  "text-2xl sm:text-3xl font-bold tracking-tight",
                   monthlyProfit >= 0 ? "text-green-600" : "text-red-600"
                 )}>
                   {formattedProfit}
                 </p>
-                <p className="text-xs text-muted-foreground mt-2 font-medium">
+                <p className="text-xs sm:text-sm text-muted-foreground mt-2 font-medium">
                   {monthlyProfit >= 0 ? '✓ Lucro' : '⚠ Prejuízo'}
                 </p>
               </div>
               <div className={cn(
-                "p-4 rounded-2xl shadow-lg",
+                "p-3 sm:p-4 rounded-2xl shadow-lg shrink-0 ml-3",
                 monthlyProfit >= 0 
                   ? "bg-gradient-to-br from-green-500 to-green-600" 
                   : "bg-gradient-to-br from-red-500 to-red-600"
               )}>
-                <DollarSign className="w-8 h-8 text-white" />
+                <DollarSign className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
               </div>
             </div>
           </CardContent>
@@ -292,12 +292,12 @@ export default function DashboardPage() {
             ? "border-blue-200/50 bg-gradient-to-br from-blue-50/80 via-white to-blue-50/40" 
             : "border-red-200/50 bg-gradient-to-br from-red-50/80 via-white to-red-50/40"
         )}>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Lucro Líquido - Gustavo</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm sm:text-base font-medium text-muted-foreground mb-2">Lucro Líquido - Gustavo</p>
                 <p className={cn(
-                  "text-3xl font-bold tracking-tight",
+                  "text-2xl sm:text-3xl font-bold tracking-tight",
                   monthlyProfit >= 0 ? "text-blue-600" : "text-red-600"
                 )}>
                   {(monthlyProfit / 2).toLocaleString('pt-BR', {
@@ -305,17 +305,17 @@ export default function DashboardPage() {
                     currency: 'BRL',
                   })}
                 </p>
-                <p className="text-xs text-muted-foreground mt-2 font-medium">
+                <p className="text-xs sm:text-sm text-muted-foreground mt-2 font-medium">
                   50% do lucro líquido
                 </p>
               </div>
               <div className={cn(
-                "p-4 rounded-2xl shadow-lg",
+                "p-3 sm:p-4 rounded-2xl shadow-lg shrink-0 ml-3",
                 monthlyProfit >= 0 
                   ? "bg-gradient-to-br from-blue-500 to-blue-600" 
                   : "bg-gradient-to-br from-red-500 to-red-600"
               )}>
-                <DollarSign className="w-8 h-8 text-white" />
+                <DollarSign className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
               </div>
             </div>
           </CardContent>
@@ -328,12 +328,12 @@ export default function DashboardPage() {
             ? "border-indigo-200/50 bg-gradient-to-br from-indigo-50/80 via-white to-indigo-50/40" 
             : "border-red-200/50 bg-gradient-to-br from-red-50/80 via-white to-red-50/40"
         )}>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">Lucro Líquido - Giovanni</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm sm:text-base font-medium text-muted-foreground mb-2">Lucro Líquido - Giovanni</p>
                 <p className={cn(
-                  "text-3xl font-bold tracking-tight",
+                  "text-2xl sm:text-3xl font-bold tracking-tight",
                   monthlyProfit >= 0 ? "text-indigo-600" : "text-red-600"
                 )}>
                   {(monthlyProfit / 2).toLocaleString('pt-BR', {
@@ -341,17 +341,17 @@ export default function DashboardPage() {
                     currency: 'BRL',
                   })}
                 </p>
-                <p className="text-xs text-muted-foreground mt-2 font-medium">
+                <p className="text-xs sm:text-sm text-muted-foreground mt-2 font-medium">
                   50% do lucro líquido
                 </p>
               </div>
               <div className={cn(
-                "p-4 rounded-2xl shadow-lg",
+                "p-3 sm:p-4 rounded-2xl shadow-lg shrink-0 ml-3",
                 monthlyProfit >= 0 
                   ? "bg-gradient-to-br from-indigo-500 to-indigo-600" 
                   : "bg-gradient-to-br from-red-500 to-red-600"
               )}>
-                <DollarSign className="w-8 h-8 text-white" />
+                <DollarSign className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
               </div>
             </div>
           </CardContent>
@@ -360,11 +360,11 @@ export default function DashboardPage() {
 
       {/* Recent Quotes */}
       <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-foreground tracking-tight">Orçamentos Recentes</h2>
-            <Link href="/dashboard/historico">
-              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-accent/50">
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Orçamentos Recentes</h2>
+            <Link href="/dashboard/historico" className="w-full sm:w-auto">
+              <Button variant="ghost" className="text-muted-foreground hover:text-foreground hover:bg-accent/50 w-full sm:w-auto min-h-[48px] text-base sm:text-sm touch-manipulation">
                 Ver todos
               </Button>
             </Link>

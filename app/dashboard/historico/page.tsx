@@ -77,33 +77,33 @@ export default function HistoryPage() {
   const hasActiveFilters = searchTerm || statusFilter !== 'all' || startDate || endDate
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border/50">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-4 border-b border-border/50">
+        <div className="flex items-center gap-3 sm:gap-4">
           <Link href="/dashboard">
-            <Button variant="ghost" size="icon" className="rounded-xl hover:bg-accent/50">
-              <ArrowLeft className="w-5 h-5" />
+            <Button variant="ghost" size="icon" className="rounded-xl hover:bg-accent/50 min-w-[48px] min-h-[48px] touch-manipulation">
+              <ArrowLeft className="w-6 h-6 sm:w-5 sm:h-5" />
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-foreground tracking-tight mb-1">Histórico de Orçamentos</h1>
-            <p className="text-muted-foreground text-sm font-medium">{filteredQuotes.length} orçamento(s) encontrado(s)</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-1">Histórico de Orçamentos</h1>
+            <p className="text-muted-foreground text-sm sm:text-base font-medium">{filteredQuotes.length} orçamento(s) encontrado(s)</p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button
             variant="outline"
             onClick={() => exportQuotesToCSV(filteredQuotes)}
             disabled={filteredQuotes.length === 0}
-            className="rounded-xl border-2 hover:bg-accent/50"
+            className="rounded-xl border-2 hover:bg-accent/50 min-h-[48px] text-base sm:text-sm touch-manipulation w-full sm:w-auto"
           >
-            <Download className="w-4 h-4 mr-2" />
+            <Download className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
             Exportar CSV
           </Button>
-          <Link href="/dashboard/novo-orcamento">
-            <Button className="gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30">
-              <Plus className="w-4 h-4" />
+          <Link href="/dashboard/novo-orcamento" className="w-full sm:w-auto">
+            <Button className="gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 min-h-[48px] text-base sm:text-sm touch-manipulation w-full sm:w-auto">
+              <Plus className="w-5 h-5 sm:w-4 sm:h-4" />
               Novo Orçamento
             </Button>
           </Link>
@@ -112,32 +112,32 @@ export default function HistoryPage() {
 
       {/* Filters */}
       <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-lg font-bold tracking-tight flex items-center gap-2">
-            <Filter className="w-5 h-5 text-primary" />
+        <CardHeader className="pb-3 sm:pb-4 p-4 sm:p-6">
+          <CardTitle className="text-lg sm:text-xl font-bold tracking-tight flex items-center gap-2">
+            <Filter className="w-5 h-5 sm:w-4 sm:h-4 text-primary" />
             Filtros
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 p-4 sm:p-6 pt-0">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="search" className="text-sm">Buscar</Label>
+              <Label htmlFor="search" className="text-sm sm:text-base">Buscar</Label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 sm:w-4 sm:h-4 text-muted-foreground" />
                 <Input
                   id="search"
                   placeholder="Cliente ou numero..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9 bg-background"
+                  className="pl-10 sm:pl-9 bg-background min-h-[48px] text-base sm:text-sm"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="status" className="text-sm">Status</Label>
+              <Label htmlFor="status" className="text-sm sm:text-base">Status</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger id="status" className="bg-background">
+                <SelectTrigger id="status" className="bg-background min-h-[48px] text-base sm:text-sm">
                   <SelectValue placeholder="Todos" />
                 </SelectTrigger>
                 <SelectContent>
@@ -151,29 +151,29 @@ export default function HistoryPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="startDate" className="text-sm">Data Inicial</Label>
+              <Label htmlFor="startDate" className="text-sm sm:text-base">Data Inicial</Label>
               <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 sm:w-4 sm:h-4 text-muted-foreground pointer-events-none" />
                 <Input
                   id="startDate"
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="pl-9 bg-background"
+                  className="pl-10 sm:pl-9 bg-background min-h-[48px] text-base sm:text-sm"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="endDate" className="text-sm">Data Final</Label>
+              <Label htmlFor="endDate" className="text-sm sm:text-base">Data Final</Label>
               <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 sm:w-4 sm:h-4 text-muted-foreground pointer-events-none" />
                 <Input
                   id="endDate"
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="pl-9 bg-background"
+                  className="pl-10 sm:pl-9 bg-background min-h-[48px] text-base sm:text-sm"
                 />
               </div>
             </div>
@@ -181,7 +181,7 @@ export default function HistoryPage() {
 
           {hasActiveFilters && (
             <div className="flex justify-end">
-              <Button variant="ghost" size="sm" onClick={clearFilters}>
+              <Button variant="ghost" onClick={clearFilters} className="min-h-[48px] text-base sm:text-sm touch-manipulation">
                 Limpar filtros
               </Button>
             </div>
@@ -234,38 +234,42 @@ function QuoteListItem({ quote }: { quote: Quote }) {
 
   return (
     <Link href={`/dashboard/orcamento/${quote.id}`}>
-      <Card className="border-border/50 bg-white/60 backdrop-blur-sm hover:shadow-xl hover:border-primary/30 transition-all duration-300 cursor-pointer hover:-translate-y-1 group">
-        <CardContent className="p-5">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 shadow-sm group-hover:scale-110 transition-transform">
-              <FileText className="w-7 h-7 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-2">
-                <h3 className="font-bold text-foreground text-lg group-hover:text-primary transition-colors">{quote.number}</h3>
-                <Badge variant="secondary" className={cn('text-xs font-semibold px-2.5 py-1', status.className)}>
-                  {status.label}
-                </Badge>
+      <Card className="border-border/50 bg-white/60 backdrop-blur-sm hover:shadow-xl hover:border-primary/30 transition-all duration-300 cursor-pointer hover:-translate-y-1 group active:scale-[0.98] touch-manipulation">
+        <CardContent className="p-4 sm:p-5">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+            <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+              <div className="flex items-center justify-center w-14 h-14 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 shadow-sm group-hover:scale-110 transition-transform shrink-0">
+                <FileText className="w-7 h-7 sm:w-6 sm:h-6 text-primary" />
               </div>
-              <p className="text-sm font-semibold text-foreground truncate mb-1">{quote.client.name}</p>
-              <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground font-medium">
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-3 h-3" />
-                  {formattedDate}
-                </span>
-                <span>{quote.services.length} serviço(s)</span>
-                <span>{quote.materials.length} material(is)</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <h3 className="font-bold text-foreground text-base sm:text-lg group-hover:text-primary transition-colors">{quote.number}</h3>
+                  <Badge variant="secondary" className={cn('text-xs font-semibold px-2.5 py-1 shrink-0', status.className)}>
+                    {status.label}
+                  </Badge>
+                </div>
+                <p className="text-sm sm:text-base font-semibold text-foreground truncate mb-1">{quote.client.name}</p>
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-2 text-xs sm:text-sm text-muted-foreground font-medium">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="w-4 h-4 sm:w-3 sm:h-3" />
+                    {formattedDate}
+                  </span>
+                  <span>{quote.services.length} serviço(s)</span>
+                  <span>{quote.materials.length} material(is)</span>
+                </div>
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-xl font-bold text-primary mb-1">{formattedTotal}</p>
-              {quote.discount > 0 && (
-                <p className="text-xs text-destructive font-medium">
-                  Desc: {quote.discount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                </p>
-              )}
+            <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+              <div className="text-left sm:text-right">
+                <p className="text-xl sm:text-2xl font-bold text-primary mb-1">{formattedTotal}</p>
+                {quote.discount > 0 && (
+                  <p className="text-xs sm:text-sm text-destructive font-medium">
+                    Desc: {quote.discount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </p>
+                )}
+              </div>
+              <ChevronRight className="w-6 h-6 sm:w-5 sm:h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0" />
             </div>
-            <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
           </div>
         </CardContent>
       </Card>

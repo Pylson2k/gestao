@@ -153,49 +153,61 @@ export function QuoteCard({ quote }: QuoteCardProps) {
   }
 
   return (
-    <Card className="border-border/50 bg-white/60 backdrop-blur-sm hover:shadow-lg hover:border-primary/20 transition-all duration-300 hover:-translate-y-0.5">
-      <CardContent className="p-5">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 shadow-sm">
-            <FileText className="w-6 h-6 text-primary" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
-              <h3 className="font-semibold text-foreground truncate">{quote.number}</h3>
-              <Badge variant="secondary" className={cn('text-xs font-medium px-2 py-0.5', status.className)}>
-                {status.label}
-              </Badge>
+    <Card className="border-border/50 bg-white/60 backdrop-blur-sm hover:shadow-lg hover:border-primary/20 transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.98] touch-manipulation">
+      <CardContent className="p-4 sm:p-5">
+        <Link href={`/dashboard/orcamento/${quote.id}`} className="block">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+            <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+              <div className="flex items-center justify-center w-12 h-12 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 shadow-sm shrink-0">
+                <FileText className="w-6 h-6 sm:w-5 sm:h-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-2 mb-1 sm:mb-2">
+                  <h3 className="font-semibold text-base sm:text-sm text-foreground truncate">{quote.number}</h3>
+                  <Badge variant="secondary" className={cn('text-xs font-medium px-2 py-0.5 shrink-0', status.className)}>
+                    {status.label}
+                  </Badge>
+                </div>
+                <p className="text-sm sm:text-base font-medium text-foreground truncate mb-1">{quote.client.name}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">{formattedDate}</p>
+              </div>
             </div>
-            <p className="text-sm font-medium text-foreground truncate mb-1">{quote.client.name}</p>
-            <p className="text-xs text-muted-foreground">{formattedDate}</p>
-          </div>
-          <div className="text-right">
-            <p className="font-bold text-lg text-foreground">{formattedTotal}</p>
-          </div>
-          
-          {/* Botões de ação para orçamentos aprovados */}
-          {quote.status === 'approved' && (
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleStartServiceClick}
-                className="text-blue-600 border-blue-600 hover:bg-blue-50"
-              >
-                <Play className="w-3 h-3 mr-1" />
-                Iniciar
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCancelService}
-                className="text-orange-600 border-orange-600 hover:bg-orange-50"
-              >
-                <X className="w-3 h-3 mr-1" />
-                Cancelar
-              </Button>
-            </div>
-          )}
+            <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+              <div className="text-left sm:text-right">
+                <p className="font-bold text-lg sm:text-xl text-foreground">{formattedTotal}</p>
+              </div>
+              
+              {/* Botões de ação para orçamentos aprovados */}
+              {quote.status === 'approved' && (
+                <div className="flex gap-2 shrink-0" onClick={(e) => e.preventDefault()}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      handleStartServiceClick()
+                    }}
+                    className="text-blue-600 border-blue-600 hover:bg-blue-50 min-h-[40px] sm:min-h-[36px] text-sm touch-manipulation"
+                  >
+                    <Play className="w-4 h-4 sm:w-3 sm:h-3 mr-1" />
+                    <span className="hidden sm:inline">Iniciar</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      handleCancelService()
+                    }}
+                    className="text-orange-600 border-orange-600 hover:bg-orange-50 min-h-[40px] sm:min-h-[36px] text-sm touch-manipulation"
+                  >
+                    <X className="w-4 h-4 sm:w-3 sm:h-3 mr-1" />
+                    <span className="hidden sm:inline">Cancelar</span>
+                  </Button>
+                </div>
+              )}
 
           {/* Dialog de desconto ao iniciar serviço */}
           <Dialog open={showDiscountDialog} onOpenChange={setShowDiscountDialog}>
@@ -299,25 +311,29 @@ export function QuoteCard({ quote }: QuoteCardProps) {
             </DialogContent>
           </Dialog>
 
-          {/* Botão para finalizar quando em serviço */}
-          {quote.status === 'in_progress' && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleCompleteService}
-              className="text-green-600 border-green-600 hover:bg-green-50"
-            >
-              <CheckCircle2 className="w-3 h-3 mr-1" />
-              Finalizar
-            </Button>
-          )}
+              {/* Botão para finalizar quando em serviço */}
+              {quote.status === 'in_progress' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    handleCompleteService()
+                  }}
+                  className="text-green-600 border-green-600 hover:bg-green-50 min-h-[40px] sm:min-h-[36px] text-sm touch-manipulation"
+                >
+                  <CheckCircle2 className="w-4 h-4 sm:w-3 sm:h-3 mr-1" />
+                  <span className="hidden sm:inline">Finalizar</span>
+                </Button>
+              )}
 
-          <Link href={`/dashboard/orcamento/${quote.id}`}>
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-              <ChevronRight className="w-5 h-5" />
-            </Button>
-          </Link>
-        </div>
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground min-w-[48px] min-h-[48px] sm:min-w-[40px] sm:min-h-[40px] touch-manipulation shrink-0">
+                <ChevronRight className="w-6 h-6 sm:w-5 sm:h-5" />
+              </Button>
+            </div>
+          </div>
+        </Link>
       </CardContent>
     </Card>
   )

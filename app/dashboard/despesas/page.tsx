@@ -191,24 +191,25 @@ export default function DespesasPage() {
   const hasActiveFilters = filterCategory !== 'all' || filterStartDate || filterEndDate
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border/50">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-4 border-b border-border/50">
         <div>
-          <h1 className="text-3xl font-bold text-foreground tracking-tight mb-2">Despesas</h1>
-          <p className="text-muted-foreground text-sm font-medium">Gerencie todas as despesas da empresa</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-2">Despesas</h1>
+          <p className="text-muted-foreground text-sm sm:text-base font-medium">Gerencie todas as despesas da empresa</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button
             variant="outline"
             onClick={() => exportExpensesToCSV(filteredExpenses)}
             disabled={filteredExpenses.length === 0}
+            className="min-h-[48px] text-base sm:text-sm touch-manipulation w-full sm:w-auto"
           >
-            <Download className="w-4 h-4 mr-2" />
+            <Download className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
             Exportar CSV
           </Button>
-          <Button onClick={handleOpenDialogForNew} className="gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30">
-            <Plus className="w-4 h-4" />
+          <Button onClick={handleOpenDialogForNew} className="gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 min-h-[48px] text-base sm:text-sm touch-manipulation w-full sm:w-auto">
+            <Plus className="w-5 h-5 sm:w-4 sm:h-4" />
             Nova Despesa
           </Button>
           
@@ -217,23 +218,23 @@ export default function DespesasPage() {
               handleCloseDialog()
             }
           }}>
-            <DialogContent className="max-w-md sm:max-w-lg">
+            <DialogContent className="max-w-md sm:max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="text-xl font-bold tracking-tight">
+                <DialogTitle className="text-xl sm:text-2xl font-bold tracking-tight">
                   {editingExpense ? 'Editar Despesa' : 'Nova Despesa'}
                 </DialogTitle>
-                <DialogDescription>
+                <DialogDescription className="text-sm sm:text-base">
                   {editingExpense ? 'Atualize os dados da despesa' : 'Adicione uma nova despesa ao sistema'}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="category" className="font-medium">Categoria *</Label>
+                  <Label htmlFor="category" className="font-medium text-sm sm:text-base">Categoria *</Label>
                   <Select
                     value={formData.category}
                     onValueChange={(value) => setFormData({ ...formData, category: value as ExpenseCategory })}
                   >
-                    <SelectTrigger className="bg-background">
+                    <SelectTrigger className="bg-background min-h-[48px] text-base sm:text-sm">
                       <SelectValue placeholder="Selecione a categoria" />
                     </SelectTrigger>
                     <SelectContent>
@@ -247,19 +248,19 @@ export default function DespesasPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description" className="font-medium">Descrição *</Label>
+                  <Label htmlFor="description" className="font-medium text-sm sm:text-base">Descrição *</Label>
                   <Input
                     id="description"
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Ex: Compra de material para obra X"
-                    className="bg-background"
+                    className="bg-background min-h-[48px] text-base sm:text-sm"
                     autoComplete="off"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="amount" className="font-medium">Valor (R$) *</Label>
+                  <Label htmlFor="amount" className="font-medium text-sm sm:text-base">Valor (R$) *</Label>
                   <Input
                     id="amount"
                     type="number"
@@ -268,19 +269,19 @@ export default function DespesasPage() {
                     value={formData.amount}
                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                     placeholder="0.00"
-                    className="bg-background"
+                    className="bg-background min-h-[48px] text-base sm:text-sm"
                     autoComplete="off"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="date" className="font-medium">Data *</Label>
+                  <Label htmlFor="date" className="font-medium text-sm sm:text-base">Data *</Label>
                   <Input
                     id="date"
                     type="date"
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    className="bg-background"
+                    className="bg-background min-h-[48px] text-base sm:text-sm"
                   />
                 </div>
 
@@ -307,30 +308,30 @@ export default function DespesasPage() {
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="observations" className="font-medium">Observações</Label>
+                  <Label htmlFor="observations" className="font-medium text-sm sm:text-base">Observações</Label>
                   <Textarea
                     id="observations"
                     value={formData.observations}
                     onChange={(e) => setFormData({ ...formData, observations: e.target.value })}
                     placeholder="Observações adicionais (opcional)"
                     rows={3}
-                    className="bg-background resize-none"
+                    className="bg-background resize-none text-base sm:text-sm min-h-[100px]"
                     autoComplete="off"
                   />
                 </div>
 
-                <div className="flex gap-2 justify-end pt-2">
+                <div className="flex flex-col sm:flex-row gap-2 justify-end pt-2">
                   <Button 
                     type="button" 
                     variant="outline" 
                     onClick={handleCloseDialog}
-                    className="rounded-xl"
+                    className="rounded-xl min-h-[48px] text-base sm:text-sm touch-manipulation w-full sm:w-auto"
                   >
                     Cancelar
                   </Button>
                   <Button 
                     type="submit"
-                    className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30"
+                    className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 min-h-[48px] text-base sm:text-sm touch-manipulation w-full sm:w-auto"
                   >
                     {editingExpense ? 'Atualizar' : 'Adicionar'}
                   </Button>
@@ -343,19 +344,19 @@ export default function DespesasPage() {
 
       {/* Total Card */}
       <Card className="border-2 border-red-200/50 bg-gradient-to-br from-red-50/80 via-white to-red-50/40 shadow-lg">
-        <CardContent className="pt-6">
+        <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground mb-2">Total de Despesas</p>
-              <p className="text-3xl font-bold text-red-600 tracking-tight">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm sm:text-base font-medium text-muted-foreground mb-2">Total de Despesas</p>
+              <p className="text-2xl sm:text-3xl font-bold text-red-600 tracking-tight">
                 {totalExpenses.toLocaleString('pt-BR', {
                   style: 'currency',
                   currency: 'BRL',
                 })}
               </p>
             </div>
-            <div className="p-4 rounded-2xl bg-gradient-to-br from-red-500 to-red-600 shadow-lg">
-              <DollarSign className="w-8 h-8 text-white" />
+            <div className="p-3 sm:p-4 rounded-2xl bg-gradient-to-br from-red-500 to-red-600 shadow-lg shrink-0 ml-3">
+              <DollarSign className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
             </div>
           </div>
         </CardContent>
@@ -363,15 +364,15 @@ export default function DespesasPage() {
 
       {/* Filters */}
       <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-lg font-bold tracking-tight">Filtros</CardTitle>
+        <CardHeader className="pb-3 sm:pb-4 p-4 sm:p-6">
+          <CardTitle className="text-lg sm:text-xl font-bold tracking-tight">Filtros</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <CardContent className="p-4 sm:p-6 pt-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label>Categoria</Label>
+              <Label className="text-sm sm:text-base">Categoria</Label>
               <Select value={filterCategory} onValueChange={setFilterCategory}>
-                <SelectTrigger>
+                <SelectTrigger className="min-h-[48px] text-base sm:text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -386,26 +387,28 @@ export default function DespesasPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Data Inicial</Label>
+              <Label className="text-sm sm:text-base">Data Inicial</Label>
               <Input
                 type="date"
                 value={filterStartDate}
                 onChange={(e) => setFilterStartDate(e.target.value)}
+                className="min-h-[48px] text-base sm:text-sm"
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Data Final</Label>
+              <Label className="text-sm sm:text-base">Data Final</Label>
               <Input
                 type="date"
                 value={filterEndDate}
                 onChange={(e) => setFilterEndDate(e.target.value)}
+                className="min-h-[48px] text-base sm:text-sm"
               />
             </div>
 
-            <div className="flex items-end">
+            <div className="flex items-end sm:col-span-2 lg:col-span-1">
               {hasActiveFilters && (
-                <Button variant="outline" onClick={clearFilters} className="w-full">
+                <Button variant="outline" onClick={clearFilters} className="w-full min-h-[48px] text-base sm:text-sm touch-manipulation">
                   Limpar Filtros
                 </Button>
               )}
@@ -424,49 +427,49 @@ export default function DespesasPage() {
       ) : filteredExpenses.length > 0 ? (
         <div className="space-y-3">
           {filteredExpenses.map((expense) => (
-            <Card key={expense.id} className="border-border/50 bg-white/60 backdrop-blur-sm hover:shadow-lg hover:border-primary/20 transition-all duration-300 hover:-translate-y-0.5">
-              <CardContent className="p-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Badge className={cn('text-xs font-semibold px-2.5 py-1', categoryColors[expense.category])}>
+            <Card key={expense.id} className="border-border/50 bg-white/60 backdrop-blur-sm hover:shadow-lg hover:border-primary/20 transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.98] touch-manipulation">
+              <CardContent className="p-4 sm:p-5">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                  <div className="flex-1 min-w-0 w-full sm:w-auto">
+                    <div className="flex flex-wrap items-center gap-2 mb-2 sm:mb-3">
+                      <Badge className={cn('text-xs font-semibold px-2.5 py-1 shrink-0', categoryColors[expense.category])}>
                         {categoryLabels[expense.category]}
                       </Badge>
                       <span className="text-sm text-muted-foreground font-medium flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
+                        <Calendar className="w-4 h-4 sm:w-3 sm:h-3" />
                         {new Date(expense.date).toLocaleDateString('pt-BR')}
                       </span>
                     </div>
-                    <h3 className="font-semibold text-foreground mb-1.5 text-base">{expense.description}</h3>
+                    <h3 className="font-semibold text-foreground mb-1.5 text-base sm:text-lg">{expense.description}</h3>
                     {expense.observations && (
-                      <p className="text-sm text-muted-foreground italic">{expense.observations}</p>
+                      <p className="text-sm sm:text-base text-muted-foreground italic">{expense.observations}</p>
                     )}
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="font-bold text-foreground text-xl">
+                  <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+                    <div className="text-left sm:text-right">
+                      <p className="font-bold text-foreground text-xl sm:text-2xl">
                         {expense.amount.toLocaleString('pt-BR', {
                           style: 'currency',
                           currency: 'BRL',
                         })}
                       </p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 shrink-0">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => handleOpenDialog(expense)}
-                        className="rounded-lg hover:bg-accent/50"
+                        className="rounded-lg hover:bg-accent/50 min-w-[48px] min-h-[48px] sm:min-w-[40px] sm:min-h-[40px] touch-manipulation"
                       >
-                        <Edit className="w-4 h-4" />
+                        <Edit className="w-5 h-5 sm:w-4 sm:h-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDelete(expense.id)}
-                        className="rounded-lg hover:bg-destructive/10"
+                        className="rounded-lg hover:bg-destructive/10 min-w-[48px] min-h-[48px] sm:min-w-[40px] sm:min-h-[40px] touch-manipulation"
                       >
-                        <Trash2 className="w-4 h-4 text-destructive" />
+                        <Trash2 className="w-5 h-5 sm:w-4 sm:h-4 text-destructive" />
                       </Button>
                     </div>
                   </div>

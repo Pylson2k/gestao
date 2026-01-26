@@ -62,10 +62,10 @@ export function Sidebar() {
       {/* Mobile menu button */}
       <button
         type="button"
-        className="fixed top-4 left-4 z-50 lg:hidden p-2 rounded-lg bg-sidebar text-sidebar-foreground"
+        className="fixed top-4 left-4 z-50 lg:hidden p-3 rounded-lg bg-sidebar text-sidebar-foreground min-w-[48px] min-h-[48px] touch-manipulation shadow-lg"
         onClick={() => setMobileOpen(!mobileOpen)}
       >
-        {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
       </button>
 
       {/* Mobile overlay */}
@@ -103,7 +103,7 @@ export function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-3 sm:p-4 space-y-1 sm:space-y-1 overflow-y-auto">
           {navigation.map((item) => {
             const isActive = pathname === item.href
             return (
@@ -112,14 +112,14 @@ export function Sidebar() {
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
                 className={cn(
-                  'flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group',
+                  'flex items-center gap-3 px-4 py-3 sm:py-2.5 rounded-xl text-base sm:text-sm font-medium transition-all duration-200 group min-h-[48px] touch-manipulation',
                   isActive
                     ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30'
-                    : 'text-slate-300 hover:bg-slate-700/50 hover:text-white hover:translate-x-1'
+                    : 'text-slate-300 hover:bg-slate-700/50 hover:text-white hover:translate-x-1 active:scale-[0.98]'
                 )}
               >
                 <item.icon className={cn(
-                  'w-5 h-5 transition-transform',
+                  'w-6 h-6 sm:w-5 sm:h-5 transition-transform shrink-0',
                   isActive ? 'scale-110' : 'group-hover:scale-110'
                 )} />
                 <span className={cn(
@@ -146,10 +146,10 @@ export function Sidebar() {
           </div>
           <Button
             variant="ghost"
-            className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-xl transition-all"
+            className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-xl transition-all min-h-[48px] text-base sm:text-sm touch-manipulation"
             onClick={handleLogout}
           >
-            <LogOut className="w-5 h-5 mr-3" />
+            <LogOut className="w-6 h-6 sm:w-5 sm:h-5 mr-3" />
             Sair
           </Button>
         </div>

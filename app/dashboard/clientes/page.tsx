@@ -111,40 +111,41 @@ export default function ClientesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <UserCircle className="w-6 h-6" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2">
+            <UserCircle className="w-6 h-6 sm:w-5 sm:h-5" />
             Clientes
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm sm:text-base mt-1">
             Gerencie o cadastro de clientes e seus orçamentos
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button
             variant="outline"
             onClick={() => exportClientsToCSV(clients)}
             disabled={clients.length === 0}
+            className="min-h-[48px] text-base sm:text-sm touch-manipulation w-full sm:w-auto"
           >
-            <Download className="w-4 h-4 mr-2" />
+            <Download className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
             Exportar CSV
           </Button>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button onClick={() => handleOpenDialog()}>
-                <Plus className="w-4 h-4 mr-2" />
+              <Button onClick={() => handleOpenDialog()} className="min-h-[48px] text-base sm:text-sm touch-manipulation w-full sm:w-auto">
+                <Plus className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
                 Novo Cliente
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>
+              <DialogTitle className="text-xl sm:text-2xl">
                 {editingClient ? 'Editar Cliente' : 'Novo Cliente'}
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="text-sm sm:text-base">
                 {editingClient
                   ? 'Atualize as informações do cliente'
                   : 'Preencha os dados do novo cliente'}
@@ -153,51 +154,55 @@ export default function ClientesPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Nome *</Label>
+                  <Label htmlFor="name" className="text-sm sm:text-base">Nome *</Label>
                   <Input
                     id="name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
                     placeholder="Nome completo ou razão social"
+                    className="min-h-[48px] text-base sm:text-sm"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Telefone *</Label>
+                  <Label htmlFor="phone" className="text-sm sm:text-base">Telefone *</Label>
                   <Input
                     id="phone"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     required
                     placeholder="(00) 00000-0000"
+                    className="min-h-[48px] text-base sm:text-sm"
                   />
                 </div>
                 <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="address">Endereço *</Label>
+                  <Label htmlFor="address" className="text-sm sm:text-base">Endereço *</Label>
                   <Input
                     id="address"
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     required
                     placeholder="Endereço completo"
+                    className="min-h-[48px] text-base sm:text-sm"
                   />
                 </div>
                 <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email" className="text-sm sm:text-base">Email</Label>
                   <Input
                     id="email"
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="email@exemplo.com"
+                    className="min-h-[48px] text-base sm:text-sm"
                   />
                 </div>
               </div>
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={handleCloseDialog}>
+              <div className="flex flex-col sm:flex-row justify-end gap-2">
+                <Button type="button" variant="outline" onClick={handleCloseDialog} className="min-h-[48px] text-base sm:text-sm touch-manipulation w-full sm:w-auto">
                   Cancelar
                 </Button>
-                <Button type="submit">
+                <Button type="submit" className="min-h-[48px] text-base sm:text-sm touch-manipulation w-full sm:w-auto">
                   {editingClient ? 'Atualizar' : 'Criar'}
                 </Button>
               </div>
@@ -209,26 +214,27 @@ export default function ClientesPage() {
 
       {/* Stats */}
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Total de Clientes</p>
-              <p className="text-2xl font-bold">{clients.length}</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm sm:text-base text-muted-foreground">Total de Clientes</p>
+              <p className="text-2xl sm:text-3xl font-bold">{clients.length}</p>
             </div>
-            <UserCircle className="w-8 h-8 text-muted-foreground" />
+            <UserCircle className="w-8 h-8 sm:w-7 sm:h-7 text-muted-foreground shrink-0 ml-3" />
           </div>
         </CardContent>
       </Card>
 
       {/* Search */}
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
           <div className="space-y-2">
-            <Label>Buscar Cliente</Label>
+            <Label className="text-sm sm:text-base">Buscar Cliente</Label>
             <Input
               placeholder="Nome, telefone, endereço ou email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              className="min-h-[48px] text-base sm:text-sm"
             />
           </div>
         </CardContent>
@@ -242,30 +248,30 @@ export default function ClientesPage() {
           </CardContent>
         </Card>
       ) : filteredClients.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredClients.map((client) => (
-            <Card key={client.id} className="border-border">
-              <CardHeader>
+            <Card key={client.id} className="border-border hover:shadow-lg transition-all duration-300 active:scale-[0.98] touch-manipulation">
+              <CardHeader className="p-4 sm:p-6">
                 <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg">{client.name}</CardTitle>
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-lg sm:text-xl">{client.name}</CardTitle>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3 text-sm">
+              <CardContent className="p-4 sm:p-6 pt-0">
+                <div className="space-y-3 text-sm sm:text-base">
                   <div className="flex items-center gap-2 text-muted-foreground">
-                    <Phone className="w-4 h-4" />
-                    <span>{client.phone}</span>
+                    <Phone className="w-5 h-5 sm:w-4 sm:h-4 shrink-0" />
+                    <span className="break-words">{client.phone}</span>
                   </div>
                   <div className="flex items-start gap-2 text-muted-foreground">
-                    <MapPin className="w-4 h-4 mt-0.5" />
-                    <span className="flex-1">{client.address}</span>
+                    <MapPin className="w-5 h-5 sm:w-4 sm:h-4 mt-0.5 shrink-0" />
+                    <span className="flex-1 break-words">{client.address}</span>
                   </div>
                   {client.email && (
                     <div className="flex items-center gap-2 text-muted-foreground">
-                      <Mail className="w-4 h-4" />
-                      <span>{client.email}</span>
+                      <Mail className="w-5 h-5 sm:w-4 sm:h-4 shrink-0" />
+                      <span className="break-words">{client.email}</span>
                     </div>
                   )}
                   {(() => {
@@ -298,45 +304,42 @@ export default function ClientesPage() {
                     )
                   })()}
                 </div>
-                <div className="flex gap-2 mt-4">
+                <div className="flex flex-col sm:flex-row gap-2 mt-4">
                   <Button
                     variant="outline"
-                    size="sm"
-                    className="flex-1"
+                    className="flex-1 min-h-[48px] text-base sm:text-sm touch-manipulation"
                     onClick={() => handleOpenDialog(client)}
                   >
-                    <Edit className="w-4 h-4 mr-2" />
+                    <Edit className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
                     Editar
                   </Button>
                   <Button
                     variant="outline"
-                    size="sm"
-                    className="flex-1"
+                    className="flex-1 min-h-[48px] text-base sm:text-sm touch-manipulation"
                     onClick={() => setSelectedClientId(selectedClientId === client.id ? null : client.id)}
                   >
-                    <FileText className="w-4 h-4 mr-2" />
+                    <FileText className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
                     Histórico
                   </Button>
                   <Button
                     variant="outline"
-                    size="sm"
-                    className="flex-1"
+                    className="flex-1 min-h-[48px] text-base sm:text-sm touch-manipulation text-destructive hover:bg-destructive/10"
                     onClick={() => handleDelete(client.id)}
                   >
-                    <Trash2 className="w-4 h-4 mr-2" />
+                    <Trash2 className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
                     Excluir
                   </Button>
                 </div>
                 {selectedClientId === client.id && (
                   <div className="mt-4 pt-4 border-t">
-                    <h4 className="font-semibold text-sm mb-2">Histórico de Orçamentos</h4>
+                    <h4 className="font-semibold text-sm sm:text-base mb-2">Histórico de Orçamentos</h4>
                     {(() => {
                       const clientQuotes = quotes
                         .filter(q => q.client.id === client.id)
                         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                       
                       if (clientQuotes.length === 0) {
-                        return <p className="text-xs text-muted-foreground">Nenhum orçamento encontrado</p>
+                        return <p className="text-xs sm:text-sm text-muted-foreground">Nenhum orçamento encontrado</p>
                       }
                       
                       return (
@@ -345,17 +348,17 @@ export default function ClientesPage() {
                             <Link
                               key={quote.id}
                               href={`/dashboard/orcamento/${quote.id}`}
-                              className="block p-2 rounded border hover:bg-accent transition-colors"
+                              className="block p-3 sm:p-2 rounded border hover:bg-accent transition-colors active:scale-[0.98] touch-manipulation"
                             >
-                              <div className="flex items-center justify-between">
-                                <div className="flex-1">
-                                  <p className="text-xs font-medium">{quote.number}</p>
-                                  <p className="text-xs text-muted-foreground">
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm sm:text-xs font-medium">{quote.number}</p>
+                                  <p className="text-xs sm:text-xs text-muted-foreground">
                                     {new Date(quote.createdAt).toLocaleDateString('pt-BR')}
                                   </p>
                                 </div>
-                                <div className="text-right">
-                                  <p className="text-xs font-semibold">
+                                <div className="text-left sm:text-right w-full sm:w-auto">
+                                  <p className="text-sm sm:text-xs font-semibold">
                                     {quote.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                                   </p>
                                   <Badge variant="outline" className="text-xs mt-1">
@@ -396,8 +399,8 @@ export default function ClientesPage() {
                   : 'Tente ajustar os termos de busca'}
               </p>
               {clients.length === 0 && (
-                <Button onClick={() => handleOpenDialog()}>
-                  <Plus className="w-4 h-4 mr-2" />
+                <Button onClick={() => handleOpenDialog()} className="min-h-[48px] text-base sm:text-sm touch-manipulation">
+                  <Plus className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
                   Cadastrar Cliente
                 </Button>
               )}

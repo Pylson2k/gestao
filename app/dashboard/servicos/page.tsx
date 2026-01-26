@@ -216,40 +216,41 @@ export default function ServicosPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Wrench className="w-6 h-6" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2">
+            <Wrench className="w-6 h-6 sm:w-5 sm:h-5" />
             Serviços
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm sm:text-base mt-1">
             Cadastre serviços para agilizar a criação de orçamentos
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button
             variant="outline"
             onClick={handleExport}
             disabled={(allServices.length > 0 ? allServices : services).length === 0}
+            className="min-h-[48px] text-base sm:text-sm touch-manipulation w-full sm:w-auto"
           >
-            <Download className="w-4 h-4 mr-2" />
+            <Download className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
             Exportar CSV
           </Button>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button onClick={() => handleOpenDialog()}>
-                <Plus className="w-4 h-4 mr-2" />
+              <Button onClick={() => handleOpenDialog()} className="min-h-[48px] text-base sm:text-sm touch-manipulation w-full sm:w-auto">
+                <Plus className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
                 Novo Serviço
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>
+                <DialogTitle className="text-xl sm:text-2xl">
                   {editingService ? 'Editar Serviço' : 'Novo Serviço'}
                 </DialogTitle>
-                <DialogDescription>
+                <DialogDescription className="text-sm sm:text-base">
                   {editingService
                     ? 'Atualize as informações do serviço'
                     : 'Preencha os dados do novo serviço'}
@@ -258,17 +259,18 @@ export default function ServicosPage() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="name">Nome do Serviço *</Label>
+                    <Label htmlFor="name" className="text-sm sm:text-base">Nome do Serviço *</Label>
                     <Input
                       id="name"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       required
                       placeholder="Ex: Instalação elétrica, Pintura, etc"
+                      className="min-h-[48px] text-base sm:text-sm"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="unitPrice">Preço Unitário (R$) *</Label>
+                    <Label htmlFor="unitPrice" className="text-sm sm:text-base">Preço Unitário (R$) *</Label>
                     <Input
                       id="unitPrice"
                       type="number"
@@ -278,15 +280,16 @@ export default function ServicosPage() {
                       onChange={(e) => setFormData({ ...formData, unitPrice: e.target.value })}
                       required
                       placeholder="0.00"
+                      className="min-h-[48px] text-base sm:text-sm"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="unit">Unidade de Medida *</Label>
+                    <Label htmlFor="unit" className="text-sm sm:text-base">Unidade de Medida *</Label>
                     <Select
                       value={formData.unit}
                       onValueChange={(value) => setFormData({ ...formData, unit: value })}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="min-h-[48px] text-base sm:text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -299,13 +302,14 @@ export default function ServicosPage() {
                     </Select>
                   </div>
                   <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="description">Descrição</Label>
+                    <Label htmlFor="description" className="text-sm sm:text-base">Descrição</Label>
                     <Textarea
                       id="description"
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       placeholder="Descrição detalhada do serviço (opcional)"
                       rows={3}
+                      className="text-base sm:text-sm min-h-[100px]"
                     />
                   </div>
                 </div>
@@ -315,17 +319,17 @@ export default function ServicosPage() {
                     id="isActive"
                     checked={formData.isActive}
                     onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                    className="rounded border-gray-300"
+                    className="rounded border-gray-300 w-5 h-5 sm:w-4 sm:h-4"
                   />
-                  <Label htmlFor="isActive" className="cursor-pointer">
+                  <Label htmlFor="isActive" className="cursor-pointer text-sm sm:text-base">
                     Serviço ativo
                   </Label>
                 </div>
-                <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={handleCloseDialog}>
+                <div className="flex flex-col sm:flex-row justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={handleCloseDialog} className="min-h-[48px] text-base sm:text-sm touch-manipulation w-full sm:w-auto">
                     Cancelar
                   </Button>
-                  <Button type="submit">
+                  <Button type="submit" className="min-h-[48px] text-base sm:text-sm touch-manipulation w-full sm:w-auto">
                     {editingService ? 'Atualizar' : 'Criar'}
                   </Button>
                 </div>
@@ -338,37 +342,37 @@ export default function ServicosPage() {
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total de Serviços</p>
-                <p className="text-2xl font-bold">{(allServices.length > 0 ? allServices : services).length}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm sm:text-base text-muted-foreground">Total de Serviços</p>
+                <p className="text-2xl sm:text-3xl font-bold">{(allServices.length > 0 ? allServices : services).length}</p>
               </div>
-              <Wrench className="w-8 h-8 text-muted-foreground" />
+              <Wrench className="w-8 h-8 sm:w-7 sm:h-7 text-muted-foreground shrink-0 ml-3" />
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Serviços Ativos</p>
-                <p className="text-2xl font-bold text-green-500">{activeServices}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm sm:text-base text-muted-foreground">Serviços Ativos</p>
+                <p className="text-2xl sm:text-3xl font-bold text-green-500">{activeServices}</p>
               </div>
-              <CheckCircle className="w-8 h-8 text-green-500" />
+              <CheckCircle className="w-8 h-8 sm:w-7 sm:h-7 text-green-500 shrink-0 ml-3" />
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Serviços Inativos</p>
-                <p className="text-2xl font-bold text-red-500">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm sm:text-base text-muted-foreground">Serviços Inativos</p>
+                <p className="text-2xl sm:text-3xl font-bold text-red-500">
                   {(allServices.length > 0 ? allServices : services).length - activeServices}
                 </p>
               </div>
-              <XCircle className="w-8 h-8 text-red-500" />
+              <XCircle className="w-8 h-8 sm:w-7 sm:h-7 text-red-500 shrink-0 ml-3" />
             </div>
           </CardContent>
         </Card>
@@ -376,20 +380,21 @@ export default function ServicosPage() {
 
       {/* Filters */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label>Buscar</Label>
+              <Label className="text-sm sm:text-base">Buscar</Label>
               <Input
                 placeholder="Nome, descrição ou unidade..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                className="min-h-[48px] text-base sm:text-sm"
               />
             </div>
             <div className="space-y-2">
-              <Label>Status</Label>
+              <Label className="text-sm sm:text-base">Status</Label>
               <select
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-base sm:text-sm min-h-[48px]"
                 value={filterActive}
                 onChange={(e) => setFilterActive(e.target.value)}
               >
@@ -447,23 +452,21 @@ export default function ServicosPage() {
                     </div>
                   )}
                 </div>
-                <div className="flex gap-2 mt-4">
+                <div className="flex flex-col sm:flex-row gap-2 mt-4">
                   <Button
                     variant="outline"
-                    size="sm"
-                    className="flex-1"
+                    className="flex-1 min-h-[48px] text-base sm:text-sm touch-manipulation"
                     onClick={() => handleOpenDialog(service)}
                   >
-                    <Edit className="w-4 h-4 mr-2" />
+                    <Edit className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
                     Editar
                   </Button>
                   <Button
                     variant="outline"
-                    size="sm"
-                    className="flex-1"
+                    className="flex-1 min-h-[48px] text-base sm:text-sm touch-manipulation text-destructive hover:bg-destructive/10"
                     onClick={() => handleDelete(service.id)}
                   >
-                    <Trash2 className="w-4 h-4 mr-2" />
+                    <Trash2 className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
                     Excluir
                   </Button>
                 </div>
@@ -485,8 +488,8 @@ export default function ServicosPage() {
                   : 'Nenhum serviço corresponde aos filtros selecionados'}
               </p>
               {(allServices.length > 0 ? allServices : services).length === 0 && (
-                <Button onClick={() => handleOpenDialog()}>
-                  <Plus className="w-4 h-4 mr-2" />
+                <Button onClick={() => handleOpenDialog()} className="min-h-[48px] text-base sm:text-sm touch-manipulation">
+                  <Plus className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
                   Cadastrar Serviço
                 </Button>
               )}

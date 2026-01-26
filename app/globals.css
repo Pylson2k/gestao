@@ -137,13 +137,24 @@
     font-size: 16px !important; /* Previne zoom automático no iOS */
   }
 
-  /* Melhora o touch target em mobile */
+  /* Melhora o touch target em mobile - mobile-first */
   button,
-  a {
-    min-height: 44px;
-    min-width: 44px;
+  a,
+  [role="button"] {
+    min-height: 48px;
+    min-width: 48px;
     touch-action: manipulation;
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+  }
+
+  /* Desktop: reduz tamanho mínimo */
+  @media (min-width: 640px) {
+    button,
+    a,
+    [role="button"] {
+      min-height: 40px;
+      min-width: 40px;
+    }
   }
 
   /* Remove highlight em tap no mobile */
