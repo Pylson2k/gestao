@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useCompany } from '@/contexts/company-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,7 +16,12 @@ export default function SettingsPage() {
   const [success, setSuccess] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleInputChange = (field: keyof typeof formData, value: string) => {
+  // Atualizar formData quando settings mudarem
+  useEffect(() => {
+    setFormData(settings)
+  }, [settings])
+
+  const handleInputChange = (field: keyof typeof formData, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
@@ -330,6 +335,39 @@ export default function SettingsPage() {
                   placeholder="Informacoes extras que aparecerao no rodape do orcamento"
                   rows={4}
                 />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Configurações Financeiras */}
+          <Card className="border-border">
+            <CardHeader>
+              <CardTitle className="text-lg">Configuracoes Financeiras</CardTitle>
+              <CardDescription>Configuracoes relacionadas ao fechamento de caixa</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="companyCashPercentage">
+                  Porcentagem do Caixa da Empresa (%)
+                </Label>
+                <Input
+                  id="companyCashPercentage"
+                  type="number"
+                  min="0"
+                  max="50"
+                  step="0.1"
+                  value={formData.companyCashPercentage ?? 10}
+                  onChange={(e) => {
+                    const value = parseFloat(e.target.value) || 0
+                    const clampedValue = Math.max(0, Math.min(50, value))
+                    setFormData((prev) => ({ ...prev, companyCashPercentage: clampedValue }))
+                  }}
+                  placeholder="10"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Porcentagem do lucro líquido destinada ao caixa da empresa (0% a 50%). 
+                  O restante será dividido igualmente entre os sócios.
+                </p>
               </div>
             </CardContent>
           </Card>

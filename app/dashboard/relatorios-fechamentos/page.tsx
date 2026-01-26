@@ -21,6 +21,7 @@ export default function RelatoriosFechamentosPage() {
     const totalProfit = closings.reduce((sum, c) => sum + c.totalProfit, 0)
     const totalRevenue = closings.reduce((sum, c) => sum + c.totalRevenue, 0)
     const totalExpenses = closings.reduce((sum, c) => sum + c.totalExpenses, 0)
+    const totalCompanyCash = closings.reduce((sum, c) => sum + (c.companyCash || 0), 0)
     const totalGustavo = closings.reduce((sum, c) => sum + c.gustavoProfit, 0)
     const totalGiovanni = closings.reduce((sum, c) => sum + c.giovanniProfit, 0)
 
@@ -28,6 +29,7 @@ export default function RelatoriosFechamentosPage() {
       totalProfit,
       totalRevenue,
       totalExpenses,
+      totalCompanyCash,
       totalGustavo,
       totalGiovanni,
       count: closings.length,
@@ -56,7 +58,7 @@ export default function RelatoriosFechamentosPage() {
       </div>
 
       {/* Estatísticas Gerais */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card className="border-green-500/20 bg-green-500/5">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -110,6 +112,20 @@ export default function RelatoriosFechamentosPage() {
             </div>
           </CardContent>
         </Card>
+
+        <Card className="border-purple-500/20 bg-purple-500/5">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Caixa da Empresa</p>
+                <p className="text-2xl font-bold text-purple-500">
+                  {stats.totalCompanyCash.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </p>
+              </div>
+              <Wallet className="w-8 h-8 text-purple-500" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Lista de Fechamentos */}
@@ -143,7 +159,7 @@ export default function RelatoriosFechamentosPage() {
                             {new Date(closing.startDate).toLocaleDateString('pt-BR')} a {new Date(closing.endDate).toLocaleDateString('pt-BR')}
                           </span>
                         </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                           <div>
                             <p className="text-muted-foreground">Receita</p>
                             <p className="font-semibold text-green-500">
@@ -166,7 +182,13 @@ export default function RelatoriosFechamentosPage() {
                             </p>
                           </div>
                           <div>
-                            <p className="text-muted-foreground">Por Sócio (50%)</p>
+                            <p className="text-muted-foreground">Caixa Empresa</p>
+                            <p className="font-semibold text-purple-500">
+                              {(closing.companyCash || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">Por Sócio</p>
                             <p className="font-semibold text-blue-500">
                               {closing.gustavoProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                             </p>

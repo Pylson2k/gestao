@@ -50,6 +50,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
           cnpj: data.cnpj || undefined,
           website: data.website || undefined,
           additionalInfo: data.additionalInfo || undefined,
+          companyCashPercentage: data.companyCashPercentage !== undefined ? data.companyCashPercentage : 10,
         })
       }
     } catch (error) {
@@ -98,6 +99,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         cnpj: data.cnpj || undefined,
         website: data.website || undefined,
         additionalInfo: data.additionalInfo || undefined,
+        companyCashPercentage: data.companyCashPercentage !== undefined ? data.companyCashPercentage : 10,
       })
     } catch (error) {
       console.error('Update settings error:', error)

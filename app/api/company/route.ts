@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
           phone: '',
           email: '',
           address: '',
+          companyCashPercentage: 10, // Padrão 10%
         },
       })
     }
@@ -91,6 +92,7 @@ export async function PUT(request: NextRequest) {
         cnpj: body.cnpj,
         website: body.website,
         additionalInfo: body.additionalInfo,
+        companyCashPercentage: body.companyCashPercentage !== undefined ? Math.max(0, Math.min(50, parseFloat(body.companyCashPercentage))) : undefined,
       },
       create: {
         userId: dbUserId,
@@ -100,6 +102,7 @@ export async function PUT(request: NextRequest) {
         email: body.email || '',
         address: body.address || '',
         cnpj: body.cnpj,
+        companyCashPercentage: body.companyCashPercentage !== undefined ? Math.max(0, Math.min(50, parseFloat(body.companyCashPercentage))) : 10,
         website: body.website,
         additionalInfo: body.additionalInfo,
       },

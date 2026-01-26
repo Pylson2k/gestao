@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { useQuotes } from '@/contexts/quotes-context'
 import { useExpenses } from '@/contexts/expenses-context'
 import { useCashClosings } from '@/contexts/cash-closings-context'
+import { useCompany } from '@/contexts/company-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -32,6 +33,7 @@ export default function FechamentoCaixaPage() {
   const { quotes } = useQuotes()
   const { expenses } = useExpenses()
   const { lastClosing, addClosing, refreshClosings } = useCashClosings()
+  const { settings } = useCompany()
   
   const [periodType, setPeriodType] = useState<PeriodType>('mensal')
   const [startDate, setStartDate] = useState('')
@@ -107,27 +109,60 @@ export default function FechamentoCaixaPage() {
       })
       .reduce((sum, quote) => sum + quote.total, 0)
 
-    // Despesas no período
-    const totalExpenses = expenses
-      .filter((expense) => {
-        const expenseDate = new Date(expense.date)
-        return expenseDate >= start && expenseDate <= end
-      })
+    // Despesas no período (excluindo vales dos sócios)
+    const expensesInPeriod = expenses.filter((expense) => {
+      const expenseDate = new Date(expense.date)
+      return expenseDate >= start && expenseDate <= end
+    })
+
+    // Separar vales dos sócios das outras despesas
+    const gustavoVales = expensesInPeriod
+      .filter((expense) => expense.category === 'vale_gustavo')
       .reduce((sum, expense) => sum + expense.amount, 0)
 
-    // Lucro líquido
-    const profit = revenue - totalExpenses
-    const gustavoProfit = profit / 2
-    const giovanniProfit = profit / 2
+    const giovanniVales = expensesInPeriod
+      .filter((expense) => expense.category === 'vale_giovanni')
+      .reduce((sum, expense) => sum + expense.amount, 0)
+
+    // Outras despesas (excluindo vales dos sócios)
+    const otherExpenses = expensesInPeriod
+      .filter((expense) => expense.category !== 'vale_gustavo' && expense.category !== 'vale_giovanni')
+      .reduce((sum, expense) => sum + expense.amount, 0)
+
+    // Total de despesas (para exibição)
+    const totalExpenses = otherExpenses + gustavoVales + giovanniVales
+
+    // Lucro líquido (receita - outras despesas, sem incluir vales)
+    const profit = revenue - otherExpenses
+
+    // Porcentagem do caixa da empresa (padrão 10%)
+    const companyCashPercentage = settings.companyCashPercentage ?? 10
+    const companyCashPercentageValue = Math.max(0, Math.min(50, companyCashPercentage)) // Limitar entre 0 e 50%
+
+    // Calcular caixa da empresa
+    const companyCash = profit * (companyCashPercentageValue / 100)
+
+    // Lucro restante após desconto do caixa da empresa
+    const remainingProfit = profit - companyCash
+
+    // Dividir o lucro restante entre os sócios (50% cada)
+    const baseGustavoProfit = remainingProfit / 2
+    const baseGiovanniProfit = remainingProfit / 2
+
+    // Descontar vales do lucro de cada sócio
+    const gustavoProfit = baseGustavoProfit - gustavoVales
+    const giovanniProfit = baseGiovanniProfit - giovanniVales
 
     return {
       revenue,
       totalExpenses,
       profit,
+      companyCash,
+      companyCashPercentage: companyCashPercentageValue,
       gustavoProfit,
       giovanniProfit,
     }
-  }, [quotes, expenses, startDate, endDate])
+  }, [quotes, expenses, startDate, endDate, settings.companyCashPercentage])
 
   const handleClose = async () => {
     if (!periodData || !startDate || !endDate) {
@@ -146,6 +181,7 @@ export default function FechamentoCaixaPage() {
         startDate,
         endDate,
         totalProfit: periodData.profit,
+        companyCash: periodData.companyCash,
         gustavoProfit: periodData.gustavoProfit,
         giovanniProfit: periodData.giovanniProfit,
         totalRevenue: periodData.revenue,
@@ -260,7 +296,7 @@ export default function FechamentoCaixaPage() {
 
       {/* Resumo do Período */}
       {periodData && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <Card className="border-green-500/20 bg-green-500/5">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -312,17 +348,50 @@ export default function FechamentoCaixaPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-blue-500/20 bg-blue-500/5">
+          <Card className="border-purple-500/20 bg-purple-500/5">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Lucro por Sócio</p>
-                  <p className="text-2xl font-bold text-blue-500">
-                    {periodData.gustavoProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  <p className="text-sm text-muted-foreground">Caixa da Empresa</p>
+                  <p className="text-2xl font-bold text-purple-500">
+                    {periodData.companyCash.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">50% cada</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {periodData.companyCashPercentage}% do lucro
+                  </p>
                 </div>
-                <CheckCircle className="w-8 h-8 text-blue-500" />
+                <Wallet className="w-8 h-8 text-purple-500" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-blue-500/20 bg-blue-500/5">
+            <CardContent className="pt-6">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Lucro Gustavo</p>
+                    <p className={cn(
+                      "text-xl font-bold",
+                      periodData.gustavoProfit >= 0 ? "text-green-500" : "text-red-500"
+                    )}>
+                      {periodData.gustavoProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </p>
+                  </div>
+                </div>
+                <div className="border-t pt-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Lucro Giovanni</p>
+                      <p className={cn(
+                        "text-xl font-bold",
+                        periodData.giovanniProfit >= 0 ? "text-green-500" : "text-red-500"
+                      )}>
+                        {periodData.giovanniProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>

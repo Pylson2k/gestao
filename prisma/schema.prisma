@@ -98,18 +98,19 @@ model MaterialItem {
 }
 
 model CompanySettings {
-  id             String   @id @default(cuid())
-  userId         String   @unique
-  name           String
-  logo           String?   @db.Text
-  phone          String
-  email          String
-  address        String
-  cnpj           String?
-  website        String?
-  additionalInfo String?   @db.Text
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  name                  String
+  logo                  String?   @db.Text
+  phone                 String
+  email                 String
+  address               String
+  cnpj                  String?
+  website               String?
+  additionalInfo        String?   @db.Text
+  companyCashPercentage Float    @default(10) // Porcentagem do lucro líquido para caixa da empresa (0 a 50)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
   
   @@map("company_settings")
 }
@@ -157,8 +158,9 @@ model CashClosing {
   startDate       DateTime
   endDate         DateTime
   totalProfit     Float    // Lucro líquido total
-  gustavoProfit   Float    // 50% para Gustavo
-  giovanniProfit  Float    // 50% para Giovanni
+  companyCash     Float    @default(0) // Valor destinado ao caixa da empresa
+  gustavoProfit   Float    // Lucro para Gustavo (após desconto do caixa da empresa)
+  giovanniProfit  Float    // Lucro para Giovanni (após desconto do caixa da empresa)
   totalRevenue    Float    // Receita total do período
   totalExpenses    Float    // Despesas total do período
   observations    String?  @db.Text

@@ -61,6 +61,7 @@ export interface CompanySettings {
   cnpj?: string
   website?: string
   additionalInfo?: string
+  companyCashPercentage?: number // Porcentagem do lucro líquido para caixa da empresa (0 a 50)
 }
 
 export type ExpenseCategory = 
@@ -122,6 +123,7 @@ export interface CashClosing {
   startDate: string | Date
   endDate: string | Date
   totalProfit: number
+  companyCash: number // Valor destinado ao caixa da empresa
   gustavoProfit: number
   giovanniProfit: number
   totalRevenue: number
