@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { AuthProvider } from '@/contexts/auth-context'
+import { DynamicFavicon } from '@/components/dynamic-favicon'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -60,15 +61,17 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <head>
-        <link rel="manifest" href="/manifest.json" />
+        <link rel="manifest" href="/api/manifest" />
+        <link rel="icon" href="/api/company/favicon" type="image/png" />
         <meta name="theme-color" content="#3b82f6" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="ServiPro" />
-        <link rel="apple-touch-icon" href="/apple-icon-180x180.png" />
+        <link rel="apple-touch-icon" href="/api/company/pwa-icon/180" />
       </head>
       <body className={`font-sans antialiased`}>
+        <DynamicFavicon />
         <AuthProvider>
           {children}
         </AuthProvider>

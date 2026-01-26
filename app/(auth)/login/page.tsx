@@ -16,6 +16,8 @@ export default function LoginPage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [companyLogo, setCompanyLogo] = useState<string | null>(null)
+  const [companyName, setCompanyName] = useState('ServiPro')
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -23,6 +25,22 @@ export default function LoginPage() {
       router.push('/dashboard')
     }
   }, [isAuthenticated, isLoading, router])
+
+  // Buscar logo da empresa
+  useEffect(() => {
+    const fetchCompanyLogo = async () => {
+      try {
+        const response = await fetch('/api/company/logo')
+        const data = await response.json()
+        if (data.logo) {
+          setCompanyLogo(data.logo)
+        }
+      } catch (error) {
+        console.error('Error fetching company logo:', error)
+      }
+    }
+    fetchCompanyLogo()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -44,11 +62,19 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-black p-4">
       <div className="w-full max-w-md">
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary">
-            <Zap className="w-6 h-6 text-primary-foreground" />
-          </div>
-          <span className="text-2xl font-bold text-white">ServiPro</span>
+        <div className="flex items-center justify-center gap-3 mb-8">
+          {companyLogo ? (
+            <img 
+              src={companyLogo} 
+              alt={companyName}
+              className="w-16 h-16 object-contain rounded-lg bg-white/10 p-2"
+            />
+          ) : (
+            <div className="flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg">
+              <Zap className="w-8 h-8 text-primary-foreground" />
+            </div>
+          )}
+          <span className="text-3xl font-bold text-white tracking-tight">{companyName}</span>
         </div>
 
         <Card className="border-border shadow-lg">
