@@ -14,8 +14,23 @@ export function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [showPrompt, setShowPrompt] = useState(false)
   const [isInstalled, setIsInstalled] = useState(false)
+  const [companyName, setCompanyName] = useState('ServiPro')
 
   useEffect(() => {
+    // Buscar nome da empresa
+    const fetchCompanyName = async () => {
+      try {
+        const response = await fetch('/api/company/logo')
+        const data = await response.json()
+        if (data.name) {
+          setCompanyName(data.name)
+        }
+      } catch (error) {
+        console.error('Error fetching company name:', error)
+      }
+    }
+    fetchCompanyName()
+
     // Verifica se já está instalado
     if (window.matchMedia('(display-mode: standalone)').matches) {
       setIsInstalled(true)
@@ -91,7 +106,7 @@ export function InstallPrompt() {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-bold text-foreground">
-            Instalar ServiPro
+            Instalar {companyName}
           </CardTitle>
           <Button
             variant="ghost"
@@ -105,7 +120,7 @@ export function InstallPrompt() {
       </CardHeader>
       <CardContent className="space-y-3">
         <p className="text-sm text-muted-foreground">
-          Instale o ServiPro no seu celular para acesso rápido e funcionamento offline!
+          Instale o {companyName} no seu celular para acesso rápido e funcionamento offline!
         </p>
         <div className="flex gap-2">
           <Button

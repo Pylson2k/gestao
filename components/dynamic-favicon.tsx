@@ -47,10 +47,7 @@ export function DynamicFavicon() {
           appleLink.rel = 'apple-touch-icon'
           appleLink.href = data.logo
 
-          // Atualizar título da página se tiver nome da empresa
-          if (data.name && data.name !== 'ServiPro') {
-            document.title = `${data.name} - Gestão de Orçamentos`
-          }
+          // Título será atualizado pelo DynamicTitle component
         }
       } catch (error) {
         console.error('Error updating favicon:', error)

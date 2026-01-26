@@ -26,20 +26,25 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, isLoading, router])
 
-  // Buscar logo da empresa
+  // Buscar logo e nome da empresa
   useEffect(() => {
-    const fetchCompanyLogo = async () => {
+    const fetchCompanyInfo = async () => {
       try {
         const response = await fetch('/api/company/logo')
         const data = await response.json()
         if (data.logo) {
           setCompanyLogo(data.logo)
         }
+        if (data.name) {
+          setCompanyName(data.name)
+          // Atualizar título da página
+          document.title = `${data.name} - Acesso ao Sistema`
+        }
       } catch (error) {
-        console.error('Error fetching company logo:', error)
+        console.error('Error fetching company info:', error)
       }
     }
-    fetchCompanyLogo()
+    fetchCompanyInfo()
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {

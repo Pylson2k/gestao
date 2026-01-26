@@ -83,6 +83,16 @@ export default function SettingsPage() {
       newManifestLink.href = `/api/manifest?t=${Date.now()}`
       document.getElementsByTagName('head')[0].appendChild(newManifestLink)
     }
+
+    // Atualizar título e meta tags do PWA
+    if (formData.name && formData.name !== 'ServiPro') {
+      document.title = `${formData.name} - Gestão de Orçamentos`
+      
+      const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]')
+      if (appleTitle) {
+        appleTitle.setAttribute('content', formData.name)
+      }
+    }
   }
 
   const handleRemoveLogo = async () => {

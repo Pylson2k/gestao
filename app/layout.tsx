@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { AuthProvider } from '@/contexts/auth-context'
 import { DynamicFavicon } from '@/components/dynamic-favicon'
+import { DynamicTitle } from '@/components/dynamic-title'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -72,6 +73,7 @@ export default function RootLayout({
       </head>
       <body className={`font-sans antialiased`}>
         <DynamicFavicon />
+        <DynamicTitle />
         <AuthProvider>
           {children}
         </AuthProvider>
