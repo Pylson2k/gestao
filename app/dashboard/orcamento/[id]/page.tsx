@@ -42,6 +42,7 @@ import {
   Eye,
   Play,
   CheckCircle2,
+  Mail,
 } from 'lucide-react'
 
 const statusConfig = {
@@ -224,83 +225,89 @@ export default function QuoteDetailPage({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border/50">
         <div className="flex items-center gap-4">
           <Link href="/dashboard">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="rounded-xl hover:bg-accent/50">
               <ArrowLeft className="w-5 h-5" />
             </Button>
           </Link>
           <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-foreground">{quote.number}</h1>
-              <Badge variant="secondary" className={cn('text-xs', status.className)}>
-                <StatusIcon className="w-3 h-3 mr-1" />
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-3xl font-bold text-foreground tracking-tight">{quote.number}</h1>
+              <Badge variant="secondary" className={cn('text-xs font-semibold px-3 py-1', status.className)}>
+                <StatusIcon className="w-3 h-3 mr-1.5" />
                 {status.label}
               </Badge>
             </div>
-            <p className="text-muted-foreground">Criado em {formattedDate}</p>
+            <p className="text-muted-foreground text-sm">Criado em {formattedDate}</p>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={handleViewQuote}>
+          <Button variant="outline" onClick={handleViewQuote} className="rounded-xl border-2 hover:bg-accent/50">
             <Eye className="w-4 h-4 mr-2" />
-            Visualizar Orcamento
+            Visualizar
           </Button>
-          <Button variant="outline" onClick={handleDownloadPDF}>
+          <Button variant="outline" onClick={handleDownloadPDF} className="rounded-xl border-2 hover:bg-accent/50">
             <Download className="w-4 h-4 mr-2" />
             Baixar PDF
           </Button>
-          <Button onClick={handleWhatsApp} className="bg-accent hover:bg-accent/90">
+          <Button onClick={handleWhatsApp} className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-xl shadow-lg shadow-green-500/30">
             <MessageCircle className="w-4 h-4 mr-2" />
-            Enviar WhatsApp
+            WhatsApp
           </Button>
         </div>
       </div>
 
       {/* Client & Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="border-border lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-lg">Dados do Cliente</CardTitle>
+        <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm lg:col-span-2">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-bold tracking-tight">Dados do Cliente</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <h3 className="font-semibold text-foreground text-lg">{quote.client.name}</h3>
+              <h3 className="font-bold text-foreground text-xl mb-1">{quote.client.name}</h3>
             </div>
-            <div className="flex items-center gap-3 text-muted-foreground">
-              <Phone className="w-4 h-4" />
-              <span>{quote.client.phone}</span>
+            <div className="flex items-center gap-3 text-muted-foreground p-3 rounded-lg bg-muted/30">
+              <Phone className="w-4 h-4 text-primary" />
+              <span className="font-medium">{quote.client.phone}</span>
             </div>
-            <div className="flex items-start gap-3 text-muted-foreground">
-              <MapPin className="w-4 h-4 mt-0.5" />
-              <span>{quote.client.address}</span>
+            <div className="flex items-start gap-3 text-muted-foreground p-3 rounded-lg bg-muted/30">
+              <MapPin className="w-4 h-4 mt-0.5 text-primary" />
+              <span className="font-medium">{quote.client.address}</span>
             </div>
+            {quote.client.email && (
+              <div className="flex items-center gap-3 text-muted-foreground p-3 rounded-lg bg-muted/30">
+                <Mail className="w-4 h-4 text-primary" />
+                <span className="font-medium">{quote.client.email}</span>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        <Card className="border-border">
-          <CardHeader>
-            <CardTitle className="text-lg">Resumo</CardTitle>
+        <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-white to-primary/5 shadow-lg">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-bold tracking-tight">Resumo Financeiro</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Subtotal</span>
-              <span className="text-foreground">
+          <CardContent className="space-y-4">
+            <div className="flex justify-between items-center py-2">
+              <span className="text-muted-foreground font-medium">Subtotal</span>
+              <span className="text-foreground font-semibold">
                 {quote.subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </span>
             </div>
             {quote.discount > 0 && (
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Desconto</span>
-                <span className="text-destructive">
+              <div className="flex justify-between items-center py-2 border-t border-border/50">
+                <span className="text-muted-foreground font-medium">Desconto</span>
+                <span className="text-destructive font-semibold">
                   - {quote.discount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </span>
               </div>
             )}
-            <div className="border-t border-border pt-3 flex justify-between">
-              <span className="font-semibold text-foreground">Total</span>
-              <span className="text-xl font-bold text-primary">
+            <div className="border-t-2 border-primary/30 pt-4 mt-2 flex justify-between items-center bg-gradient-to-r from-primary/10 to-transparent p-4 rounded-lg">
+              <span className="font-bold text-foreground text-lg">Total</span>
+              <span className="text-2xl font-bold text-primary">
                 {quote.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </span>
             </div>
@@ -310,30 +317,33 @@ export default function QuoteDetailPage({
 
       {/* Services */}
       {quote.services.length > 0 && (
-        <Card className="border-border">
-          <CardHeader>
-            <CardTitle className="text-lg">Servicos</CardTitle>
+        <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-bold tracking-tight">Serviços</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto rounded-lg border border-border/50">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-3 px-2 font-medium text-muted-foreground">Descricao</th>
-                    <th className="text-center py-3 px-2 font-medium text-muted-foreground">Qtd</th>
-                    <th className="text-right py-3 px-2 font-medium text-muted-foreground">Valor Unit.</th>
-                    <th className="text-right py-3 px-2 font-medium text-muted-foreground">Total</th>
+                  <tr className="bg-gradient-to-r from-slate-50 to-slate-100 border-b-2 border-slate-200">
+                    <th className="text-left py-4 px-4 font-bold text-slate-700 uppercase text-xs tracking-wider">Descrição</th>
+                    <th className="text-center py-4 px-4 font-bold text-slate-700 uppercase text-xs tracking-wider">Qtd</th>
+                    <th className="text-right py-4 px-4 font-bold text-slate-700 uppercase text-xs tracking-wider">Valor Unit.</th>
+                    <th className="text-right py-4 px-4 font-bold text-slate-700 uppercase text-xs tracking-wider">Total</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {quote.services.map((item) => (
-                    <tr key={item.id} className="border-b border-border last:border-0">
-                      <td className="py-3 px-2 text-foreground">{item.name}</td>
-                      <td className="py-3 px-2 text-center text-foreground">{item.quantity}</td>
-                      <td className="py-3 px-2 text-right text-foreground">
+                  {quote.services.map((item, index) => (
+                    <tr key={item.id} className={cn(
+                      "border-b border-border/30 transition-colors hover:bg-slate-50/50",
+                      index % 2 === 0 ? "bg-white" : "bg-slate-50/30"
+                    )}>
+                      <td className="py-4 px-4 text-foreground font-medium">{item.name}</td>
+                      <td className="py-4 px-4 text-center text-foreground font-semibold">{item.quantity}</td>
+                      <td className="py-4 px-4 text-right text-muted-foreground">
                         {item.unitPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                       </td>
-                      <td className="py-3 px-2 text-right font-medium text-foreground">
+                      <td className="py-4 px-4 text-right font-bold text-foreground">
                         {(item.quantity * item.unitPrice).toLocaleString('pt-BR', {
                           style: 'currency',
                           currency: 'BRL',
@@ -350,30 +360,33 @@ export default function QuoteDetailPage({
 
       {/* Materials */}
       {quote.materials.length > 0 && (
-        <Card className="border-border">
-          <CardHeader>
-            <CardTitle className="text-lg">Materiais</CardTitle>
+        <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-bold tracking-tight">Materiais</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto rounded-lg border border-border/50">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-3 px-2 font-medium text-muted-foreground">Descricao</th>
-                    <th className="text-center py-3 px-2 font-medium text-muted-foreground">Qtd</th>
-                    <th className="text-right py-3 px-2 font-medium text-muted-foreground">Valor Unit.</th>
-                    <th className="text-right py-3 px-2 font-medium text-muted-foreground">Total</th>
+                  <tr className="bg-gradient-to-r from-slate-50 to-slate-100 border-b-2 border-slate-200">
+                    <th className="text-left py-4 px-4 font-bold text-slate-700 uppercase text-xs tracking-wider">Descrição</th>
+                    <th className="text-center py-4 px-4 font-bold text-slate-700 uppercase text-xs tracking-wider">Qtd</th>
+                    <th className="text-right py-4 px-4 font-bold text-slate-700 uppercase text-xs tracking-wider">Valor Unit.</th>
+                    <th className="text-right py-4 px-4 font-bold text-slate-700 uppercase text-xs tracking-wider">Total</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {quote.materials.map((item) => (
-                    <tr key={item.id} className="border-b border-border last:border-0">
-                      <td className="py-3 px-2 text-foreground">{item.name}</td>
-                      <td className="py-3 px-2 text-center text-foreground">{item.quantity}</td>
-                      <td className="py-3 px-2 text-right text-foreground">
+                  {quote.materials.map((item, index) => (
+                    <tr key={item.id} className={cn(
+                      "border-b border-border/30 transition-colors hover:bg-slate-50/50",
+                      index % 2 === 0 ? "bg-white" : "bg-slate-50/30"
+                    )}>
+                      <td className="py-4 px-4 text-foreground font-medium">{item.name}</td>
+                      <td className="py-4 px-4 text-center text-foreground font-semibold">{item.quantity}</td>
+                      <td className="py-4 px-4 text-right text-muted-foreground">
                         {item.unitPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                       </td>
-                      <td className="py-3 px-2 text-right font-medium text-foreground">
+                      <td className="py-4 px-4 text-right font-bold text-foreground">
                         {(item.quantity * item.unitPrice).toLocaleString('pt-BR', {
                           style: 'currency',
                           currency: 'BRL',
@@ -390,12 +403,14 @@ export default function QuoteDetailPage({
 
       {/* Observations */}
       {quote.observations && (
-        <Card className="border-border">
-          <CardHeader>
-            <CardTitle className="text-lg">Observacoes</CardTitle>
+        <Card className="border-amber-200/50 bg-gradient-to-br from-amber-50/50 via-white to-amber-50/30 shadow-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-bold tracking-tight flex items-center gap-2">
+              <span className="text-amber-600">Observações</span>
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-foreground whitespace-pre-wrap">{quote.observations}</p>
+            <p className="text-foreground whitespace-pre-wrap leading-relaxed font-medium">{quote.observations}</p>
           </CardContent>
         </Card>
       )}

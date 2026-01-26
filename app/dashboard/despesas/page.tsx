@@ -194,10 +194,10 @@ export default function DespesasPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border/50">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Despesas</h1>
-          <p className="text-muted-foreground">Gerencie todas as despesas da empresa</p>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight mb-2">Despesas</h1>
+          <p className="text-muted-foreground text-sm font-medium">Gerencie todas as despesas da empresa</p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -323,29 +323,29 @@ export default function DespesasPage() {
       </div>
 
       {/* Total Card */}
-      <Card className="border-border">
+      <Card className="border-2 border-red-200/50 bg-gradient-to-br from-red-50/80 via-white to-red-50/40 shadow-lg">
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground mb-1">Total de Despesas</p>
-              <p className="text-3xl font-bold text-foreground">
+              <p className="text-sm font-medium text-muted-foreground mb-2">Total de Despesas</p>
+              <p className="text-3xl font-bold text-red-600 tracking-tight">
                 {totalExpenses.toLocaleString('pt-BR', {
                   style: 'currency',
                   currency: 'BRL',
                 })}
               </p>
             </div>
-            <div className="p-3 rounded-lg bg-red-500/10">
-              <DollarSign className="w-8 h-8 text-red-500" />
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-red-500 to-red-600 shadow-lg">
+              <DollarSign className="w-8 h-8 text-white" />
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Filters */}
-      <Card className="border-border">
-        <CardHeader>
-          <CardTitle className="text-lg">Filtros</CardTitle>
+      <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg font-bold tracking-tight">Filtros</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -405,26 +405,27 @@ export default function DespesasPage() {
       ) : filteredExpenses.length > 0 ? (
         <div className="space-y-3">
           {filteredExpenses.map((expense) => (
-            <Card key={expense.id} className="border-border">
-              <CardContent className="p-4">
+            <Card key={expense.id} className="border-border/50 bg-white/60 backdrop-blur-sm hover:shadow-lg hover:border-primary/20 transition-all duration-300 hover:-translate-y-0.5">
+              <CardContent className="p-5">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge className={cn('text-xs', categoryColors[expense.category])}>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Badge className={cn('text-xs font-semibold px-2.5 py-1', categoryColors[expense.category])}>
                         {categoryLabels[expense.category]}
                       </Badge>
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-sm text-muted-foreground font-medium flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
                         {new Date(expense.date).toLocaleDateString('pt-BR')}
                       </span>
                     </div>
-                    <h3 className="font-medium text-foreground mb-1">{expense.description}</h3>
+                    <h3 className="font-semibold text-foreground mb-1.5 text-base">{expense.description}</h3>
                     {expense.observations && (
-                      <p className="text-sm text-muted-foreground">{expense.observations}</p>
+                      <p className="text-sm text-muted-foreground italic">{expense.observations}</p>
                     )}
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                      <p className="font-semibold text-foreground text-lg">
+                      <p className="font-bold text-foreground text-xl">
                         {expense.amount.toLocaleString('pt-BR', {
                           style: 'currency',
                           currency: 'BRL',
@@ -436,6 +437,7 @@ export default function DespesasPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleOpenDialog(expense)}
+                        className="rounded-lg hover:bg-accent/50"
                       >
                         <Edit className="w-4 h-4" />
                       </Button>
@@ -443,6 +445,7 @@ export default function DespesasPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDelete(expense.id)}
+                        className="rounded-lg hover:bg-destructive/10"
                       >
                         <Trash2 className="w-4 h-4 text-destructive" />
                       </Button>

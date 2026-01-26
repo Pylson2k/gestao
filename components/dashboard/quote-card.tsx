@@ -153,24 +153,24 @@ export function QuoteCard({ quote }: QuoteCardProps) {
   }
 
   return (
-    <Card className="border-border hover:shadow-md transition-shadow">
-      <CardContent className="p-4">
+    <Card className="border-border/50 bg-white/60 backdrop-blur-sm hover:shadow-lg hover:border-primary/20 transition-all duration-300 hover:-translate-y-0.5">
+      <CardContent className="p-5">
         <div className="flex items-center gap-4">
-          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-secondary">
-            <FileText className="w-5 h-5 text-secondary-foreground" />
+          <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 shadow-sm">
+            <FileText className="w-6 h-6 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-medium text-foreground truncate">{quote.number}</h3>
-              <Badge variant="secondary" className={cn('text-xs', status.className)}>
+            <div className="flex items-center gap-2 mb-2">
+              <h3 className="font-semibold text-foreground truncate">{quote.number}</h3>
+              <Badge variant="secondary" className={cn('text-xs font-medium px-2 py-0.5', status.className)}>
                 {status.label}
               </Badge>
             </div>
-            <p className="text-sm text-muted-foreground truncate">{quote.client.name}</p>
+            <p className="text-sm font-medium text-foreground truncate mb-1">{quote.client.name}</p>
             <p className="text-xs text-muted-foreground">{formattedDate}</p>
           </div>
           <div className="text-right">
-            <p className="font-semibold text-foreground">{formattedTotal}</p>
+            <p className="font-bold text-lg text-foreground">{formattedTotal}</p>
           </div>
           
           {/* Botões de ação para orçamentos aprovados */}

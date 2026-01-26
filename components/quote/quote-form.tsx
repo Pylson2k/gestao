@@ -174,24 +174,27 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 pb-4 border-b border-border/50">
         <Link href="/dashboard">
-          <Button type="button" variant="ghost" size="icon">
+          <Button type="button" variant="ghost" size="icon" className="rounded-xl hover:bg-accent/50">
             <ArrowLeft className="w-5 h-5" />
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            {initialData ? 'Editar Orcamento' : 'Novo Orcamento'}
+          <h1 className="text-3xl font-bold text-foreground tracking-tight mb-1">
+            {initialData ? 'Editar Orçamento' : 'Novo Orçamento'}
           </h1>
-          <p className="text-muted-foreground">Preencha os dados do orcamento</p>
+          <p className="text-muted-foreground text-sm font-medium">Preencha os dados do orçamento</p>
         </div>
       </div>
 
       {/* Client Info */}
-      <Card className="border-border">
-        <CardHeader>
-          <CardTitle className="text-lg">Dados do Cliente</CardTitle>
+      <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl font-bold tracking-tight flex items-center gap-2">
+            <UserCircle className="w-5 h-5 text-primary" />
+            Dados do Cliente
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {!initialData && clients.length > 0 && (
@@ -276,9 +279,9 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
       </Card>
 
       {/* Services */}
-      <Card className="border-border">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-lg">Servicos</CardTitle>
+      <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between pb-4">
+          <CardTitle className="text-xl font-bold tracking-tight">Serviços</CardTitle>
           <div className="flex gap-2">
             {catalogServices.length > 0 && (
               <Select
@@ -340,9 +343,9 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
       </Card>
 
       {/* Materials */}
-      <Card className="border-border">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-lg">Materiais</CardTitle>
+      <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between pb-4">
+          <CardTitle className="text-xl font-bold tracking-tight">Materiais</CardTitle>
           <Button type="button" variant="outline" size="sm" onClick={addMaterial}>
             <Plus className="w-4 h-4 mr-2" />
             Adicionar
@@ -369,35 +372,35 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
 
       {/* Summary & Observations */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="border-border">
-          <CardHeader>
-            <CardTitle className="text-lg">Observacoes</CardTitle>
+        <Card className="border-amber-200/50 bg-gradient-to-br from-amber-50/50 via-white to-amber-50/30 shadow-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-bold tracking-tight text-amber-700">Observações</CardTitle>
           </CardHeader>
           <CardContent>
             <Textarea
-              placeholder="Informacoes adicionais, condicoes, garantia..."
+              placeholder="Informações adicionais, condições, garantia..."
               value={observations}
               onChange={(e) => setObservations(e.target.value)}
               rows={5}
-              className="bg-background resize-none"
+              className="bg-background resize-none rounded-xl border-2"
             />
           </CardContent>
         </Card>
 
-        <Card className="border-border">
-          <CardHeader>
-            <CardTitle className="text-lg">Resumo</CardTitle>
+        <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-white to-primary/5 shadow-lg">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-bold tracking-tight">Resumo Financeiro</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Subtotal</span>
-              <span className="font-medium text-foreground">
+          <CardContent className="space-y-5">
+            <div className="flex justify-between items-center py-2">
+              <span className="text-muted-foreground font-medium">Subtotal</span>
+              <span className="font-bold text-foreground text-lg">
                 {subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </span>
             </div>
-            <div className="flex items-center justify-between gap-4">
-              <Label htmlFor="discount" className="text-sm text-muted-foreground">
-                Desconto
+            <div className="flex items-center justify-between gap-4 py-2 border-t border-border/50 pt-4">
+              <Label htmlFor="discount" className="text-sm font-medium text-muted-foreground">
+                Desconto (R$)
               </Label>
               <Input
                 id="discount"
@@ -406,12 +409,12 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
                 step={0.01}
                 value={discount || ''}
                 onChange={(e) => setDiscount(Number(e.target.value) || 0)}
-                className="w-32 bg-background text-right"
+                className="w-36 bg-background text-right rounded-xl border-2"
               />
             </div>
-            <div className="border-t border-border pt-4 flex justify-between">
-              <span className="font-semibold text-foreground">Total</span>
-              <span className="text-xl font-bold text-primary">
+            <div className="border-t-2 border-primary/30 pt-5 mt-2 flex justify-between items-center bg-gradient-to-r from-primary/10 to-transparent p-4 rounded-xl">
+              <span className="font-bold text-foreground text-lg">Total</span>
+              <span className="text-3xl font-bold text-primary tracking-tight">
                 {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </span>
             </div>
@@ -427,15 +430,15 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
       )}
 
       {/* Actions */}
-      <div className="flex justify-end gap-3">
+      <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
         <Link href="/dashboard">
-          <Button type="button" variant="outline" disabled={isSubmitting}>
+          <Button type="button" variant="outline" disabled={isSubmitting} className="rounded-xl border-2 hover:bg-accent/50">
             Cancelar
           </Button>
         </Link>
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitting} className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30">
           <Save className="w-4 h-4 mr-2" />
-          {isSubmitting ? 'Salvando...' : initialData ? 'Salvar Alteracoes' : 'Criar Orcamento'}
+          {isSubmitting ? 'Salvando...' : initialData ? 'Salvar Alterações' : 'Criar Orçamento'}
         </Button>
       </div>
     </form>

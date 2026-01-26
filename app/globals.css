@@ -123,3 +123,40 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* PWA Mobile Optimizations */
+@layer base {
+  /* Previne zoom em inputs no iOS */
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="date"],
+  textarea,
+  select {
+    font-size: 16px !important; /* Previne zoom automático no iOS */
+  }
+
+  /* Melhora o touch target em mobile */
+  button,
+  a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Remove highlight em tap no mobile */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Previne pull-to-refresh em mobile */
+  body {
+    overscroll-behavior-y: contain;
+  }
+}

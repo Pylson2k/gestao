@@ -79,16 +79,16 @@ export default function HistoryPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border/50">
         <div className="flex items-center gap-4">
           <Link href="/dashboard">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="rounded-xl hover:bg-accent/50">
               <ArrowLeft className="w-5 h-5" />
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Historico de Orcamentos</h1>
-            <p className="text-muted-foreground">{filteredQuotes.length} orcamento(s) encontrado(s)</p>
+            <h1 className="text-3xl font-bold text-foreground tracking-tight mb-1">Histórico de Orçamentos</h1>
+            <p className="text-muted-foreground text-sm font-medium">{filteredQuotes.length} orçamento(s) encontrado(s)</p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -96,24 +96,25 @@ export default function HistoryPage() {
             variant="outline"
             onClick={() => exportQuotesToCSV(filteredQuotes)}
             disabled={filteredQuotes.length === 0}
+            className="rounded-xl border-2 hover:bg-accent/50"
           >
             <Download className="w-4 h-4 mr-2" />
             Exportar CSV
           </Button>
           <Link href="/dashboard/novo-orcamento">
-            <Button className="gap-2">
+            <Button className="gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30">
               <Plus className="w-4 h-4" />
-              Novo Orcamento
+              Novo Orçamento
             </Button>
           </Link>
         </div>
       </div>
 
       {/* Filters */}
-      <Card className="border-border">
+      <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
         <CardHeader className="pb-4">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Filter className="w-4 h-4" />
+          <CardTitle className="text-lg font-bold tracking-tight flex items-center gap-2">
+            <Filter className="w-5 h-5 text-primary" />
             Filtros
           </CardTitle>
         </CardHeader>
@@ -233,33 +234,38 @@ function QuoteListItem({ quote }: { quote: Quote }) {
 
   return (
     <Link href={`/dashboard/orcamento/${quote.id}`}>
-      <Card className="border-border hover:shadow-md hover:border-primary/20 transition-all cursor-pointer">
-        <CardContent className="p-4">
+      <Card className="border-border/50 bg-white/60 backdrop-blur-sm hover:shadow-xl hover:border-primary/30 transition-all duration-300 cursor-pointer hover:-translate-y-1 group">
+        <CardContent className="p-5">
           <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-secondary">
-              <FileText className="w-6 h-6 text-secondary-foreground" />
+            <div className="flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 shadow-sm group-hover:scale-110 transition-transform">
+              <FileText className="w-7 h-7 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className="font-semibold text-foreground">{quote.number}</h3>
-                <Badge variant="secondary" className={cn('text-xs', status.className)}>
+              <div className="flex items-center gap-2 mb-2">
+                <h3 className="font-bold text-foreground text-lg group-hover:text-primary transition-colors">{quote.number}</h3>
+                <Badge variant="secondary" className={cn('text-xs font-semibold px-2.5 py-1', status.className)}>
                   {status.label}
                 </Badge>
               </div>
-              <p className="text-sm text-foreground truncate">{quote.client.name}</p>
-              <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
-                <span>{formattedDate}</span>
-                <span>{quote.services.length} servico(s)</span>
+              <p className="text-sm font-semibold text-foreground truncate mb-1">{quote.client.name}</p>
+              <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground font-medium">
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  {formattedDate}
+                </span>
+                <span>{quote.services.length} serviço(s)</span>
                 <span>{quote.materials.length} material(is)</span>
               </div>
             </div>
             <div className="text-right">
-              <p className="text-lg font-bold text-primary">{formattedTotal}</p>
-              <p className="text-xs text-muted-foreground">
-                {quote.discount > 0 && `Desc: ${quote.discount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`}
-              </p>
+              <p className="text-xl font-bold text-primary mb-1">{formattedTotal}</p>
+              {quote.discount > 0 && (
+                <p className="text-xs text-destructive font-medium">
+                  Desc: {quote.discount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </p>
+              )}
             </div>
-            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
           </div>
         </CardContent>
       </Card>
