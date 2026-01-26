@@ -18,10 +18,8 @@ export async function POST(request: Request) {
       }, { status: 500 })
     }
 
-    // Dynamic imports para Prisma 7.3.0
-    const { PrismaClient } = await import('@prisma/client')
-    
-    const prisma = new PrismaClient()
+    // Usar o PrismaClient do helper lib/prisma.ts
+    const { prisma } = await import('@/lib/prisma')
     
     // Contar registros antes de deletar (para relatório)
     const countsBefore = {
