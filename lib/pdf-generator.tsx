@@ -310,55 +310,115 @@ export function openPrintWindow(html: string) {
 }
 
 export function openViewWindow(html: string) {
-  const viewWindow = window.open('', '_blank', 'width=900,height=700,scrollbars=yes,resizable=yes')
-  if (!viewWindow) {
-    alert('Por favor, permita pop-ups para visualizar o orcamento')
-    return
-  }
+  // Verificar se está em mobile
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  
+  if (isMobile) {
+    // No mobile, usar fullscreen
+    const viewWindow = window.open('', '_blank', 'fullscreen=yes')
+    if (!viewWindow) {
+      // Se pop-up foi bloqueado, criar um blob URL e abrir
+      const blob = new Blob([html], { type: 'text/html' })
+      const url = URL.createObjectURL(blob)
+      window.open(url, '_blank')
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+      return
+    }
 
-  try {
-    viewWindow.document.open('text/html', 'replace')
-    viewWindow.document.write(html)
-    viewWindow.document.close()
-    
-    // Aguardar o conteúdo ser renderizado
-    setTimeout(() => {
+    try {
+      viewWindow.document.open('text/html', 'replace')
+      viewWindow.document.write(html)
+      viewWindow.document.close()
+      
+      // Aguardar o conteúdo ser renderizado
+      setTimeout(() => {
+        if (viewWindow && !viewWindow.closed) {
+          viewWindow.focus()
+        }
+      }, 100)
+    } catch (error) {
+      console.error('Erro ao abrir janela de visualização:', error)
       if (viewWindow && !viewWindow.closed) {
-        viewWindow.focus()
+        viewWindow.close()
       }
-    }, 100)
-  } catch (error) {
-    console.error('Erro ao abrir janela de visualização:', error)
-    viewWindow.close()
-    alert('Erro ao visualizar o orcamento. Tente novamente.')
+      // Fallback: criar blob URL
+      const blob = new Blob([html], { type: 'text/html' })
+      const url = URL.createObjectURL(blob)
+      window.open(url, '_blank')
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+    }
+  } else {
+    // Desktop: comportamento normal
+    const viewWindow = window.open('', '_blank', 'width=900,height=700,scrollbars=yes,resizable=yes')
+    if (!viewWindow) {
+      alert('Por favor, permita pop-ups para visualizar o orcamento')
+      return
+    }
+
+    try {
+      viewWindow.document.open('text/html', 'replace')
+      viewWindow.document.write(html)
+      viewWindow.document.close()
+      
+      // Aguardar o conteúdo ser renderizado
+      setTimeout(() => {
+        if (viewWindow && !viewWindow.closed) {
+          viewWindow.focus()
+        }
+      }, 100)
+    } catch (error) {
+      console.error('Erro ao abrir janela de visualização:', error)
+      viewWindow.close()
+      alert('Erro ao visualizar o orcamento. Tente novamente.')
+    }
   }
 }
 
 export async function downloadPDF(html: string, filename: string = 'orcamento.pdf') {
-  // Dynamic import to avoid SSR issues
-  const html2pdfModule = await import('html2pdf.js')
-  const html2pdf = html2pdfModule.default || html2pdfModule
-  
-  // Create a temporary container
-  const element = document.createElement('div')
-  element.innerHTML = html
-  document.body.appendChild(element)
-  
-  // Configure options - using type assertion to satisfy Html2PdfOptions
-  const opt = {
-    margin: [10, 10, 10, 10] as [number, number, number, number],
-    filename: filename,
-    image: { type: 'jpeg' as const, quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
-  }
-  
   try {
+    // Dynamic import to avoid SSR issues
+    const html2pdfModule = await import('html2pdf.js')
+    const html2pdf = html2pdfModule.default || html2pdfModule
+    
+    // Create a temporary container
+    const element = document.createElement('div')
+    element.style.position = 'absolute'
+    element.style.left = '-9999px'
+    element.style.width = '800px'
+    element.innerHTML = html
+    document.body.appendChild(element)
+    
+    // Configure options - using type assertion to satisfy Html2PdfOptions
+    const opt = {
+      margin: [10, 10, 10, 10] as [number, number, number, number],
+      filename: filename,
+      image: { type: 'jpeg' as const, quality: 0.98 },
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true,
+        logging: false,
+        letterRendering: true,
+      },
+      jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
+    }
+    
     // Generate and download PDF
     await html2pdf().set(opt as any).from(element).save()
-  } finally {
+    
     // Clean up
     document.body.removeChild(element)
+  } catch (error) {
+    console.error('Erro ao gerar PDF:', error)
+    // Fallback: abrir em nova janela para impressão
+    const printWindow = window.open('', '_blank')
+    if (printWindow) {
+      printWindow.document.write(html)
+      printWindow.document.close()
+      setTimeout(() => {
+        printWindow.print()
+      }, 500)
+    }
+    throw error
   }
 }
 
@@ -389,5 +449,22 @@ Aguardo sua confirmacao!`
 export function openWhatsApp(phone: string, message: string) {
   const cleanPhone = phone.replace(/\D/g, '')
   const fullPhone = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`
-  window.open(`https://wa.me/${fullPhone}?text=${message}`, '_blank')
+  const whatsappUrl = `https://wa.me/${fullPhone}?text=${message}`
+  
+  // Tentar abrir normalmente
+  const whatsappWindow = window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
+  
+  // Se não abrir (bloqueio de pop-up), criar link temporário e clicar
+  if (!whatsappWindow || whatsappWindow.closed || typeof whatsappWindow.closed === 'undefined') {
+    const link = document.createElement('a')
+    link.href = whatsappUrl
+    link.target = '_blank'
+    link.rel = 'noopener noreferrer'
+    link.style.display = 'none'
+    document.body.appendChild(link)
+    link.click()
+    setTimeout(() => {
+      document.body.removeChild(link)
+    }, 100)
+  }
 }

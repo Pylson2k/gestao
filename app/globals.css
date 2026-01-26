@@ -142,11 +142,18 @@
   a {
     min-height: 44px;
     min-width: 44px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
   }
 
   /* Remove highlight em tap no mobile */
   * {
     -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Touch manipulation para melhor responsividade */
+  button, a, [role="button"] {
+    touch-action: manipulation;
   }
 
   /* Smooth scrolling */

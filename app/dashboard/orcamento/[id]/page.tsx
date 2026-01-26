@@ -85,57 +85,113 @@ export default function QuoteDetailPage({
   const formattedDate = new Date(quote.createdAt).toLocaleDateString('pt-BR')
 
   const handleDownloadPDF = async () => {
-    const html = generateQuotePDF(quote, companySettings)
-    const filename = `orcamento-${quote.number.replace(/\s+/g, '-')}.pdf`
-    await downloadPDF(html, filename)
-    
-    // Log de auditoria
     try {
-      const userId = sessionStorage.getItem('servipro_user') ? JSON.parse(sessionStorage.getItem('servipro_user')!).id : null
-      if (userId) {
-        await fetch('/api/audit/action', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'x-user-id': userId,
-          },
-          body: JSON.stringify({
-            action: 'download_quote_pdf',
-            entityType: 'quote',
-            entityId: quote.id,
-            description: `PDF do orçamento ${quote.number} baixado`,
-          }),
-        })
+      const html = generateQuotePDF(quote, companySettings)
+      const filename = `orcamento-${quote.number.replace(/\s+/g, '-')}.pdf`
+      
+      // Verificar se está em mobile/PWA
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      
+      if (isMobile) {
+        // No mobile, abrir em nova aba para visualizar e permitir download manual
+        const viewWindow = window.open('', '_blank')
+        if (viewWindow) {
+          viewWindow.document.write(html)
+          viewWindow.document.close()
+          // Adicionar botão de impressão/salvar
+          setTimeout(() => {
+            if (viewWindow && !viewWindow.closed) {
+              viewWindow.focus()
+              // Tentar download automático também
+              try {
+                downloadPDF(html, filename).catch(() => {
+                  // Se falhar, pelo menos a janela está aberta para o usuário salvar manualmente
+                })
+              } catch {}
+            }
+          }, 500)
+        } else {
+          alert('Por favor, permita pop-ups para baixar o PDF')
+        }
+      } else {
+        // Desktop: download direto
+        await downloadPDF(html, filename)
       }
-    } catch {}
+      
+      // Log de auditoria
+      try {
+        const userId = sessionStorage.getItem('servipro_user') ? JSON.parse(sessionStorage.getItem('servipro_user')!).id : null
+        if (userId) {
+          await fetch('/api/audit/action', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'x-user-id': userId,
+            },
+            body: JSON.stringify({
+              action: 'download_quote_pdf',
+              entityType: 'quote',
+              entityId: quote.id,
+              description: `PDF do orçamento ${quote.number} baixado`,
+            }),
+          })
+        }
+      } catch {}
+    } catch (error) {
+      console.error('Erro ao baixar PDF:', error)
+      alert('Erro ao baixar PDF. Tente visualizar o orçamento e usar a opção de impressão do navegador.')
+    }
   }
 
   const handleWhatsApp = async () => {
-    const message = generateWhatsAppMessage(quote)
-    openWhatsApp(quote.client.phone, message)
-    if (quote.status === 'draft') {
-      updateQuote(quote.id, { status: 'sent' })
-    }
-    
-    // Log de auditoria
     try {
-      const userId = sessionStorage.getItem('servipro_user') ? JSON.parse(sessionStorage.getItem('servipro_user')!).id : null
-      if (userId) {
-        await fetch('/api/audit/action', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'x-user-id': userId,
-          },
-          body: JSON.stringify({
-            action: 'send_quote_whatsapp',
-            entityType: 'quote',
-            entityId: quote.id,
-            description: `Orçamento ${quote.number} enviado via WhatsApp para ${quote.client.name}`,
-          }),
-        })
+      const message = generateWhatsAppMessage(quote)
+      const cleanPhone = quote.client.phone.replace(/\D/g, '')
+      const fullPhone = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`
+      const whatsappUrl = `https://wa.me/${fullPhone}?text=${message}`
+      
+      // Tentar abrir WhatsApp
+      const whatsappWindow = window.open(whatsappUrl, '_blank')
+      
+      // Se não abrir (bloqueio de pop-up), criar link temporário
+      if (!whatsappWindow || whatsappWindow.closed || typeof whatsappWindow.closed === 'undefined') {
+        // Criar link temporário e clicar automaticamente
+        const link = document.createElement('a')
+        link.href = whatsappUrl
+        link.target = '_blank'
+        link.rel = 'noopener noreferrer'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
       }
-    } catch {}
+      
+      if (quote.status === 'draft') {
+        updateQuote(quote.id, { status: 'sent' })
+      }
+      
+      // Log de auditoria
+      try {
+        const userId = sessionStorage.getItem('servipro_user') ? JSON.parse(sessionStorage.getItem('servipro_user')!).id : null
+        if (userId) {
+          await fetch('/api/audit/action', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'x-user-id': userId,
+            },
+            body: JSON.stringify({
+              action: 'send_quote_whatsapp',
+              entityType: 'quote',
+              entityId: quote.id,
+              description: `Orçamento ${quote.number} enviado via WhatsApp para ${quote.client.name}`,
+            }),
+          })
+        }
+      } catch {}
+    } catch (error) {
+      console.error('Erro ao abrir WhatsApp:', error)
+      alert('Erro ao abrir WhatsApp. Verifique se o número está correto.')
+    }
   }
 
   const handleViewQuote = async () => {
@@ -286,34 +342,45 @@ export default function QuoteDetailPage({
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border/50">
-        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4">
           <Link href="/dashboard">
-            <Button variant="ghost" size="icon" className="rounded-xl hover:bg-accent/50">
-              <ArrowLeft className="w-5 h-5" />
+            <Button variant="ghost" size="icon" className="rounded-xl hover:bg-accent/50 min-w-[48px] min-h-[48px] touch-manipulation">
+              <ArrowLeft className="w-6 h-6 sm:w-5 sm:h-5" />
             </Button>
           </Link>
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-bold text-foreground tracking-tight">{quote.number}</h1>
-              <Badge variant="secondary" className={cn('text-xs font-semibold px-3 py-1', status.className)}>
-                <StatusIcon className="w-3 h-3 mr-1.5" />
+            <div className="flex flex-wrap items-center gap-3 mb-2">
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">{quote.number}</h1>
+              <Badge variant="secondary" className={cn('text-sm sm:text-xs font-semibold px-3 sm:px-3 py-1.5 sm:py-1', status.className)}>
+                <StatusIcon className="w-4 h-4 sm:w-3 sm:h-3 mr-1.5" />
                 {status.label}
               </Badge>
             </div>
-            <p className="text-muted-foreground text-sm">Criado em {formattedDate}</p>
+            <p className="text-muted-foreground text-base sm:text-sm">Criado em {formattedDate}</p>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={handleViewQuote} className="rounded-xl border-2 hover:bg-accent/50">
-            <Eye className="w-4 h-4 mr-2" />
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+          <Button 
+            variant="outline" 
+            onClick={handleViewQuote} 
+            className="rounded-xl border-2 hover:bg-accent/50 min-h-[48px] text-base sm:text-sm px-6 py-3 sm:py-2 touch-manipulation"
+          >
+            <Eye className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
             Visualizar
           </Button>
-          <Button variant="outline" onClick={handleDownloadPDF} className="rounded-xl border-2 hover:bg-accent/50">
-            <Download className="w-4 h-4 mr-2" />
+          <Button 
+            variant="outline" 
+            onClick={handleDownloadPDF} 
+            className="rounded-xl border-2 hover:bg-accent/50 min-h-[48px] text-base sm:text-sm px-6 py-3 sm:py-2 touch-manipulation"
+          >
+            <Download className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
             Baixar PDF
           </Button>
-          <Button onClick={handleWhatsApp} className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-xl shadow-lg shadow-green-500/30">
-            <MessageCircle className="w-4 h-4 mr-2" />
+          <Button 
+            onClick={handleWhatsApp} 
+            className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-xl shadow-lg shadow-green-500/30 min-h-[48px] text-base sm:text-sm px-6 py-3 sm:py-2 touch-manipulation"
+          >
+            <MessageCircle className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
             WhatsApp
           </Button>
         </div>
@@ -323,24 +390,24 @@ export default function QuoteDetailPage({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm lg:col-span-2">
           <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-bold tracking-tight">Dados do Cliente</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl font-bold tracking-tight">Dados do Cliente</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <h3 className="font-bold text-foreground text-xl mb-1">{quote.client.name}</h3>
+              <h3 className="font-bold text-foreground text-2xl sm:text-xl mb-2">{quote.client.name}</h3>
             </div>
-            <div className="flex items-center gap-3 text-muted-foreground p-3 rounded-lg bg-muted/30">
-              <Phone className="w-4 h-4 text-primary" />
-              <span className="font-medium">{quote.client.phone}</span>
+            <div className="flex items-center gap-3 text-muted-foreground p-4 sm:p-3 rounded-lg bg-muted/30">
+              <Phone className="w-5 h-5 sm:w-4 sm:h-4 text-primary shrink-0" />
+              <span className="font-medium text-base sm:text-sm">{quote.client.phone}</span>
             </div>
-            <div className="flex items-start gap-3 text-muted-foreground p-3 rounded-lg bg-muted/30">
-              <MapPin className="w-4 h-4 mt-0.5 text-primary" />
-              <span className="font-medium">{quote.client.address}</span>
+            <div className="flex items-start gap-3 text-muted-foreground p-4 sm:p-3 rounded-lg bg-muted/30">
+              <MapPin className="w-5 h-5 sm:w-4 sm:h-4 mt-0.5 text-primary shrink-0" />
+              <span className="font-medium text-base sm:text-sm">{quote.client.address}</span>
             </div>
             {quote.client.email && (
-              <div className="flex items-center gap-3 text-muted-foreground p-3 rounded-lg bg-muted/30">
-                <Mail className="w-4 h-4 text-primary" />
-                <span className="font-medium">{quote.client.email}</span>
+              <div className="flex items-center gap-3 text-muted-foreground p-4 sm:p-3 rounded-lg bg-muted/30">
+                <Mail className="w-5 h-5 sm:w-4 sm:h-4 text-primary shrink-0" />
+                <span className="font-medium text-base sm:text-sm">{quote.client.email}</span>
               </div>
             )}
           </CardContent>
@@ -348,26 +415,26 @@ export default function QuoteDetailPage({
 
         <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-white to-primary/5 shadow-lg">
           <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-bold tracking-tight">Resumo Financeiro</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl font-bold tracking-tight">Resumo Financeiro</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex justify-between items-center py-2">
-              <span className="text-muted-foreground font-medium">Subtotal</span>
-              <span className="text-foreground font-semibold">
+            <div className="flex justify-between items-center py-3 sm:py-2">
+              <span className="text-muted-foreground font-medium text-base sm:text-sm">Subtotal</span>
+              <span className="text-foreground font-semibold text-lg sm:text-base">
                 {quote.subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </span>
             </div>
             {quote.discount > 0 && (
-              <div className="flex justify-between items-center py-2 border-t border-border/50">
-                <span className="text-muted-foreground font-medium">Desconto</span>
-                <span className="text-destructive font-semibold">
+              <div className="flex justify-between items-center py-3 sm:py-2 border-t border-border/50">
+                <span className="text-muted-foreground font-medium text-base sm:text-sm">Desconto</span>
+                <span className="text-destructive font-semibold text-lg sm:text-base">
                   - {quote.discount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </span>
               </div>
             )}
             <div className="border-t-2 border-primary/30 pt-4 mt-2 flex justify-between items-center bg-gradient-to-r from-primary/10 to-transparent p-4 rounded-lg">
-              <span className="font-bold text-foreground text-lg">Total</span>
-              <span className="text-2xl font-bold text-primary">
+              <span className="font-bold text-foreground text-xl sm:text-lg">Total</span>
+              <span className="text-3xl sm:text-2xl font-bold text-primary">
                 {quote.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </span>
             </div>
@@ -379,17 +446,17 @@ export default function QuoteDetailPage({
       {quote.services.length > 0 && (
         <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
           <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-bold tracking-tight">Serviços</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl font-bold tracking-tight">Serviços</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto rounded-lg border border-border/50">
-              <table className="w-full text-sm">
+              <table className="w-full text-base sm:text-sm">
                 <thead>
                   <tr className="bg-gradient-to-r from-slate-50 to-slate-100 border-b-2 border-slate-200">
-                    <th className="text-left py-4 px-4 font-bold text-slate-700 uppercase text-xs tracking-wider">Descrição</th>
-                    <th className="text-center py-4 px-4 font-bold text-slate-700 uppercase text-xs tracking-wider">Qtd</th>
-                    <th className="text-right py-4 px-4 font-bold text-slate-700 uppercase text-xs tracking-wider">Valor Unit.</th>
-                    <th className="text-right py-4 px-4 font-bold text-slate-700 uppercase text-xs tracking-wider">Total</th>
+                    <th className="text-left py-4 sm:py-3 px-4 sm:px-3 font-bold text-slate-700 uppercase text-sm sm:text-xs tracking-wider">Descrição</th>
+                    <th className="text-center py-4 sm:py-3 px-4 sm:px-3 font-bold text-slate-700 uppercase text-sm sm:text-xs tracking-wider">Qtd</th>
+                    <th className="text-right py-4 sm:py-3 px-4 sm:px-3 font-bold text-slate-700 uppercase text-sm sm:text-xs tracking-wider">Valor Unit.</th>
+                    <th className="text-right py-4 sm:py-3 px-4 sm:px-3 font-bold text-slate-700 uppercase text-sm sm:text-xs tracking-wider">Total</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -398,12 +465,12 @@ export default function QuoteDetailPage({
                       "border-b border-border/30 transition-colors hover:bg-slate-50/50",
                       index % 2 === 0 ? "bg-white" : "bg-slate-50/30"
                     )}>
-                      <td className="py-4 px-4 text-foreground font-medium">{item.name}</td>
-                      <td className="py-4 px-4 text-center text-foreground font-semibold">{item.quantity}</td>
-                      <td className="py-4 px-4 text-right text-muted-foreground">
+                      <td className="py-4 sm:py-3 px-4 sm:px-3 text-foreground font-medium text-base sm:text-sm">{item.name}</td>
+                      <td className="py-4 sm:py-3 px-4 sm:px-3 text-center text-foreground font-semibold text-base sm:text-sm">{item.quantity}</td>
+                      <td className="py-4 sm:py-3 px-4 sm:px-3 text-right text-muted-foreground text-base sm:text-sm">
                         {item.unitPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                       </td>
-                      <td className="py-4 px-4 text-right font-bold text-foreground">
+                      <td className="py-4 sm:py-3 px-4 sm:px-3 text-right font-bold text-foreground text-base sm:text-sm">
                         {(item.quantity * item.unitPrice).toLocaleString('pt-BR', {
                           style: 'currency',
                           currency: 'BRL',
@@ -422,17 +489,17 @@ export default function QuoteDetailPage({
       {quote.materials.length > 0 && (
         <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
           <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-bold tracking-tight">Materiais</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl font-bold tracking-tight">Materiais</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto rounded-lg border border-border/50">
-              <table className="w-full text-sm">
+              <table className="w-full text-base sm:text-sm">
                 <thead>
                   <tr className="bg-gradient-to-r from-slate-50 to-slate-100 border-b-2 border-slate-200">
-                    <th className="text-left py-4 px-4 font-bold text-slate-700 uppercase text-xs tracking-wider">Descrição</th>
-                    <th className="text-center py-4 px-4 font-bold text-slate-700 uppercase text-xs tracking-wider">Qtd</th>
-                    <th className="text-right py-4 px-4 font-bold text-slate-700 uppercase text-xs tracking-wider">Valor Unit.</th>
-                    <th className="text-right py-4 px-4 font-bold text-slate-700 uppercase text-xs tracking-wider">Total</th>
+                    <th className="text-left py-4 sm:py-3 px-4 sm:px-3 font-bold text-slate-700 uppercase text-sm sm:text-xs tracking-wider">Descrição</th>
+                    <th className="text-center py-4 sm:py-3 px-4 sm:px-3 font-bold text-slate-700 uppercase text-sm sm:text-xs tracking-wider">Qtd</th>
+                    <th className="text-right py-4 sm:py-3 px-4 sm:px-3 font-bold text-slate-700 uppercase text-sm sm:text-xs tracking-wider">Valor Unit.</th>
+                    <th className="text-right py-4 sm:py-3 px-4 sm:px-3 font-bold text-slate-700 uppercase text-sm sm:text-xs tracking-wider">Total</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -441,12 +508,12 @@ export default function QuoteDetailPage({
                       "border-b border-border/30 transition-colors hover:bg-slate-50/50",
                       index % 2 === 0 ? "bg-white" : "bg-slate-50/30"
                     )}>
-                      <td className="py-4 px-4 text-foreground font-medium">{item.name}</td>
-                      <td className="py-4 px-4 text-center text-foreground font-semibold">{item.quantity}</td>
-                      <td className="py-4 px-4 text-right text-muted-foreground">
+                      <td className="py-4 sm:py-3 px-4 sm:px-3 text-foreground font-medium text-base sm:text-sm">{item.name}</td>
+                      <td className="py-4 sm:py-3 px-4 sm:px-3 text-center text-foreground font-semibold text-base sm:text-sm">{item.quantity}</td>
+                      <td className="py-4 sm:py-3 px-4 sm:px-3 text-right text-muted-foreground text-base sm:text-sm">
                         {item.unitPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                       </td>
-                      <td className="py-4 px-4 text-right font-bold text-foreground">
+                      <td className="py-4 sm:py-3 px-4 sm:px-3 text-right font-bold text-foreground text-base sm:text-sm">
                         {(item.quantity * item.unitPrice).toLocaleString('pt-BR', {
                           style: 'currency',
                           currency: 'BRL',
@@ -465,12 +532,12 @@ export default function QuoteDetailPage({
       {quote.observations && (
         <Card className="border-amber-200/50 bg-gradient-to-br from-amber-50/50 via-white to-amber-50/30 shadow-sm">
           <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-bold tracking-tight flex items-center gap-2">
+            <CardTitle className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
               <span className="text-amber-600">Observações</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-foreground whitespace-pre-wrap leading-relaxed font-medium">{quote.observations}</p>
+            <p className="text-foreground whitespace-pre-wrap leading-relaxed font-medium text-base sm:text-sm">{quote.observations}</p>
           </CardContent>
         </Card>
       )}
@@ -478,13 +545,13 @@ export default function QuoteDetailPage({
       {/* Actions */}
       <Card className="border-border">
         <CardHeader>
-          <CardTitle className="text-lg">Acoes</CardTitle>
+          <CardTitle className="text-xl sm:text-lg">Acoes</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-3">
             <Link href="/dashboard">
-              <Button className="bg-primary hover:bg-primary/90">
-                <ArrowLeft className="w-4 h-4 mr-2" />
+              <Button className="bg-primary hover:bg-primary/90 min-h-[48px] text-base sm:text-sm px-6 py-3 sm:py-2 touch-manipulation">
+                <ArrowLeft className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
                 Voltar ao Dashboard
               </Button>
             </Link>
@@ -494,17 +561,17 @@ export default function QuoteDetailPage({
                 <Button
                   variant="outline"
                   onClick={() => handleStatusChange('approved')}
-                  className="text-accent border-accent hover:bg-accent/10"
+                  className="text-accent border-accent hover:bg-accent/10 min-h-[48px] text-base sm:text-sm px-6 py-3 sm:py-2 touch-manipulation"
                 >
-                  <CheckCircle className="w-4 h-4 mr-2" />
+                  <CheckCircle className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
                   Marcar como Aprovado
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => handleStatusChange('rejected')}
-                  className="text-destructive border-destructive hover:bg-destructive/10"
+                  className="text-destructive border-destructive hover:bg-destructive/10 min-h-[48px] text-base sm:text-sm px-6 py-3 sm:py-2 touch-manipulation"
                 >
-                  <XCircle className="w-4 h-4 mr-2" />
+                  <XCircle className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
                   Marcar como Rejeitado
                 </Button>
               </>
@@ -516,17 +583,17 @@ export default function QuoteDetailPage({
                 <Button
                   variant="outline"
                   onClick={handleStartServiceClick}
-                  className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                  className="text-blue-600 border-blue-600 hover:bg-blue-50 min-h-[48px] text-base sm:text-sm px-6 py-3 sm:py-2 touch-manipulation"
                 >
-                  <Play className="w-4 h-4 mr-2" />
+                  <Play className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
                   Iniciar Servico
                 </Button>
                 <Button
                   variant="outline"
                   onClick={handleCancelService}
-                  className="text-orange-600 border-orange-600 hover:bg-orange-50"
+                  className="text-orange-600 border-orange-600 hover:bg-orange-50 min-h-[48px] text-base sm:text-sm px-6 py-3 sm:py-2 touch-manipulation"
                 >
-                  <XCircle className="w-4 h-4 mr-2" />
+                  <XCircle className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
                   Cancelar Servico
                 </Button>
               </>
@@ -537,9 +604,9 @@ export default function QuoteDetailPage({
               <Button
                 variant="outline"
                 onClick={handleCompleteService}
-                className="text-green-600 border-green-600 hover:bg-green-50"
+                className="text-green-600 border-green-600 hover:bg-green-50 min-h-[48px] text-base sm:text-sm px-6 py-3 sm:py-2 touch-manipulation"
               >
-                <CheckCircle2 className="w-4 h-4 mr-2" />
+                <CheckCircle2 className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
                 Finalizar Servico
               </Button>
             )}
@@ -547,8 +614,8 @@ export default function QuoteDetailPage({
             {/* Botão de editar (não disponível para finalizados ou cancelados) */}
             {quote.status !== 'completed' && quote.status !== 'cancelled' && (
               <Link href={`/dashboard/editar-orcamento/${quote.id}`}>
-                <Button variant="outline">
-                  <Edit className="w-4 h-4 mr-2" />
+                <Button variant="outline" className="min-h-[48px] text-base sm:text-sm px-6 py-3 sm:py-2 touch-manipulation">
+                  <Edit className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
                   Editar
                 </Button>
               </Link>
@@ -556,8 +623,8 @@ export default function QuoteDetailPage({
 
             {/* Botão de excluir (não disponível para finalizados ou cancelados) */}
             {quote.status !== 'completed' && quote.status !== 'cancelled' && (
-              <Button variant="outline" onClick={handleDelete} className="text-destructive hover:bg-destructive/10 bg-transparent">
-                <Trash2 className="w-4 h-4 mr-2" />
+              <Button variant="outline" onClick={handleDelete} className="text-destructive hover:bg-destructive/10 bg-transparent min-h-[48px] text-base sm:text-sm px-6 py-3 sm:py-2 touch-manipulation">
+                <Trash2 className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
                 Excluir
               </Button>
             )}
