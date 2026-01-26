@@ -36,6 +36,10 @@ export type AuditAction =
   // Fechamentos de Caixa
   | 'create_cash_closing'
   | 'view_cash_closing'
+  // Pagamentos
+  | 'create_payment'
+  | 'update_payment'
+  | 'delete_payment'
   // Configurações
   | 'update_company_settings'
   | 'update_profile'
@@ -49,7 +53,7 @@ export type AuditAction =
   | 'export_csv'
   | 'export_pdf'
 
-export type EntityType = 'quote' | 'expense' | 'client' | 'employee' | 'service' | 'cash_closing' | 'company_settings' | 'user' | 'export'
+export type EntityType = 'quote' | 'expense' | 'client' | 'employee' | 'service' | 'cash_closing' | 'payment' | 'company_settings' | 'user' | 'export'
 
 interface AuditLogData {
   userId: string
