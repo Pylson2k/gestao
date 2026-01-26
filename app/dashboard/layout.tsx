@@ -11,6 +11,7 @@ import { EmployeesProvider } from '@/contexts/employees-context'
 import { ClientsProvider } from '@/contexts/clients-context'
 import { ServicesProvider } from '@/contexts/services-context'
 import { CashClosingsProvider } from '@/contexts/cash-closings-context'
+import { PaymentsProvider } from '@/contexts/payments-context'
 import { Sidebar } from '@/components/dashboard/sidebar'
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
@@ -58,7 +59,9 @@ export default function DashboardLayout({
             <ClientsProvider>
               <ServicesProvider>
                 <CashClosingsProvider>
-                  <DashboardContent>{children}</DashboardContent>
+                  <PaymentsProvider>
+                    <DashboardContent>{children}</DashboardContent>
+                  </PaymentsProvider>
                 </CashClosingsProvider>
               </ServicesProvider>
             </ClientsProvider>

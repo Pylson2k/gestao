@@ -24,6 +24,7 @@ import {
   Wrench,
   Wallet,
   Calendar,
+  CreditCard,
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useCompany } from '@/contexts/company-context'
@@ -33,6 +34,7 @@ const navigation = [
   { name: 'Novo Orcamento', href: '/dashboard/novo-orcamento', icon: FileText },
   { name: 'Historico', href: '/dashboard/historico', icon: History },
   { name: 'Faturamento', href: '/dashboard/faturamento', icon: DollarSign },
+  { name: 'Pagamentos', href: '/dashboard/pagamentos', icon: CreditCard },
   { name: 'Clientes', href: '/dashboard/clientes', icon: UserCircle },
   { name: 'Servicos', href: '/dashboard/servicos', icon: Wrench },
   { name: 'Funcionarios', href: '/dashboard/funcionarios', icon: Users },

@@ -30,6 +30,7 @@ model User {
   employees         Employee[]
   services          Service[]
   cashClosings      CashClosing[]
+  payments          Payment[]
   
   @@map("users")
 }
@@ -67,6 +68,7 @@ model Quote {
   client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
   services    ServiceItem[]
   materials   MaterialItem[]
+  payments    Payment[]
   
   @@map("quotes")
 }
@@ -186,11 +188,31 @@ model Expense {
   @@map("expenses")
 }
 
+model Payment {
+  id          String   @id @default(cuid())
+  quoteId     String
+  userId      String
+  amount      Float    // Valor do pagamento
+  paymentDate DateTime // Data do pagamento
+  paymentMethod String // dinheiro, pix, cartao_credito, cartao_debito, transferencia, boleto
+  observations String? @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  quote       Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([quoteId])
+  @@index([userId])
+  @@index([paymentDate])
+  @@map("payments")
+}
+
 model AuditLog {
   id          String   @id @default(cuid())
   userId      String
-  action      String   // create_quote, update_quote, delete_quote, create_expense, update_expense, delete_expense, change_status, change_discount, change_total
-  entityType  String   // quote, expense
+  action      String   // create_quote, update_quote, delete_quote, create_expense, update_expense, delete_expense, change_status, change_discount, change_total, create_payment, update_payment, delete_payment
+  entityType  String   // quote, expense, payment
   entityId    String
   description String
   oldValue    String?  @db.Text  // JSON com valores antigos

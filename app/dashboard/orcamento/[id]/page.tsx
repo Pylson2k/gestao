@@ -1,10 +1,11 @@
 'use client'
 
-import { use, useState } from 'react'
+import { use, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useQuotes } from '@/contexts/quotes-context'
 import { useCompany } from '@/contexts/company-context'
+import { usePayments } from '@/contexts/payments-context'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -43,6 +44,9 @@ import {
   Play,
   CheckCircle2,
   Mail,
+  Plus,
+  DollarSign,
+  CreditCard,
 } from 'lucide-react'
 
 const statusConfig = {
@@ -64,8 +68,16 @@ export default function QuoteDetailPage({
   const router = useRouter()
   const { getQuoteById, updateQuote, deleteQuote } = useQuotes()
   const { settings: companySettings } = useCompany()
+  const { getPaymentsByQuoteId, getTotalPaidByQuoteId, refreshPayments } = usePayments()
 
   const quote = getQuoteById(id)
+
+  // Carregar pagamentos quando a página carregar
+  useEffect(() => {
+    if (quote?.id) {
+      refreshPayments(quote.id)
+    }
+  }, [quote?.id, refreshPayments])
 
   if (!quote) {
     return (
@@ -438,6 +450,50 @@ export default function QuoteDetailPage({
                 {quote.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </span>
             </div>
+            {(() => {
+              const totalPaid = getTotalPaidByQuoteId(quote.id)
+              const remaining = quote.total - totalPaid
+              const paymentPercentage = quote.total > 0 ? (totalPaid / quote.total) * 100 : 0
+              
+              return (
+                <>
+                  <div className="border-t border-border/50 pt-4 mt-2 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground font-medium text-base sm:text-sm">Total Pago</span>
+                      <span className="text-green-600 font-semibold text-lg sm:text-base">
+                        {totalPaid.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground font-medium text-base sm:text-sm">Saldo Pendente</span>
+                      <span className={cn(
+                        "font-semibold text-lg sm:text-base",
+                        remaining > 0 ? "text-orange-600" : "text-green-600"
+                      )}>
+                        {remaining.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      </span>
+                    </div>
+                    {quote.total > 0 && (
+                      <div className="mt-3">
+                        <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                          <span>Progresso de Pagamento</span>
+                          <span>{paymentPercentage.toFixed(1)}%</span>
+                        </div>
+                        <div className="w-full bg-muted rounded-full h-2">
+                          <div
+                            className={cn(
+                              "h-2 rounded-full transition-all",
+                              remaining === 0 ? "bg-green-500" : "bg-primary"
+                            )}
+                            style={{ width: `${Math.min(paymentPercentage, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )
+            })()}
           </CardContent>
         </Card>
       </div>
@@ -541,6 +597,99 @@ export default function QuoteDetailPage({
           </CardContent>
         </Card>
       )}
+
+      {/* Payment History */}
+      {(() => {
+        const quotePayments = getPaymentsByQuoteId(quote.id)
+        const paymentMethodLabels: Record<string, string> = {
+          dinheiro: 'Dinheiro',
+          pix: 'PIX',
+          cartao_credito: 'Cartão de Crédito',
+          cartao_debito: 'Cartão de Débito',
+          transferencia: 'Transferência Bancária',
+          boleto: 'Boleto',
+        }
+        const paymentMethodColors: Record<string, string> = {
+          dinheiro: 'bg-green-500/10 text-green-500',
+          pix: 'bg-blue-500/10 text-blue-500',
+          cartao_credito: 'bg-purple-500/10 text-purple-500',
+          cartao_debito: 'bg-indigo-500/10 text-indigo-500',
+          transferencia: 'bg-cyan-500/10 text-cyan-500',
+          boleto: 'bg-orange-500/10 text-orange-500',
+        }
+        
+        return (
+          <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl sm:text-2xl font-bold tracking-tight flex items-center justify-between">
+                <span>Histórico de Pagamentos</span>
+                <Link href="/dashboard/pagamentos">
+                  <Button variant="outline" size="sm" className="min-h-[40px]">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Registrar Pagamento
+                  </Button>
+                </Link>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {quotePayments.length === 0 ? (
+                <div className="text-center py-8">
+                  <CreditCard className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+                  <p className="text-muted-foreground mb-4">Nenhum pagamento registrado ainda</p>
+                  <Link href="/dashboard/pagamentos">
+                    <Button variant="outline" className="min-h-[48px]">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Registrar Primeiro Pagamento
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {quotePayments
+                    .sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime())
+                    .map((payment) => (
+                      <div
+                        key={payment.id}
+                        className="border border-border/50 rounded-lg p-4 hover:bg-muted/30 transition-colors"
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                          <div className="flex-1">
+                            <div className="flex flex-wrap items-center gap-2 mb-2">
+                              <Badge className={cn('text-xs', paymentMethodColors[payment.paymentMethod] || 'bg-gray-500/10 text-gray-500')}>
+                                {paymentMethodLabels[payment.paymentMethod] || payment.paymentMethod}
+                              </Badge>
+                              <span className="text-sm text-muted-foreground">
+                                {new Date(payment.paymentDate).toLocaleDateString('pt-BR', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  year: 'numeric',
+                                })}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <DollarSign className="w-4 h-4 text-primary" />
+                              <span className="font-bold text-lg text-foreground">
+                                {payment.amount.toLocaleString('pt-BR', {
+                                  style: 'currency',
+                                  currency: 'BRL',
+                                })}
+                              </span>
+                            </div>
+                            {payment.observations && (
+                              <p className="text-sm text-muted-foreground mt-2">
+                                {payment.observations}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )
+      })()}
 
       {/* Actions */}
       <Card className="border-border">

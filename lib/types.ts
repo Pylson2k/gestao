@@ -43,6 +43,7 @@ export interface Quote {
   serviceStartedAt?: Date
   serviceCompletedAt?: Date
   userId: string
+  payments?: Payment[]
 }
 
 export interface AuthState {
@@ -127,4 +128,25 @@ export interface CashClosing {
   totalExpenses: number
   observations?: string | null
   createdAt: string | Date
+}
+
+export type PaymentMethod = 
+  | 'dinheiro' 
+  | 'pix' 
+  | 'cartao_credito' 
+  | 'cartao_debito' 
+  | 'transferencia' 
+  | 'boleto'
+
+export interface Payment {
+  id: string
+  quoteId: string
+  userId: string
+  amount: number
+  paymentDate: string | Date
+  paymentMethod: PaymentMethod
+  observations?: string | null
+  createdAt: string | Date
+  updatedAt: string | Date
+  quote?: Quote
 }

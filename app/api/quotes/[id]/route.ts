@@ -45,6 +45,7 @@ export async function GET(
         client: true,
         services: true,
         materials: true,
+        payments: true,
       },
     })
 

@@ -42,6 +42,7 @@ export async function GET(request: NextRequest) {
         client: true,
         services: true,
         materials: true,
+        payments: true,
       },
       orderBy: {
         createdAt: 'desc',

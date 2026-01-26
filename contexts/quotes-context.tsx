@@ -68,6 +68,17 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
           serviceStartedAt: q.serviceStartedAt ? new Date(q.serviceStartedAt) : undefined,
           serviceCompletedAt: q.serviceCompletedAt ? new Date(q.serviceCompletedAt) : undefined,
           userId: q.userId,
+          payments: q.payments ? q.payments.map((p: any) => ({
+            id: p.id,
+            quoteId: p.quoteId,
+            userId: p.userId,
+            amount: p.amount,
+            paymentDate: new Date(p.paymentDate),
+            paymentMethod: p.paymentMethod,
+            observations: p.observations,
+            createdAt: new Date(p.createdAt),
+            updatedAt: new Date(p.updatedAt),
+          })) : [],
         }))
         setQuotes(transformedQuotes)
       }
