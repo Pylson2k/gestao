@@ -24,13 +24,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Plus, Trash2, Edit, Wrench, CheckCircle, XCircle, DollarSign, Download } from 'lucide-react'
+import { Plus, Trash2, Edit, Wrench, CheckCircle, XCircle, DollarSign, Download, Sparkles, Loader2 } from 'lucide-react'
 import type { Service } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { exportServicesToCSV } from '@/lib/export-utils'
 
 const unitOptions = [
   { value: 'unidade', label: 'Unidade' },
+  { value: 'ponto', label: 'Ponto' },
   { value: 'hora', label: 'Hora' },
   { value: 'm²', label: 'm²' },
   { value: 'm³', label: 'm³' },
@@ -39,6 +40,7 @@ const unitOptions = [
   { value: 'tonelada', label: 'Tonelada' },
   { value: 'dia', label: 'Dia' },
   { value: 'mes', label: 'Mês' },
+  { value: 'servico', label: 'Serviço' },
 ]
 
 export default function ServicosPage() {
@@ -56,6 +58,7 @@ export default function ServicosPage() {
 
   const [filterActive, setFilterActive] = useState<string>('all')
   const [searchTerm, setSearchTerm] = useState('')
+  const [isSeeding, setIsSeeding] = useState(false)
 
   // Buscar todos os serviços (incluindo inativos) para a página
   const [allServices, setAllServices] = useState<Service[]>([])
@@ -215,6 +218,70 @@ export default function ServicosPage() {
     exportServicesToCSV(servicesToExport)
   }
 
+  const handleSeedServices = async () => {
+    if (!user?.id) {
+      alert('Usuário não autenticado')
+      return
+    }
+
+    if (allServices.length > 0) {
+      const confirmMessage = `Você já possui ${allServices.length} serviço(s) cadastrado(s).\n\nPara popular os serviços pré-definidos, você precisa excluir os serviços existentes primeiro.\n\nDeseja continuar?`
+      if (!confirm(confirmMessage)) {
+        return
+      }
+    } else {
+      if (!confirm('Deseja popular os serviços pré-definidos de elétrica?\n\nIsso criará 20 serviços com valores médios do mercado.')) {
+        return
+      }
+    }
+
+    setIsSeeding(true)
+    try {
+      const response = await fetch('/api/services/seed', {
+        method: 'POST',
+        headers: {
+          'x-user-id': user.id,
+        },
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        if (response.status === 400 && data.existingCount) {
+          alert(`Erro: ${data.message}\n\nVocê possui ${data.existingCount} serviço(s) cadastrado(s). Exclua-os primeiro ou adicione manualmente.`)
+        } else {
+          alert(`Erro: ${data.error || 'Erro ao popular serviços'}`)
+        }
+        return
+      }
+
+      alert(`Sucesso! ${data.count} serviços pré-definidos foram criados.\n\nVocê pode editá-los conforme necessário.`)
+
+      // Atualizar lista de serviços
+      if (user?.id) {
+        const refreshResponse = await fetch('/api/services', {
+          headers: {
+            'x-user-id': user.id,
+          },
+        })
+        if (refreshResponse.ok) {
+          const refreshData = await refreshResponse.json()
+          setAllServices(refreshData.map((s: any) => ({
+            ...s,
+            createdAt: new Date(s.createdAt),
+            updatedAt: new Date(s.updatedAt),
+          })))
+        }
+      }
+      await refreshServices()
+    } catch (error: any) {
+      console.error('Error seeding services:', error)
+      alert(`Erro ao popular serviços: ${error.message}`)
+    } finally {
+      setIsSeeding(false)
+    }
+  }
+
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
@@ -229,6 +296,24 @@ export default function ServicosPage() {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            onClick={handleSeedServices}
+            disabled={isSeeding || isLoading}
+            className="min-h-[48px] text-base sm:text-sm touch-manipulation w-full sm:w-auto border-purple-200 hover:border-purple-400 hover:bg-purple-50"
+          >
+            {isSeeding ? (
+              <>
+                <Loader2 className="w-5 h-5 sm:w-4 sm:h-4 mr-2 animate-spin" />
+                Populando...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
+                Popular Serviços Pré-definidos
+              </>
+            )}
+          </Button>
           <Button
             variant="outline"
             onClick={handleExport}

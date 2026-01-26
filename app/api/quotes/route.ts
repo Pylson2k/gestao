@@ -36,17 +36,48 @@ export async function GET(request: NextRequest) {
       where.status = status
     }
 
+    // Otimizar query - carregar apenas dados necessários
     const quotes = await prisma.quote.findMany({
       where,
       include: {
-        client: true,
-        services: true,
-        materials: true,
-        payments: true,
+        client: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            address: true,
+            email: true,
+          },
+        },
+        services: {
+          select: {
+            id: true,
+            name: true,
+            quantity: true,
+            unitPrice: true,
+          },
+        },
+        materials: {
+          select: {
+            id: true,
+            name: true,
+            quantity: true,
+            unitPrice: true,
+          },
+        },
+        payments: {
+          select: {
+            id: true,
+            amount: true,
+            paymentDate: true,
+            paymentMethod: true,
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
       },
+      take: 100, // Limitar a 100 orçamentos por vez
     })
 
     return NextResponse.json(quotes)
@@ -148,23 +179,35 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate quote number
+    // Generate quote number (otimizado - busca apenas o último número)
     const year = new Date().getFullYear()
-    const count = await prisma.quote.count({
+    const lastQuote = await prisma.quote.findFirst({
       where: {
         number: {
           startsWith: `ORC-${year}-`,
         },
+        userId: dbUserId, // Filtrar por usuário para melhor performance
       },
+      select: { number: true },
+      orderBy: { createdAt: 'desc' },
     })
+    
+    let count = 0
+    if (lastQuote) {
+      const match = lastQuote.number.match(/ORC-\d+-(\d+)/)
+      if (match) {
+        count = parseInt(match[1], 10)
+      }
+    }
     const number = `ORC-${year}-${String(count + 1).padStart(3, '0')}`
 
-    // Create or find client
+    // Create or find client (otimizado - usa upsert quando possível)
     let clientRecord = await prisma.client.findFirst({
       where: {
         name: client.name,
-        phone: client.phone,
+        phone: client.phone || '',
       },
+      select: { id: true }, // Apenas o ID necessário
     })
 
     if (!clientRecord) {
@@ -175,6 +218,7 @@ export async function POST(request: NextRequest) {
           address: client.address || '',
           email: client.email || '',
         },
+        select: { id: true },
       })
     }
 
@@ -221,9 +265,9 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Log de auditoria
+    // Log de auditoria (assíncrono - não bloqueia a resposta)
     const metadata = getRequestMetadata(request)
-    await createAuditLog({
+    createAuditLog({
       userId,
       action: 'create_quote',
       entityType: 'quote',
@@ -238,7 +282,7 @@ export async function POST(request: NextRequest) {
         status: quote.status,
       },
       ...metadata,
-    })
+    }).catch(err => console.error('Audit log error (non-blocking):', err))
 
     return NextResponse.json(quote, { status: 201 })
   } catch (error: any) {

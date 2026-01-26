@@ -22,7 +22,7 @@ import {
 import { ServiceItemRow } from './service-item-row'
 import { MaterialItemRow } from './material-item-row'
 import type { Client, ServiceItem, MaterialItem, Quote } from '@/lib/types'
-import { Plus, Save, ArrowLeft, UserCircle } from 'lucide-react'
+import { Plus, Save, ArrowLeft, UserCircle, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 
 interface QuoteFormProps {
@@ -159,10 +159,15 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
 
       if (initialData) {
         await updateQuote(initialData.id, quoteData)
-        router.push(`/dashboard/orcamento/${initialData.id}`)
+        setIsSubmitting(false)
+        // Usar replace para evitar problemas de navegação
+        router.replace(`/dashboard/orcamento/${initialData.id}`)
       } else {
         const newQuote = await addQuote(quoteData)
-        router.push(`/dashboard/orcamento/${newQuote.id}`)
+        setIsSubmitting(false)
+        // Usar replace e garantir que o estado foi atualizado
+        await new Promise(resolve => setTimeout(resolve, 50))
+        router.replace(`/dashboard/orcamento/${newQuote.id}`)
       }
     } catch (err: any) {
       console.error('Error creating quote:', err)
@@ -436,9 +441,22 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
             Cancelar
           </Button>
         </Link>
-        <Button type="submit" disabled={isSubmitting} className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30">
-          <Save className="w-4 h-4 mr-2" />
-          {isSubmitting ? 'Salvando...' : initialData ? 'Salvar Alterações' : 'Criar Orçamento'}
+        <Button 
+          type="submit" 
+          disabled={isSubmitting} 
+          className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Salvando...
+            </>
+          ) : (
+            <>
+              <Save className="w-4 h-4 mr-2" />
+              {initialData ? 'Salvar Alterações' : 'Criar Orçamento'}
+            </>
+          )}
         </Button>
       </div>
     </form>
