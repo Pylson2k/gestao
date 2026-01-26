@@ -142,9 +142,9 @@ export async function POST(request: NextRequest) {
     const metadata = getRequestMetadata(request)
     await createAuditLog({
       userId,
-      action: 'create_quote', // Reutilizando ação existente
-      entityType: 'quote', // Reutilizando tipo existente
-      entityId: `client-${client.id}`,
+      action: 'create_client',
+      entityType: 'client',
+      entityId: client.id,
       description: `Cliente cadastrado - ${client.name} (${client.phone})`,
       newValue: {
         name: client.name,

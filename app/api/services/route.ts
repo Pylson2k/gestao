@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getDbUserId } from '@/lib/user-mapping'
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log'
 
-// GET - List all employees for a user
+// GET - List all services for a user
 export async function GET(request: NextRequest) {
   try {
     const userId = request.headers.get('x-user-id')
     const searchParams = request.nextUrl.searchParams
     const isActive = searchParams.get('isActive')
+    const search = searchParams.get('search')
 
     if (!userId) {
       return NextResponse.json(
@@ -28,25 +29,32 @@ export async function GET(request: NextRequest) {
     if (isActive !== null && isActive !== undefined) {
       where.isActive = isActive === 'true'
     }
+    
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ]
+    }
 
-    const employees = await prisma.employee.findMany({
+    const services = await prisma.service.findMany({
       where,
       orderBy: {
-        name: 'asc',
+        createdAt: 'desc',
       },
     })
 
-    return NextResponse.json(employees)
+    return NextResponse.json(services)
   } catch (error) {
-    console.error('Get employees error:', error)
+    console.error('Get services error:', error)
     return NextResponse.json(
-      { error: 'Erro ao buscar funcionarios' },
+      { error: 'Erro ao buscar servicos' },
       { status: 500 }
     )
   }
 }
 
-// POST - Create new employee
+// POST - Create new service
 export async function POST(request: NextRequest) {
   try {
     const userId = request.headers.get('x-user-id')
@@ -66,7 +74,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, cpf, phone, email, position, hireDate, observations, isActive } = body
+    const { name, description, unitPrice, unit, isActive } = body
 
     // Validações
     if (!name || name.trim() === '') {
@@ -76,19 +84,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    if (unitPrice === undefined || unitPrice < 0) {
+      return NextResponse.json(
+        { error: 'Preco unitario deve ser maior ou igual a zero' },
+        { status: 400 }
+      )
+    }
+
     const { prisma } = await import('@/lib/prisma')
     const dbUserId = await getDbUserId(userId)
 
-    const employee = await prisma.employee.create({
+    const service = await prisma.service.create({
       data: {
         userId: dbUserId,
         name: name.trim(),
-        cpf: cpf?.trim() || null,
-        phone: phone?.trim() || null,
-        email: email?.trim() || null,
-        position: position?.trim() || null,
-        hireDate: hireDate ? new Date(hireDate) : null,
-        observations: observations?.trim() || null,
+        description: description?.trim() || null,
+        unitPrice: parseFloat(unitPrice),
+        unit: unit?.trim() || 'unidade',
         isActive: isActive !== undefined ? isActive : true,
       },
     })
@@ -97,23 +109,24 @@ export async function POST(request: NextRequest) {
     const metadata = getRequestMetadata(request)
     await createAuditLog({
       userId,
-      action: 'create_employee',
-      entityType: 'employee',
-      entityId: employee.id,
-      description: `Funcionário cadastrado - ${employee.name}${employee.position ? ` (${employee.position})` : ''}`,
+      action: 'create_service',
+      entityType: 'service',
+      entityId: service.id,
+      description: `Serviço cadastrado - ${service.name} - Preço: R$ ${service.unitPrice.toFixed(2)}/${service.unit}`,
       newValue: {
-        name: employee.name,
-        position: employee.position,
-        isActive: employee.isActive,
+        name: service.name,
+        unitPrice: service.unitPrice,
+        unit: service.unit,
+        isActive: service.isActive,
       },
       ...metadata,
     })
 
-    return NextResponse.json(employee, { status: 201 })
+    return NextResponse.json(service, { status: 201 })
   } catch (error: any) {
-    console.error('Create employee error:', error)
+    console.error('Create service error:', error)
     return NextResponse.json(
-      { error: 'Erro ao criar funcionario', details: error.message },
+      { error: 'Erro ao criar servico', details: error.message },
       { status: 500 }
     )
   }

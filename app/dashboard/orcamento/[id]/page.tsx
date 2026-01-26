@@ -88,19 +88,79 @@ export default function QuoteDetailPage({
     const html = generateQuotePDF(quote, companySettings)
     const filename = `orcamento-${quote.number.replace(/\s+/g, '-')}.pdf`
     await downloadPDF(html, filename)
+    
+    // Log de auditoria
+    try {
+      const userId = sessionStorage.getItem('servipro_user') ? JSON.parse(sessionStorage.getItem('servipro_user')!).id : null
+      if (userId) {
+        await fetch('/api/audit/action', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-user-id': userId,
+          },
+          body: JSON.stringify({
+            action: 'download_quote_pdf',
+            entityType: 'quote',
+            entityId: quote.id,
+            description: `PDF do orçamento ${quote.number} baixado`,
+          }),
+        })
+      }
+    } catch {}
   }
 
-  const handleWhatsApp = () => {
+  const handleWhatsApp = async () => {
     const message = generateWhatsAppMessage(quote)
     openWhatsApp(quote.client.phone, message)
     if (quote.status === 'draft') {
       updateQuote(quote.id, { status: 'sent' })
     }
+    
+    // Log de auditoria
+    try {
+      const userId = sessionStorage.getItem('servipro_user') ? JSON.parse(sessionStorage.getItem('servipro_user')!).id : null
+      if (userId) {
+        await fetch('/api/audit/action', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-user-id': userId,
+          },
+          body: JSON.stringify({
+            action: 'send_quote_whatsapp',
+            entityType: 'quote',
+            entityId: quote.id,
+            description: `Orçamento ${quote.number} enviado via WhatsApp para ${quote.client.name}`,
+          }),
+        })
+      }
+    } catch {}
   }
 
-  const handleViewQuote = () => {
+  const handleViewQuote = async () => {
     const html = generateQuotePDF(quote, companySettings)
     openViewWindow(html)
+    
+    // Log de auditoria
+    try {
+      const userId = sessionStorage.getItem('servipro_user') ? JSON.parse(sessionStorage.getItem('servipro_user')!).id : null
+      if (userId) {
+        await fetch('/api/audit/action', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-user-id': userId,
+          },
+          body: JSON.stringify({
+            action: 'view_quote',
+            entityType: 'quote',
+            entityId: quote.id,
+            description: `Orçamento ${quote.number} visualizado`,
+          }),
+        })
+      }
+    } catch {}
   }
 
   const handleDelete = () => {

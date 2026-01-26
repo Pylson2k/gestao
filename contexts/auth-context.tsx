@@ -72,6 +72,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (!foundUser) {
       setIsLoading(false)
+      // Log de tentativa de login falhada
+      try {
+        await fetch('/api/audit/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: 'unknown',
+            username,
+            success: false,
+            error: 'Usuario nao encontrado',
+          }),
+        })
+      } catch {}
       return { success: false, error: 'Usuario ou senha invalidos' }
     }
 
@@ -81,6 +94,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (userPassword !== password) {
       setIsLoading(false)
+      // Log de tentativa de login falhada
+      try {
+        await fetch('/api/audit/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: foundUser.id,
+            username,
+            success: false,
+            error: 'Senha incorreta',
+          }),
+        })
+      } catch {}
       return { success: false, error: 'Usuario ou senha invalidos' }
     }
 
@@ -107,13 +133,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     sessionStorage.setItem('servipro_user', JSON.stringify(userData))
     setIsLoading(false)
     
+    // Log de login bem-sucedido
+    try {
+      await fetch('/api/audit/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: foundUser.id,
+          username,
+          success: true,
+        }),
+      })
+    } catch {}
+    
     return { success: true }
   }, [])
 
   const logout = useCallback(() => {
+    // Log de logout antes de limpar
+    if (user) {
+      fetch('/api/audit/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          username: user.username,
+        }),
+      }).catch(() => {})
+    }
+    
     setUser(null)
     sessionStorage.removeItem('servipro_user')
-  }, [])
+  }, [user])
 
   const changePassword = useCallback(async (currentPassword: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
     if (!user) {
@@ -138,6 +189,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     localStorage.setItem('servipro_passwords', JSON.stringify(updatedPasswords))
     
+    // Log de auditoria
+    try {
+      await fetch('/api/audit/profile', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-id': user.id,
+        },
+        body: JSON.stringify({
+          action: 'change_password',
+          username: user.username,
+        }),
+      })
+    } catch {}
+    
     return { success: true }
   }, [user])
 
@@ -156,6 +222,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await new Promise(resolve => setTimeout(resolve, 500))
 
     // Atualizar email do usuário
+    const oldEmail = user.email
     const updatedUser: User = {
       ...user,
       email: newEmail,
@@ -163,6 +230,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setUser(updatedUser)
     sessionStorage.setItem('servipro_user', JSON.stringify(updatedUser))
+    
+    // Log de auditoria
+    try {
+      await fetch('/api/audit/profile', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-id': user.id,
+        },
+        body: JSON.stringify({
+          action: 'change_email',
+          username: user.username,
+          oldValue: oldEmail,
+          newValue: newEmail,
+        }),
+      })
+    } catch {}
     
     return { success: true }
   }, [user])

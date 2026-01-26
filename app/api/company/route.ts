@@ -122,8 +122,8 @@ export async function PUT(request: NextRequest) {
         await createAuditLog({
           userId,
           action: 'update_company_settings',
-          entityType: 'quote', // Reutilizando tipo existente para compatibilidade
-          entityId: 'company-settings', // ID especial para configurações
+          entityType: 'company_settings',
+          entityId: 'company-settings',
           description: `Configurações da empresa atualizadas - ${changes.join(', ')}`,
           oldValue: {
             name: oldSettings.name,

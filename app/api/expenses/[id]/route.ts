@@ -131,12 +131,17 @@ export async function PUT(
     }
 
     if (changes.length > 0) {
+      const isVale = existingExpense.category.includes('vale') || expense.category.includes('vale')
+      const descriptionText = isVale
+        ? `💰 VALE ATUALIZADO - ${changes.join(', ')}`
+        : `Despesa atualizada - ${changes.join(', ')}`
+      
       await createAuditLog({
         userId,
         action: 'update_expense',
         entityType: 'expense',
         entityId: id,
-        description: `Despesa atualizada - ${changes.join(', ')}`,
+        description: descriptionText,
         oldValue: {
           category: existingExpense.category,
           description: existingExpense.description,
@@ -201,11 +206,18 @@ export async function DELETE(
       )
     }
 
-    // Validação adicional: alertar sobre exclusão de despesas grandes
+    // Validação adicional: alertar sobre exclusão de despesas grandes ou vales
+    const isVale = expense.category.includes('vale')
     const isLargeExpense = expense.amount > 1000
-    const description = isLargeExpense
-      ? `⚠️ EXCLUSÃO DE DESPESA DE VALOR ALTO - ${expense.category}: ${expense.description} - Valor: R$ ${expense.amount.toFixed(2)}`
-      : `Despesa EXCLUÍDA - ${expense.category}: ${expense.description} - Valor: R$ ${expense.amount.toFixed(2)}`
+    let description: string
+    
+    if (isVale) {
+      description = `💰⚠️ VALE EXCLUÍDO - ${expense.category}: ${expense.description} - Valor: R$ ${expense.amount.toFixed(2)}`
+    } else if (isLargeExpense) {
+      description = `⚠️ EXCLUSÃO DE DESPESA DE VALOR ALTO - ${expense.category}: ${expense.description} - Valor: R$ ${expense.amount.toFixed(2)}`
+    } else {
+      description = `Despesa EXCLUÍDA - ${expense.category}: ${expense.description} - Valor: R$ ${expense.amount.toFixed(2)}`
+    }
 
     // Log de auditoria antes de excluir
     const metadata = getRequestMetadata(request)

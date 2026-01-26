@@ -121,12 +121,17 @@ export async function POST(request: NextRequest) {
 
     // Log de auditoria
     const metadata = getRequestMetadata(request)
+    const isVale = category.includes('vale')
+    const descriptionText = isVale
+      ? `💰 VALE CRIADO - ${category}: ${description} - Valor: R$ ${expense.amount.toFixed(2)}`
+      : `Despesa criada - ${category}: ${description} - Valor: R$ ${expense.amount.toFixed(2)}`
+    
     await createAuditLog({
       userId,
       action: 'create_expense',
       entityType: 'expense',
       entityId: expense.id,
-      description: `Despesa criada - ${category}: ${description} - Valor: R$ ${expense.amount.toFixed(2)}`,
+      description: descriptionText,
       newValue: {
         category,
         description,

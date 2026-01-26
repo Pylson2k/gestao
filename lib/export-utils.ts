@@ -2,7 +2,28 @@
  * Utilitários para exportação de dados
  */
 
-export function exportToCSV(data: any[], filename: string) {
+// Helper para log de exportação
+async function logExport(userId: string | null, type: string, count: number) {
+  if (!userId) return
+  try {
+    await fetch('/api/audit/action', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-user-id': userId,
+      },
+      body: JSON.stringify({
+        action: 'export_csv',
+        entityType: 'export',
+        entityId: `export-${type}-${Date.now()}`,
+        description: `Exportação CSV de ${count} ${type}(s)`,
+        newValue: { type, count },
+      }),
+    })
+  } catch {}
+}
+
+export function exportToCSV(data: any[], filename: string, type?: string) {
   if (data.length === 0) {
     alert('Nenhum dado para exportar')
     return
@@ -42,6 +63,14 @@ export function exportToCSV(data: any[], filename: string) {
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
+  
+  // Log de exportação
+  if (type) {
+    const userId = sessionStorage.getItem('servipro_user') 
+      ? JSON.parse(sessionStorage.getItem('servipro_user')!).id 
+      : null
+    logExport(userId, type, data.length)
+  }
 }
 
 export function exportQuotesToCSV(quotes: any[]) {
@@ -59,7 +88,7 @@ export function exportQuotesToCSV(quotes: any[]) {
       : '',
   }))
   
-  exportToCSV(data, 'orcamentos')
+  exportToCSV(data, 'orcamentos', 'orçamento')
 }
 
 export function exportClientsToCSV(clients: any[]) {
@@ -71,7 +100,7 @@ export function exportClientsToCSV(clients: any[]) {
     'Data de Cadastro': new Date(client.createdAt).toLocaleDateString('pt-BR'),
   }))
   
-  exportToCSV(data, 'clientes')
+  exportToCSV(data, 'clientes', 'cliente')
 }
 
 export function exportExpensesToCSV(expenses: any[]) {
@@ -84,7 +113,7 @@ export function exportExpensesToCSV(expenses: any[]) {
     'Observações': expense.observations || '',
   }))
   
-  exportToCSV(data, 'despesas')
+  exportToCSV(data, 'despesas', 'despesa')
 }
 
 export function exportEmployeesToCSV(employees: any[]) {
@@ -100,7 +129,7 @@ export function exportEmployeesToCSV(employees: any[]) {
     'Status': employee.isActive ? 'Ativo' : 'Inativo',
   }))
   
-  exportToCSV(data, 'funcionarios')
+  exportToCSV(data, 'funcionarios', 'funcionário')
 }
 
 export function exportServicesToCSV(services: any[]) {
@@ -113,5 +142,5 @@ export function exportServicesToCSV(services: any[]) {
     'Data de Cadastro': new Date(service.createdAt).toLocaleDateString('pt-BR'),
   }))
   
-  exportToCSV(data, 'servicos')
+  exportToCSV(data, 'servicos', 'serviço')
 }
