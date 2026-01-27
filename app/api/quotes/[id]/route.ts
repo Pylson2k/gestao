@@ -110,20 +110,6 @@ export async function PUT(
 
     const { prisma } = await import('@/lib/prisma')
 
-    // Mapear userId da autenticação para ID do banco
-    let dbUserId: string
-    try {
-      dbUserId = await getDbUserId(userId)
-    } catch (error: any) {
-      console.error('Error getting dbUserId:', error)
-      return NextResponse.json(
-        { error: 'Erro ao autenticar usuario' },
-        { status: 401 }
-      )
-    }
-
-    const { prisma } = await import('@/lib/prisma')
-
     // Buscar IDs de ambos os sócios para compartilhar dados
     const partnersIds = await getPartnersDbUserIds()
     
