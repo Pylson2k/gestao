@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -192,14 +192,12 @@ export default function AuditoriaPage() {
 
   const [filterAction, setFilterAction] = useState<string>('all')
   const [filterEntityType, setFilterEntityType] = useState<string>('all')
+  const [isFetching, setIsFetching] = useState(false)
 
-  useEffect(() => {
-    fetchLogs()
-  }, [filterStartDate, filterEndDate, filterAction, filterEntityType, user?.id])
+  const fetchLogs = useCallback(async () => {
+    if (!user?.id || isFetching) return
 
-  const fetchLogs = async () => {
-    if (!user?.id) return
-
+    setIsFetching(true)
     setIsLoading(true)
     try {
       const params = new URLSearchParams()
@@ -223,8 +221,50 @@ export default function AuditoriaPage() {
       console.error('Error fetching audit logs:', error)
     } finally {
       setIsLoading(false)
+      setIsFetching(false)
     }
-  }
+  }, [user?.id, filterStartDate, filterEndDate, filterAction, filterEntityType, isFetching])
+
+  useEffect(() => {
+    fetchLogs()
+  }, [fetchLogs])
+
+  // Atualizar dados em tempo real (polling a cada 5 segundos, apenas se página visível)
+  useEffect(() => {
+    if (!user?.id) return
+
+    let interval: NodeJS.Timeout | null = null
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        if (interval) clearInterval(interval)
+        interval = null
+      } else {
+        if (!interval) {
+          interval = setInterval(() => {
+            if (!isFetching && !isLoading) {
+              fetchLogs()
+            }
+          }, 5000)
+        }
+      }
+    }
+
+    if (!document.hidden) {
+      interval = setInterval(() => {
+        if (!isFetching && !isLoading) {
+          fetchLogs()
+        }
+      }, 5000)
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      if (interval) clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [fetchLogs, user?.id, isFetching, isLoading])
 
   const filteredLogs = useMemo(() => {
     return logs

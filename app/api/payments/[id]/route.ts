@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDbUserId } from '@/lib/user-mapping'
+import { getDbUserId, getPartnersDbUserIds } from '@/lib/user-mapping'
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log'
 
 // GET - Get single payment
@@ -26,12 +26,14 @@ export async function GET(
     }
 
     const { prisma } = await import('@/lib/prisma')
-    const dbUserId = await getDbUserId(userId)
+    
+    // Buscar IDs de ambos os sócios para compartilhar dados
+    const partnersIds = await getPartnersDbUserIds()
 
     const payment = await prisma.payment.findFirst({
       where: {
         id,
-        userId: dbUserId,
+        userId: { in: partnersIds },
       },
       include: {
         quote: {
@@ -86,13 +88,15 @@ export async function PUT(
     const { amount, paymentDate, paymentMethod, observations } = body
 
     const { prisma } = await import('@/lib/prisma')
-    const dbUserId = await getDbUserId(userId)
+    
+    // Buscar IDs de ambos os sócios para compartilhar dados
+    const partnersIds = await getPartnersDbUserIds()
 
-    // Buscar pagamento existente
+    // Buscar pagamento existente (qualquer um dos sócios pode editar)
     const existingPayment = await prisma.payment.findFirst({
       where: {
         id,
-        userId: dbUserId,
+        userId: { in: partnersIds },
       },
       include: {
         quote: {
@@ -224,11 +228,14 @@ export async function DELETE(
     const { prisma } = await import('@/lib/prisma')
     const dbUserId = await getDbUserId(userId)
 
-    // Buscar pagamento antes de deletar
+    // Buscar IDs de ambos os sócios para compartilhar dados
+    const partnersIds = await getPartnersDbUserIds()
+
+    // Buscar pagamento antes de deletar (qualquer um dos sócios pode deletar)
     const payment = await prisma.payment.findFirst({
       where: {
         id,
-        userId: dbUserId,
+        userId: { in: partnersIds },
       },
       include: {
         quote: true,

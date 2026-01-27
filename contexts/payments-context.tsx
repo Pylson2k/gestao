@@ -22,13 +22,15 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const [payments, setPayments] = useState<Payment[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isFetching, setIsFetching] = useState(false)
 
   const fetchPayments = useCallback(async (quoteId?: string) => {
-    if (!user?.id) {
+    if (!user?.id || isFetching) {
       setIsLoading(false)
       return
     }
 
+    setIsFetching(true)
     try {
       const url = quoteId ? `/api/payments?quoteId=${quoteId}` : '/api/payments'
       const response = await fetch(url, {
@@ -73,14 +75,52 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
       console.error('Fetch payments error:', error)
     } finally {
       setIsLoading(false)
+      setIsFetching(false)
     }
-  }, [user?.id])
+  }, [user?.id, isFetching])
 
   useEffect(() => {
     if (user?.id) {
       fetchPayments()
     }
   }, [fetchPayments, user?.id])
+
+  // Atualizar dados em tempo real (polling a cada 5 segundos, apenas se página visível)
+  useEffect(() => {
+    if (!user?.id) return
+
+    let interval: NodeJS.Timeout | null = null
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        if (interval) clearInterval(interval)
+        interval = null
+      } else {
+        if (!interval) {
+          interval = setInterval(() => {
+            if (!isFetching && !isLoading) {
+              fetchPayments()
+            }
+          }, 5000)
+        }
+      }
+    }
+
+    if (!document.hidden) {
+      interval = setInterval(() => {
+        if (!isFetching && !isLoading) {
+          fetchPayments()
+        }
+      }, 5000)
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      if (interval) clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [fetchPayments, user?.id, isFetching, isLoading])
 
   const addPayment = useCallback(async (paymentData: Omit<Payment, 'id' | 'createdAt' | 'updatedAt' | 'userId'>): Promise<Payment> => {
     if (!user?.id) {

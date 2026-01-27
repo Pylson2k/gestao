@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getMemoryQuotes, addMemoryQuote } from '@/lib/emergency-store'
-import { getDbUserId } from '@/lib/user-mapping'
+import { getDbUserId, getPartnersDbUserIds } from '@/lib/user-mapping'
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log'
 
 // GET - List all quotes for a user
@@ -19,7 +19,8 @@ export async function GET(request: NextRequest) {
 
     // Se não tem DATABASE_URL, usa modo de emergência
     if (!process.env.DATABASE_URL) {
-      let quotes = getMemoryQuotes().filter(q => q.userId === userId)
+      // No modo de emergência, compartilhar dados entre todos os usuários
+      let quotes = getMemoryQuotes()
       if (status) {
         quotes = quotes.filter(q => q.status === status)
       }
@@ -28,10 +29,12 @@ export async function GET(request: NextRequest) {
 
     const { prisma } = await import('@/lib/prisma')
 
-    // Mapear userId da autenticação para ID do banco
-    const dbUserId = await getDbUserId(userId)
+    // Buscar IDs de ambos os sócios para compartilhar dados
+    const partnersIds = await getPartnersDbUserIds()
 
-    const where: any = { userId: dbUserId }
+    const where: any = { 
+      userId: { in: partnersIds } // Compartilhar dados entre sócios
+    }
     if (status) {
       where.status = status
     }

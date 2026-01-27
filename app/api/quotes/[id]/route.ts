@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getMemoryQuoteById, updateMemoryQuote, deleteMemoryQuote } from '@/lib/emergency-store'
-import { getDbUserId } from '@/lib/user-mapping'
+import { getDbUserId, getPartnersDbUserIds } from '@/lib/user-mapping'
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log'
 
 // GET - Get single quote
@@ -22,7 +22,7 @@ export async function GET(
     // Se não tem DATABASE_URL, usa modo de emergência
     if (!process.env.DATABASE_URL) {
       const quote = getMemoryQuoteById(id)
-      if (!quote || quote.userId !== userId) {
+      if (!quote) {
         return NextResponse.json(
           { error: 'Orcamento nao encontrado' },
           { status: 404 }
@@ -33,13 +33,13 @@ export async function GET(
 
     const { prisma } = await import('@/lib/prisma')
 
-    // Mapear userId da autenticação para ID do banco
-    const dbUserId = await getDbUserId(userId)
+    // Buscar IDs de ambos os sócios para compartilhar dados
+    const partnersIds = await getPartnersDbUserIds()
 
     const quote = await prisma.quote.findFirst({
       where: {
         id,
-        userId: dbUserId,
+        userId: { in: partnersIds }, // Compartilhar dados entre sócios
       },
       include: {
         client: true,
@@ -121,66 +121,23 @@ export async function PUT(
         { status: 401 }
       )
     }
-    
-    console.log('PUT /api/quotes/[id] - Debug info:', {
-      authUserId: userId,
-      dbUserId,
-      quoteId: id,
-    })
 
-    // Verify ownership - primeiro tenta encontrar sem verificar userId para debug
-    const existingQuoteWithoutUser = await prisma.quote.findFirst({
-      where: { id },
-      select: { id: true, userId: true, status: true },
-    })
-    
-    console.log('Quote found (without user check):', existingQuoteWithoutUser ? {
-      id: existingQuoteWithoutUser.id,
-      userId: existingQuoteWithoutUser.userId,
-      status: existingQuoteWithoutUser.status,
-      dbUserIdMatches: existingQuoteWithoutUser.userId === dbUserId,
-    } : null)
+    const { prisma } = await import('@/lib/prisma')
 
-    // Verify ownership
+    // Buscar IDs de ambos os sócios para compartilhar dados
+    const partnersIds = await getPartnersDbUserIds()
+    
+    // Verify ownership (qualquer um dos sócios pode editar)
     const existingQuote = await prisma.quote.findFirst({
-      where: { id, userId: dbUserId },
+      where: { id, userId: { in: partnersIds } },
     })
 
-    // Se o orçamento não foi encontrado com o userId correto, verificar se existe
+    // Se o orçamento não foi encontrado, retornar erro
     if (!existingQuote) {
-      const errorDetails = {
-        quoteId: id,
-        requestedDbUserId: dbUserId,
-        quoteUserId: existingQuoteWithoutUser?.userId,
-        quoteExists: !!existingQuoteWithoutUser,
-        userIdMismatch: existingQuoteWithoutUser?.userId !== dbUserId,
-      }
-      
-      // Se o orçamento não existe de forma alguma, retornar erro
-      if (!existingQuoteWithoutUser) {
-        console.error('Quote not found:', errorDetails)
-        return NextResponse.json(
-          { 
-            error: 'Orcamento nao encontrado',
-            details: process.env.NODE_ENV === 'development' ? errorDetails : undefined
-          },
-          { status: 404 }
-        )
-      }
-      
-      // Se o orçamento existe mas o userId não corresponde, logar aviso mas permitir atualização
-      // (pode ser um problema de mapeamento temporário ou usuário recriado)
-      if (existingQuoteWithoutUser.userId !== dbUserId) {
-        console.warn('User ID mismatch detected. Quote exists but userId differs:', errorDetails)
-        console.warn('Allowing update anyway - this may indicate a user mapping issue')
-      }
-    }
-    
-    // Usar existingQuote se encontrado, senão usar existingQuoteWithoutUser
-    const quoteToUpdate = existingQuote || existingQuoteWithoutUser
-    if (!quoteToUpdate) {
       return NextResponse.json(
-        { error: 'Orcamento nao encontrado' },
+        { 
+          error: 'Orcamento nao encontrado'
+        },
         { status: 404 }
       )
     }
@@ -433,12 +390,12 @@ export async function DELETE(
 
     const { prisma } = await import('@/lib/prisma')
 
-    // Mapear userId da autenticação para ID do banco
-    const dbUserId = await getDbUserId(userId)
+    // Buscar IDs de ambos os sócios para compartilhar dados
+    const partnersIds = await getPartnersDbUserIds()
 
-    // Verify ownership
+    // Verify ownership (qualquer um dos sócios pode deletar)
     const quote = await prisma.quote.findFirst({
-      where: { id, userId: dbUserId },
+      where: { id, userId: { in: partnersIds } },
     })
 
     if (!quote) {

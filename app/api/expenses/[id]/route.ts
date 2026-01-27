@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDbUserId } from '@/lib/user-mapping'
+import { getDbUserId, getPartnersDbUserIds } from '@/lib/user-mapping'
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log'
 
 // GET - Get single expense
@@ -26,12 +26,14 @@ export async function GET(
     }
 
     const { prisma } = await import('@/lib/prisma')
-    const dbUserId = await getDbUserId(userId)
+    
+    // Buscar IDs de ambos os sócios para compartilhar dados
+    const partnersIds = await getPartnersDbUserIds()
 
     const expense = await prisma.expense.findFirst({
       where: {
         id,
-        userId: dbUserId,
+        userId: { in: partnersIds },
       },
     })
 
@@ -77,11 +79,13 @@ export async function PUT(
     }
 
     const { prisma } = await import('@/lib/prisma')
-    const dbUserId = await getDbUserId(userId)
+    
+    // Buscar IDs de ambos os sócios para compartilhar dados
+    const partnersIds = await getPartnersDbUserIds()
 
-    // Verify ownership
+    // Verify ownership (qualquer um dos sócios pode editar)
     const existingExpense = await prisma.expense.findFirst({
-      where: { id, userId: dbUserId },
+      where: { id, userId: { in: partnersIds } },
     })
 
     if (!existingExpense) {
@@ -192,11 +196,13 @@ export async function DELETE(
     }
 
     const { prisma } = await import('@/lib/prisma')
-    const dbUserId = await getDbUserId(userId)
+    
+    // Buscar IDs de ambos os sócios para compartilhar dados
+    const partnersIds = await getPartnersDbUserIds()
 
-    // Verify ownership
+    // Verify ownership (qualquer um dos sócios pode deletar)
     const expense = await prisma.expense.findFirst({
-      where: { id, userId: dbUserId },
+      where: { id, userId: { in: partnersIds } },
     })
 
     if (!expense) {

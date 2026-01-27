@@ -7,6 +7,7 @@ import { useExpenses } from '@/contexts/expenses-context'
 import { useAuth } from '@/contexts/auth-context'
 import { useCashClosings } from '@/contexts/cash-closings-context'
 import { useCompany } from '@/contexts/company-context'
+import { usePayments } from '@/contexts/payments-context'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { StatsCard } from '@/components/dashboard/stats-card'
@@ -34,6 +35,7 @@ export default function DashboardPage() {
   const { user } = useAuth()
   const { lastClosing, closings } = useCashClosings()
   const { settings } = useCompany()
+  const { getTotalPaidByQuoteId } = usePayments()
 
   // Função para obter saudação baseada no horário
   const getGreeting = () => {
@@ -59,7 +61,7 @@ export default function DashboardPage() {
     return new Date(now.getFullYear(), now.getMonth(), 1)
   }, [lastClosing])
 
-  // Calcular receita desde o último fechamento
+  // Calcular receita desde o último fechamento (apenas orçamentos totalmente pagos)
   const revenueSinceLastClosing = useMemo(() => {
     return quotes
       .filter((quote) => {
@@ -67,10 +69,14 @@ export default function DashboardPage() {
         const completionDate = quote.serviceCompletedAt 
           ? new Date(quote.serviceCompletedAt) 
           : new Date(quote.createdAt)
-        return completionDate >= startDate
+        if (completionDate < startDate) return false
+        
+        // Verificar se o orçamento foi totalmente pago
+        const totalPaid = getTotalPaidByQuoteId(quote.id)
+        return totalPaid >= quote.total
       })
       .reduce((sum, quote) => sum + quote.total, 0)
-  }, [quotes, startDate])
+  }, [quotes, startDate, getTotalPaidByQuoteId])
 
   // Calcular despesas desde o último fechamento (excluindo vales dos sócios)
   const expensesSinceLastClosing = useMemo(() => {

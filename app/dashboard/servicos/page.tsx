@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useServices } from '@/contexts/services-context'
 import { useAuth } from '@/contexts/auth-context'
 import { Button } from '@/components/ui/button'
@@ -62,31 +62,73 @@ export default function ServicosPage() {
 
   // Buscar todos os serviços (incluindo inativos) para a página
   const [allServices, setAllServices] = useState<Service[]>([])
+  const [isFetchingServices, setIsFetchingServices] = useState(false)
   
+  const fetchAllServices = useCallback(async () => {
+    if (!user?.id || isFetchingServices) return
+    
+    setIsFetchingServices(true)
+    try {
+      const response = await fetch('/api/services', {
+        headers: {
+          'x-user-id': user.id,
+        },
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setAllServices(data.map((s: any) => ({
+          ...s,
+          createdAt: new Date(s.createdAt),
+          updatedAt: new Date(s.updatedAt),
+        })))
+      }
+    } catch (error) {
+      console.error('Error fetching all services:', error)
+    } finally {
+      setIsFetchingServices(false)
+    }
+  }, [user?.id, isFetchingServices])
+
   useEffect(() => {
-    const fetchAllServices = async () => {
-      if (!user?.id) return
-      
-      try {
-        const response = await fetch('/api/services', {
-          headers: {
-            'x-user-id': user.id,
-          },
-        })
-        if (response.ok) {
-          const data = await response.json()
-          setAllServices(data.map((s: any) => ({
-            ...s,
-            createdAt: new Date(s.createdAt),
-            updatedAt: new Date(s.updatedAt),
-          })))
+    fetchAllServices()
+  }, [fetchAllServices])
+
+  // Atualizar dados em tempo real (polling a cada 5 segundos, apenas se página visível)
+  useEffect(() => {
+    if (!user?.id) return
+
+    let interval: NodeJS.Timeout | null = null
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        if (interval) clearInterval(interval)
+        interval = null
+      } else {
+        if (!interval) {
+          interval = setInterval(() => {
+            if (!isFetchingServices) {
+              fetchAllServices()
+            }
+          }, 5000)
         }
-      } catch (error) {
-        console.error('Error fetching all services:', error)
       }
     }
-    fetchAllServices()
-  }, [user?.id])
+
+    if (!document.hidden) {
+      interval = setInterval(() => {
+        if (!isFetchingServices) {
+          fetchAllServices()
+        }
+      }, 5000)
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      if (interval) clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [fetchAllServices, user?.id, isFetchingServices])
 
   const filteredServices = useMemo(() => {
     let filtered = allServices.length > 0 ? allServices : services

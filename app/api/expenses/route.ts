@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDbUserId } from '@/lib/user-mapping'
+import { getDbUserId, getPartnersDbUserIds } from '@/lib/user-mapping'
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log'
 
 // GET - List all expenses for a user
@@ -23,9 +23,13 @@ export async function GET(request: NextRequest) {
     }
 
     const { prisma } = await import('@/lib/prisma')
-    const dbUserId = await getDbUserId(userId)
+    
+    // Buscar IDs de ambos os sócios para compartilhar dados
+    const partnersIds = await getPartnersDbUserIds()
 
-    const where: any = { userId: dbUserId }
+    const where: any = { 
+      userId: { in: partnersIds } // Compartilhar dados entre sócios
+    }
     
     if (startDate || endDate) {
       where.date = {}
@@ -90,9 +94,9 @@ export async function POST(request: NextRequest) {
     const { category, description, amount, date, observations } = body
 
     // Validações
-    if (!category || !description || amount === undefined || !date) {
+    if (!category || amount === undefined || !date) {
       return NextResponse.json(
-        { error: 'Campos obrigatorios: category, description, amount, date' },
+        { error: 'Campos obrigatorios: category, amount, date' },
         { status: 400 }
       )
     }
@@ -111,7 +115,7 @@ export async function POST(request: NextRequest) {
       data: {
         userId: dbUserId,
         category,
-        description,
+        description: description?.trim() || category, // Usa a categoria como descrição padrão se não fornecida
         amount: parseFloat(amount),
         date: new Date(date),
         observations: observations || null,
@@ -122,9 +126,10 @@ export async function POST(request: NextRequest) {
     // Log de auditoria
     const metadata = getRequestMetadata(request)
     const isVale = category.includes('vale')
+    const finalDescription = description?.trim() || category
     const descriptionText = isVale
-      ? `💰 VALE CRIADO - ${category}: ${description} - Valor: R$ ${expense.amount.toFixed(2)}`
-      : `Despesa criada - ${category}: ${description} - Valor: R$ ${expense.amount.toFixed(2)}`
+      ? `💰 VALE CRIADO - ${category}: ${finalDescription} - Valor: R$ ${expense.amount.toFixed(2)}`
+      : `Despesa criada - ${category}: ${finalDescription} - Valor: R$ ${expense.amount.toFixed(2)}`
     
     await createAuditLog({
       userId,

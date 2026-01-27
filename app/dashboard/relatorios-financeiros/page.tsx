@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { useQuotes } from '@/contexts/quotes-context'
 import { useExpenses } from '@/contexts/expenses-context'
+import { usePayments } from '@/contexts/payments-context'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -14,6 +15,7 @@ import { cn } from '@/lib/utils'
 export default function RelatoriosFinanceirosPage() {
   const { quotes } = useQuotes()
   const { expenses } = useExpenses()
+  const { getTotalPaidByQuoteId } = usePayments()
   
   const [startDate, setStartDate] = useState(() => {
     const date = new Date()
@@ -28,7 +30,7 @@ export default function RelatoriosFinanceirosPage() {
 
   const [bankBalance, setBankBalance] = useState('')
 
-  // Filtrar receitas (serviços finalizados) no período
+  // Filtrar receitas (serviços finalizados e totalmente pagos) no período
   const revenue = useMemo(() => {
     return quotes
       .filter((quote) => {
@@ -38,13 +40,17 @@ export default function RelatoriosFinanceirosPage() {
           ? new Date(quote.serviceCompletedAt) 
           : new Date(quote.createdAt)
         
-        return (
-          completionDate >= new Date(startDate) &&
-          completionDate <= new Date(endDate + 'T23:59:59')
-        )
+        if (
+          completionDate < new Date(startDate) ||
+          completionDate > new Date(endDate + 'T23:59:59')
+        ) return false
+        
+        // Verificar se o orçamento foi totalmente pago
+        const totalPaid = getTotalPaidByQuoteId(quote.id)
+        return totalPaid >= quote.total
       })
       .reduce((sum, quote) => sum + quote.total, 0)
-  }, [quotes, startDate, endDate])
+  }, [quotes, startDate, endDate, getTotalPaidByQuoteId])
 
   // Filtrar despesas no período
   const totalExpenses = useMemo(() => {

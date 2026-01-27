@@ -19,14 +19,16 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isFetching, setIsFetching] = useState(false)
 
   const fetchExpenses = useCallback(async () => {
-    if (!user?.id) {
+    if (!user?.id || isFetching) {
       setExpenses([])
       setIsLoading(false)
       return
     }
 
+    setIsFetching(true)
     try {
       const response = await fetch('/api/expenses', {
         headers: {
@@ -47,12 +49,52 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
       console.error('Error fetching expenses:', error)
     } finally {
       setIsLoading(false)
+      setIsFetching(false)
     }
-  }, [user?.id])
+  }, [user?.id, isFetching])
 
   useEffect(() => {
-    fetchExpenses()
-  }, [fetchExpenses])
+    if (user?.id) {
+      fetchExpenses()
+    }
+  }, [fetchExpenses, user?.id])
+
+  // Atualizar dados em tempo real (polling a cada 5 segundos, apenas se página visível)
+  useEffect(() => {
+    if (!user?.id) return
+
+    let interval: NodeJS.Timeout | null = null
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        if (interval) clearInterval(interval)
+        interval = null
+      } else {
+        if (!interval) {
+          interval = setInterval(() => {
+            if (!isFetching && !isLoading) {
+              fetchExpenses()
+            }
+          }, 5000)
+        }
+      }
+    }
+
+    if (!document.hidden) {
+      interval = setInterval(() => {
+        if (!isFetching && !isLoading) {
+          fetchExpenses()
+        }
+      }, 5000)
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      if (interval) clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [fetchExpenses, user?.id, isFetching, isLoading])
 
   const addExpense = useCallback(async (expenseData: Omit<Expense, 'id' | 'userId' | 'createdAt' | 'updatedAt'>): Promise<Expense> => {
     if (!user?.id) {

@@ -5,6 +5,7 @@ import { useQuotes } from '@/contexts/quotes-context'
 import { useExpenses } from '@/contexts/expenses-context'
 import { useCashClosings } from '@/contexts/cash-closings-context'
 import { useCompany } from '@/contexts/company-context'
+import { usePayments } from '@/contexts/payments-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -34,6 +35,7 @@ export default function FechamentoCaixaPage() {
   const { expenses } = useExpenses()
   const { lastClosing, addClosing, refreshClosings } = useCashClosings()
   const { settings } = useCompany()
+  const { getTotalPaidByQuoteId } = usePayments()
   
   const [periodType, setPeriodType] = useState<PeriodType>('mensal')
   const [startDate, setStartDate] = useState('')
@@ -98,14 +100,18 @@ export default function FechamentoCaixaPage() {
     const start = new Date(startDate)
     const end = new Date(endDate + 'T23:59:59')
 
-    // Receita (serviços finalizados no período)
+    // Receita (serviços finalizados no período e totalmente pagos)
     const revenue = quotes
       .filter((quote) => {
         if (quote.status !== 'completed') return false
         const completionDate = quote.serviceCompletedAt 
           ? new Date(quote.serviceCompletedAt) 
           : new Date(quote.createdAt)
-        return completionDate >= start && completionDate <= end
+        if (completionDate < start || completionDate > end) return false
+        
+        // Verificar se o orçamento foi totalmente pago
+        const totalPaid = getTotalPaidByQuoteId(quote.id)
+        return totalPaid >= quote.total
       })
       .reduce((sum, quote) => sum + quote.total, 0)
 
@@ -162,7 +168,7 @@ export default function FechamentoCaixaPage() {
       gustavoProfit,
       giovanniProfit,
     }
-  }, [quotes, expenses, startDate, endDate, settings.companyCashPercentage])
+  }, [quotes, expenses, startDate, endDate, settings.companyCashPercentage, getTotalPaidByQuoteId])
 
   const handleClose = async () => {
     if (!periodData || !startDate || !endDate) {

@@ -19,13 +19,15 @@ export function CashClosingsProvider({ children }: { children: ReactNode }) {
   const [closings, setClosings] = useState<CashClosing[]>([])
   const [lastClosing, setLastClosing] = useState<CashClosing | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isFetching, setIsFetching] = useState(false)
 
   const fetchClosings = useCallback(async () => {
-    if (!user?.id) {
+    if (!user?.id || isFetching) {
       setIsLoading(false)
       return
     }
 
+    setIsFetching(true)
     try {
       const response = await fetch('/api/cash-closings', {
         headers: {
@@ -50,12 +52,52 @@ export function CashClosingsProvider({ children }: { children: ReactNode }) {
       console.error('Error fetching cash closings:', error)
     } finally {
       setIsLoading(false)
+      setIsFetching(false)
     }
-  }, [user?.id])
+  }, [user?.id, isFetching])
 
   useEffect(() => {
-    fetchClosings()
-  }, [fetchClosings])
+    if (user?.id) {
+      fetchClosings()
+    }
+  }, [fetchClosings, user?.id])
+
+  // Atualizar dados em tempo real (polling a cada 5 segundos, apenas se página visível)
+  useEffect(() => {
+    if (!user?.id) return
+
+    let interval: NodeJS.Timeout | null = null
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        if (interval) clearInterval(interval)
+        interval = null
+      } else {
+        if (!interval) {
+          interval = setInterval(() => {
+            if (!isFetching && !isLoading) {
+              fetchClosings()
+            }
+          }, 5000)
+        }
+      }
+    }
+
+    if (!document.hidden) {
+      interval = setInterval(() => {
+        if (!isFetching && !isLoading) {
+          fetchClosings()
+        }
+      }, 5000)
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      if (interval) clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [fetchClosings, user?.id, isFetching, isLoading])
 
   const addClosing = useCallback(async (closingData: Omit<CashClosing, 'id' | 'userId' | 'createdAt'>) => {
     if (!user?.id) {

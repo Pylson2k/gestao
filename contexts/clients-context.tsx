@@ -19,13 +19,15 @@ export function ClientsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const [clients, setClients] = useState<Client[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isFetching, setIsFetching] = useState(false)
 
   const fetchClients = useCallback(async () => {
-    if (!user?.id) {
+    if (!user?.id || isFetching) {
       setIsLoading(false)
       return
     }
 
+    setIsFetching(true)
     try {
       const response = await fetch('/api/clients', {
         headers: {
@@ -47,12 +49,52 @@ export function ClientsProvider({ children }: { children: ReactNode }) {
       console.error('Error fetching clients:', error)
     } finally {
       setIsLoading(false)
+      setIsFetching(false)
     }
-  }, [user?.id])
+  }, [user?.id, isFetching])
 
   useEffect(() => {
-    fetchClients()
-  }, [fetchClients])
+    if (user?.id) {
+      fetchClients()
+    }
+  }, [fetchClients, user?.id])
+
+  // Atualizar dados em tempo real (polling a cada 5 segundos, apenas se página visível)
+  useEffect(() => {
+    if (!user?.id) return
+
+    let interval: NodeJS.Timeout | null = null
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        if (interval) clearInterval(interval)
+        interval = null
+      } else {
+        if (!interval) {
+          interval = setInterval(() => {
+            if (!isFetching && !isLoading) {
+              fetchClients()
+            }
+          }, 5000)
+        }
+      }
+    }
+
+    if (!document.hidden) {
+      interval = setInterval(() => {
+        if (!isFetching && !isLoading) {
+          fetchClients()
+        }
+      }, 5000)
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      if (interval) clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [fetchClients, user?.id, isFetching, isLoading])
 
   const addClient = useCallback(async (clientData: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (!user?.id) {

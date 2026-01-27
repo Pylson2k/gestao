@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCompanySettings, updateCompanySettings } from '@/lib/emergency-store'
-import { getDbUserId } from '@/lib/user-mapping'
+import { getDbUserId, getPartnersDbUserIds } from '@/lib/user-mapping'
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log'
 
 // GET - Get company settings
@@ -22,18 +22,19 @@ export async function GET(request: NextRequest) {
 
     const { prisma } = await import('@/lib/prisma')
 
-    // Mapear userId da autenticação para ID do banco
-    const dbUserId = await getDbUserId(userId)
-
-    let settings = await prisma.companySettings.findUnique({
-      where: { userId: dbUserId },
+    // Buscar IDs de ambos os sócios para compartilhar configurações
+    const partnersIds = await getPartnersDbUserIds()
+    
+    // Buscar configurações de qualquer um dos sócios (compartilhadas)
+    let settings = await prisma.companySettings.findFirst({
+      where: { userId: { in: partnersIds } },
     })
 
-    // Create default if doesn't exist
-    if (!settings) {
+    // Create default if doesn't exist (usar o primeiro ID dos sócios)
+    if (!settings && partnersIds.length > 0) {
       settings = await prisma.companySettings.create({
         data: {
-          userId: dbUserId,
+          userId: partnersIds[0], // Usar o primeiro sócio como dono
           name: 'ServiPro',
           phone: '',
           email: '',
@@ -73,16 +74,19 @@ export async function PUT(request: NextRequest) {
 
     const { prisma } = await import('@/lib/prisma')
 
-    // Mapear userId da autenticação para ID do banco
-    const dbUserId = await getDbUserId(userId)
-
-    // Buscar configurações antigas para auditoria
-    const oldSettings = await prisma.companySettings.findUnique({
-      where: { userId: dbUserId },
+    // Buscar IDs de ambos os sócios para compartilhar configurações
+    const partnersIds = await getPartnersDbUserIds()
+    
+    // Buscar configurações existentes de qualquer um dos sócios
+    const oldSettings = await prisma.companySettings.findFirst({
+      where: { userId: { in: partnersIds } },
     })
 
+    // Usar o primeiro ID dos sócios ou criar novo
+    const targetUserId = oldSettings?.userId || partnersIds[0]
+
     const settings = await prisma.companySettings.upsert({
-      where: { userId: dbUserId },
+      where: { userId: targetUserId },
       update: {
         name: body.name,
         logo: body.logo,

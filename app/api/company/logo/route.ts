@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDbUserId } from '@/lib/user-mapping'
+import { getDbUserId, getPartnersDbUserIds } from '@/lib/user-mapping'
 
 // GET - Get company logo (public endpoint, no auth required for favicon/PWA)
 export async function GET(request: NextRequest) {
@@ -16,17 +16,22 @@ export async function GET(request: NextRequest) {
 
     let settings = null
 
-    // Se tem userId, buscar logo específico do usuário
-    if (userId) {
-      const dbUserId = await getDbUserId(userId)
-      settings = await prisma.companySettings.findUnique({
-        where: { userId: dbUserId },
-        select: { logo: true, name: true },
-      })
-    } else {
-      // Se não tem userId, pegar o primeiro logo disponível (para favicon/PWA)
+    // Buscar logo de qualquer um dos sócios (compartilhado)
+    const partnersIds = await getPartnersDbUserIds()
+    
+    settings = await prisma.companySettings.findFirst({
+      where: { 
+        userId: { in: partnersIds },
+        logo: { not: null }
+      },
+      select: { logo: true, name: true },
+      orderBy: { updatedAt: 'desc' },
+    })
+    
+    // Se não encontrou com logo, buscar qualquer configuração dos sócios
+    if (!settings) {
       settings = await prisma.companySettings.findFirst({
-        where: { logo: { not: null } },
+        where: { userId: { in: partnersIds } },
         select: { logo: true, name: true },
         orderBy: { updatedAt: 'desc' },
       })

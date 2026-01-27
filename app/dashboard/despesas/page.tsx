@@ -138,7 +138,7 @@ export default function DespesasPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!formData.category || !formData.description || !formData.amount || !formData.date) {
+    if (!formData.category || !formData.amount || !formData.date) {
       alert('Preencha todos os campos obrigatórios')
       return
     }
@@ -248,12 +248,12 @@ export default function DespesasPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description" className="font-medium text-sm sm:text-base">Descrição *</Label>
+                  <Label htmlFor="description" className="font-medium text-sm sm:text-base">Descrição</Label>
                   <Input
                     id="description"
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Ex: Compra de material para obra X"
+                    placeholder="Ex: Compra de material para obra X (opcional)"
                     className="bg-background min-h-[48px] text-base sm:text-sm"
                     autoComplete="off"
                   />
@@ -440,7 +440,9 @@ export default function DespesasPage() {
                         {new Date(expense.date).toLocaleDateString('pt-BR')}
                       </span>
                     </div>
-                    <h3 className="font-semibold text-foreground mb-1.5 text-base sm:text-lg">{expense.description}</h3>
+                    <h3 className="font-semibold text-foreground mb-1.5 text-base sm:text-lg">
+                      {expense.description || expense.category}
+                    </h3>
                     {expense.observations && (
                       <p className="text-sm sm:text-base text-muted-foreground italic">{expense.observations}</p>
                     )}

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDbUserId } from '@/lib/user-mapping'
+import { getDbUserId, getPartnersDbUserIds } from '@/lib/user-mapping'
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log'
 
 // GET - List all payments for a user (optionally filtered by quoteId)
@@ -21,9 +21,13 @@ export async function GET(request: NextRequest) {
     }
 
     const { prisma } = await import('@/lib/prisma')
-    const dbUserId = await getDbUserId(userId)
+    
+    // Buscar IDs de ambos os sócios para compartilhar dados
+    const partnersIds = await getPartnersDbUserIds()
 
-    const where: any = { userId: dbUserId }
+    const where: any = { 
+      userId: { in: partnersIds } // Compartilhar dados entre sócios
+    }
     if (quoteId) {
       where.quoteId = quoteId
     }

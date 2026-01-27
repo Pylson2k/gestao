@@ -19,13 +19,15 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const [services, setServices] = useState<Service[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isFetching, setIsFetching] = useState(false)
 
   const fetchServices = useCallback(async () => {
-    if (!user?.id) {
+    if (!user?.id || isFetching) {
       setIsLoading(false)
       return
     }
 
+    setIsFetching(true)
     try {
       const response = await fetch('/api/services?isActive=true', {
         headers: {
@@ -47,12 +49,50 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       console.error('Error fetching services:', error)
     } finally {
       setIsLoading(false)
+      setIsFetching(false)
     }
-  }, [user?.id])
+  }, [user?.id, isFetching])
 
   useEffect(() => {
     fetchServices()
   }, [fetchServices])
+
+  // Atualizar dados em tempo real (polling a cada 5 segundos, apenas se página visível)
+  useEffect(() => {
+    if (!user?.id) return
+
+    let interval: NodeJS.Timeout | null = null
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        if (interval) clearInterval(interval)
+        interval = null
+      } else {
+        if (!interval) {
+          interval = setInterval(() => {
+            if (!isFetching && !isLoading) {
+              fetchServices()
+            }
+          }, 5000)
+        }
+      }
+    }
+
+    if (!document.hidden) {
+      interval = setInterval(() => {
+        if (!isFetching && !isLoading) {
+          fetchServices()
+        }
+      }, 5000)
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      if (interval) clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [fetchServices, user?.id, isFetching, isLoading])
 
   const addService = useCallback(async (serviceData: Omit<Service, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
     if (!user?.id) {

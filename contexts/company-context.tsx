@@ -25,13 +25,15 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const [settings, setSettings] = useState<CompanySettings>(defaultSettings)
   const [isLoading, setIsLoading] = useState(true)
+  const [isFetching, setIsFetching] = useState(false)
 
   const fetchSettings = useCallback(async () => {
-    if (!user?.id) {
+    if (!user?.id || isFetching) {
       setIsLoading(false)
       return
     }
 
+    setIsFetching(true)
     try {
       const response = await fetch('/api/company', {
         headers: {
@@ -57,14 +59,52 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       console.error('Fetch company settings error:', error)
     } finally {
       setIsLoading(false)
+      setIsFetching(false)
     }
-  }, [user?.id])
+  }, [user?.id, isFetching])
 
   useEffect(() => {
     if (user?.id) {
       fetchSettings()
     }
   }, [fetchSettings, user?.id])
+
+  // Atualizar dados em tempo real (polling a cada 5 segundos, apenas se página visível)
+  useEffect(() => {
+    if (!user?.id) return
+
+    let interval: NodeJS.Timeout | null = null
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        if (interval) clearInterval(interval)
+        interval = null
+      } else {
+        if (!interval) {
+          interval = setInterval(() => {
+            if (!isFetching && !isLoading) {
+              fetchSettings()
+            }
+          }, 5000)
+        }
+      }
+    }
+
+    if (!document.hidden) {
+      interval = setInterval(() => {
+        if (!isFetching && !isLoading) {
+          fetchSettings()
+        }
+      }, 5000)
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      if (interval) clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [fetchSettings, user?.id, isFetching, isLoading])
 
   const updateSettings = useCallback(async (newSettings: Partial<CompanySettings>) => {
     if (!user?.id) {

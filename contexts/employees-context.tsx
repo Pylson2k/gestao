@@ -19,13 +19,15 @@ export function EmployeesProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const [employees, setEmployees] = useState<Employee[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isFetching, setIsFetching] = useState(false)
 
   const fetchEmployees = useCallback(async () => {
-    if (!user?.id) {
+    if (!user?.id || isFetching) {
       setIsLoading(false)
       return
     }
 
+    setIsFetching(true)
     try {
       const response = await fetch('/api/employees', {
         headers: {
@@ -48,12 +50,52 @@ export function EmployeesProvider({ children }: { children: ReactNode }) {
       console.error('Error fetching employees:', error)
     } finally {
       setIsLoading(false)
+      setIsFetching(false)
     }
-  }, [user?.id])
+  }, [user?.id, isFetching])
 
   useEffect(() => {
-    fetchEmployees()
-  }, [fetchEmployees])
+    if (user?.id) {
+      fetchEmployees()
+    }
+  }, [fetchEmployees, user?.id])
+
+  // Atualizar dados em tempo real (polling a cada 5 segundos, apenas se página visível)
+  useEffect(() => {
+    if (!user?.id) return
+
+    let interval: NodeJS.Timeout | null = null
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        if (interval) clearInterval(interval)
+        interval = null
+      } else {
+        if (!interval) {
+          interval = setInterval(() => {
+            if (!isFetching && !isLoading) {
+              fetchEmployees()
+            }
+          }, 5000)
+        }
+      }
+    }
+
+    if (!document.hidden) {
+      interval = setInterval(() => {
+        if (!isFetching && !isLoading) {
+          fetchEmployees()
+        }
+      }, 5000)
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      if (interval) clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [fetchEmployees, user?.id, isFetching, isLoading])
 
   const addEmployee = useCallback(async (employeeData: Omit<Employee, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
     if (!user?.id) {
