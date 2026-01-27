@@ -99,7 +99,7 @@ export async function PUT(request: NextRequest) {
         companyCashPercentage: body.companyCashPercentage !== undefined ? Math.max(0, Math.min(50, parseFloat(body.companyCashPercentage))) : undefined,
       },
       create: {
-        userId: dbUserId,
+        userId: targetUserId,
         name: body.name || 'ServiPro',
         logo: body.logo,
         phone: body.phone || '',
