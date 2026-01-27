@@ -70,14 +70,24 @@ export default function QuoteDetailPage({
   const { settings: companySettings } = useCompany()
   const { getPaymentsByQuoteId, getTotalPaidByQuoteId, refreshPayments } = usePayments()
 
+  // TODOS os hooks devem ser chamados ANTES de qualquer early return
+  const [showDiscountDialog, setShowDiscountDialog] = useState(false)
+  const [hasDiscount, setHasDiscount] = useState(false)
+  const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage')
+  const [discountValue, setDiscountValue] = useState('')
+  const [isProcessing, setIsProcessing] = useState(false)
+
   const quote = getQuoteById(id)
 
   // Carregar pagamentos quando a página carregar
   useEffect(() => {
     if (quote?.id) {
-      refreshPayments(quote.id)
+      refreshPayments(quote.id).catch(err => {
+        console.error('Error refreshing payments:', err)
+      })
     }
-  }, [quote?.id, refreshPayments])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quote?.id])
 
   if (!quote) {
     return (
@@ -241,12 +251,6 @@ export default function QuoteDetailPage({
   const handleStatusChange = (newStatus: 'approved' | 'rejected') => {
     updateQuote(quote.id, { status: newStatus })
   }
-
-  const [showDiscountDialog, setShowDiscountDialog] = useState(false)
-  const [hasDiscount, setHasDiscount] = useState(false)
-  const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage')
-  const [discountValue, setDiscountValue] = useState('')
-  const [isProcessing, setIsProcessing] = useState(false)
 
   const handleStartServiceClick = () => {
     setShowDiscountDialog(true)
