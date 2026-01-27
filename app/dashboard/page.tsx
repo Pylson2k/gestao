@@ -136,8 +136,8 @@ export default function DashboardPage() {
   // Usar profit para os cálculos (já considera separação de despesas)
   const monthlyProfit = profit
 
-  // Manter cálculos mensais para os cards de estatísticas
-  const monthlyRevenue = calculateMonthlyRevenue(quotes)
+  // Manter cálculos mensais para os cards de estatísticas (apenas orçamentos totalmente pagos)
+  const monthlyRevenue = calculateMonthlyRevenue(quotes, getTotalPaidByQuoteId)
   const totalQuotes = quotes.length
   const approvedQuotes = quotes.filter((q) => q.status === 'approved').length
   const draftOrSentQuotes = quotes.filter((q) => q.status === 'sent' || q.status === 'draft').length

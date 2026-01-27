@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import Link from 'next/link'
 import { useQuotes } from '@/contexts/quotes-context'
+import { usePayments } from '@/contexts/payments-context'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -16,11 +17,18 @@ const statusConfig = {
 
 export default function FaturamentoPage() {
   const { quotes } = useQuotes()
+  const { getTotalPaidByQuoteId } = usePayments()
 
-  // Filtrar apenas orçamentos com status 'completed'
+  // Filtrar apenas orçamentos com status 'completed' e totalmente pagos
   const completedQuotes = useMemo(() => {
-    return quotes.filter((quote) => quote.status === 'completed')
-  }, [quotes])
+    return quotes.filter((quote) => {
+      if (quote.status !== 'completed') return false
+      
+      // Verificar se o orçamento foi totalmente pago
+      const totalPaid = getTotalPaidByQuoteId(quote.id)
+      return totalPaid >= quote.total
+    })
+  }, [quotes, getTotalPaidByQuoteId])
 
   // Calcular total do faturamento
   const totalRevenue = useMemo(() => {

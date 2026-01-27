@@ -52,21 +52,43 @@ export default function RelatoriosFinanceirosPage() {
       .reduce((sum, quote) => sum + quote.total, 0)
   }, [quotes, startDate, endDate, getTotalPaidByQuoteId])
 
-  // Filtrar despesas no período
-  const totalExpenses = useMemo(() => {
-    return expenses
-      .filter((expense) => {
-        const expenseDate = new Date(expense.date)
-        return (
-          expenseDate >= new Date(startDate) &&
-          expenseDate <= new Date(endDate + 'T23:59:59')
-        )
-      })
+  // Filtrar despesas no período (separar vales dos sócios)
+  const expensesData = useMemo(() => {
+    const expensesInPeriod = expenses.filter((expense) => {
+      const expenseDate = new Date(expense.date)
+      return (
+        expenseDate >= new Date(startDate) &&
+        expenseDate <= new Date(endDate + 'T23:59:59')
+      )
+    })
+
+    // Separar vales dos sócios das outras despesas
+    const gustavoVales = expensesInPeriod
+      .filter((expense) => expense.category === 'vale_gustavo')
       .reduce((sum, expense) => sum + expense.amount, 0)
+
+    const giovanniVales = expensesInPeriod
+      .filter((expense) => expense.category === 'vale_giovanni')
+      .reduce((sum, expense) => sum + expense.amount, 0)
+
+    // Outras despesas (excluindo vales dos sócios)
+    const otherExpenses = expensesInPeriod
+      .filter((expense) => expense.category !== 'vale_gustavo' && expense.category !== 'vale_giovanni')
+      .reduce((sum, expense) => sum + expense.amount, 0)
+
+    // Total de despesas (para exibição)
+    const totalExpenses = otherExpenses + gustavoVales + giovanniVales
+
+    return {
+      total: totalExpenses,
+      other: otherExpenses,
+      gustavoVales,
+      giovanniVales,
+    }
   }, [expenses, startDate, endDate])
 
-  // Lucro líquido
-  const netProfit = revenue - totalExpenses
+  // Lucro líquido (receita - outras despesas, sem vales dos sócios)
+  const netProfit = revenue - expensesData.other
 
   // Despesas por categoria
   const expensesByCategory = useMemo(() => {
@@ -193,7 +215,7 @@ export default function RelatoriosFinanceirosPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Despesas Total</p>
-                <p className="text-2xl font-bold text-foreground">{formatCurrency(totalExpenses)}</p>
+                <p className="text-2xl font-bold text-foreground">{formatCurrency(expensesData.total)}</p>
                 <p className="text-xs text-muted-foreground mt-1">Todas as despesas</p>
               </div>
               <div className="p-3 rounded-lg bg-red-500/10">
@@ -305,7 +327,7 @@ export default function RelatoriosFinanceirosPage() {
           <CardContent>
             <div className="space-y-3">
               {expensesByCategory.map(({ category, label, total }) => {
-                const percentage = (total / totalExpenses) * 100
+                const percentage = expensesData.total > 0 ? (total / expensesData.total) * 100 : 0
                 return (
                   <div key={category} className="space-y-1">
                     <div className="flex items-center justify-between text-sm">
@@ -341,7 +363,7 @@ export default function RelatoriosFinanceirosPage() {
             </div>
             <div className="flex justify-between py-2 border-b">
               <span className="text-muted-foreground">Despesas Total</span>
-              <span className="font-semibold text-red-500">-{formatCurrency(totalExpenses)}</span>
+              <span className="font-semibold text-red-500">-{formatCurrency(expensesData.total)}</span>
             </div>
             <div className="flex justify-between py-2 pt-4 border-t-2">
               <span className="font-semibold text-foreground">Lucro Líquido</span>

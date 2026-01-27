@@ -57,41 +57,18 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     fetchServices()
   }, [fetchServices])
 
-  // Atualizar dados em tempo real (polling a cada 5 segundos, apenas se página visível)
+  // Atualizar dados apenas quando a janela ganha foco (evita polling constante)
   useEffect(() => {
     if (!user?.id) return
 
-    let interval: NodeJS.Timeout | null = null
-
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        if (interval) clearInterval(interval)
-        interval = null
-      } else {
-        if (!interval) {
-          interval = setInterval(() => {
-            if (!isFetching && !isLoading) {
-              fetchServices()
-            }
-          }, 5000)
-        }
+    const handleFocus = () => {
+      if (!isFetching && !isLoading) {
+        fetchServices()
       }
     }
 
-    if (!document.hidden) {
-      interval = setInterval(() => {
-        if (!isFetching && !isLoading) {
-          fetchServices()
-        }
-      }, 5000)
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-
-    return () => {
-      if (interval) clearInterval(interval)
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-    }
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
   }, [fetchServices, user?.id, isFetching, isLoading])
 
   const addService = useCallback(async (serviceData: Omit<Service, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {

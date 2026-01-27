@@ -99,42 +99,18 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     }
   }, [fetchQuotes, user?.id])
 
-  // Atualizar dados em tempo real (polling a cada 5 segundos, apenas se página visível)
+  // Atualizar dados apenas quando a janela ganha foco (evita polling constante)
   useEffect(() => {
     if (!user?.id) return
 
-    let interval: NodeJS.Timeout | null = null
-
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        if (interval) clearInterval(interval)
-        interval = null
-      } else {
-        if (!interval) {
-          interval = setInterval(() => {
-            if (!isFetching && !isLoading) {
-              fetchQuotes()
-            }
-          }, 5000) // Atualizar a cada 5 segundos
-        }
+    const handleFocus = () => {
+      if (!isFetching && !isLoading) {
+        fetchQuotes()
       }
     }
 
-    // Iniciar polling apenas se página visível
-    if (!document.hidden) {
-      interval = setInterval(() => {
-        if (!isFetching && !isLoading) {
-          fetchQuotes()
-        }
-      }, 5000)
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-
-    return () => {
-      if (interval) clearInterval(interval)
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-    }
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
   }, [fetchQuotes, user?.id, isFetching, isLoading])
 
   const addQuote = useCallback(async (quoteData: Omit<Quote, 'id' | 'number' | 'createdAt' | 'userId'>): Promise<Quote> => {

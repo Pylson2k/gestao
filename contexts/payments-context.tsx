@@ -85,41 +85,18 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
     }
   }, [fetchPayments, user?.id])
 
-  // Atualizar dados em tempo real (polling a cada 5 segundos, apenas se página visível)
+  // Atualizar dados apenas quando a janela ganha foco (evita polling constante)
   useEffect(() => {
     if (!user?.id) return
 
-    let interval: NodeJS.Timeout | null = null
-
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        if (interval) clearInterval(interval)
-        interval = null
-      } else {
-        if (!interval) {
-          interval = setInterval(() => {
-            if (!isFetching && !isLoading) {
-              fetchPayments()
-            }
-          }, 5000)
-        }
+    const handleFocus = () => {
+      if (!isFetching && !isLoading) {
+        fetchPayments()
       }
     }
 
-    if (!document.hidden) {
-      interval = setInterval(() => {
-        if (!isFetching && !isLoading) {
-          fetchPayments()
-        }
-      }, 5000)
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-
-    return () => {
-      if (interval) clearInterval(interval)
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-    }
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
   }, [fetchPayments, user?.id, isFetching, isLoading])
 
   const addPayment = useCallback(async (paymentData: Omit<Payment, 'id' | 'createdAt' | 'updatedAt' | 'userId'>): Promise<Payment> => {
