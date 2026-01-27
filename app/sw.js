@@ -41,21 +41,46 @@ self.addEventListener('activate', (event) => {
 })
 
 // Estratégia: Network First, fallback para Cache
+// IMPORTANTE: Não interceptar requisições de navegação (GET para documentos HTML)
 self.addEventListener('fetch', (event) => {
+  // Ignorar requisições de navegação - sempre usar rede para navegação
+  if (event.request.mode === 'navigate') {
+    return // Deixa o navegador lidar com navegação normalmente
+  }
+  
+  // Ignorar requisições que não são GET
+  if (event.request.method !== 'GET') {
+    return
+  }
+  
+  // Ignorar requisições de API
+  if (event.request.url.includes('/api/')) {
+    return
+  }
+  
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Clone da resposta para cache
-        const responseToCache = response.clone()
-        
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache)
-        })
+        // Só cachear recursos estáticos (CSS, JS, imagens, etc)
+        if (response.status === 200 && (
+          event.request.url.includes('.css') ||
+          event.request.url.includes('.js') ||
+          event.request.url.includes('.png') ||
+          event.request.url.includes('.jpg') ||
+          event.request.url.includes('.svg') ||
+          event.request.url.includes('.woff') ||
+          event.request.url.includes('.woff2')
+        )) {
+          const responseToCache = response.clone()
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache)
+          })
+        }
         
         return response
       })
       .catch(() => {
-        // Se falhar, tenta buscar do cache
+        // Se falhar, tenta buscar do cache apenas para recursos estáticos
         return caches.match(event.request)
       })
   )

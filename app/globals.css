@@ -139,7 +139,6 @@
 
   /* Melhora o touch target em mobile - mobile-first */
   button,
-  a,
   [role="button"] {
     min-height: 48px;
     min-width: 48px;
@@ -147,24 +146,35 @@
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
   }
 
+  /* Links devem ter touch-action: auto para permitir navegação normal */
+  a {
+    min-height: 48px;
+    min-width: 48px;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+    /* Não usar touch-action: manipulation em links para não interferir na navegação */
+  }
+
   /* Desktop: reduz tamanho mínimo */
   @media (min-width: 640px) {
     button,
-    a,
     [role="button"] {
+      min-height: 40px;
+      min-width: 40px;
+    }
+    a {
       min-height: 40px;
       min-width: 40px;
     }
   }
 
-  /* Remove highlight em tap no mobile */
+  /* Remove highlight em tap no mobile, mas mantém para links */
   * {
     -webkit-tap-highlight-color: transparent;
   }
   
-  /* Touch manipulation para melhor responsividade */
-  button, a, [role="button"] {
-    touch-action: manipulation;
+  /* Restaurar highlight para links e botões */
+  a, button, [role="button"] {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
   }
 
   /* Smooth scrolling */

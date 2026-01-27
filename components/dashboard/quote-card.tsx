@@ -179,7 +179,7 @@ export function QuoteCard({ quote }: QuoteCardProps) {
               
               {/* Botões de ação para orçamentos aprovados */}
               {quote.status === 'approved' && (
-                <div className="flex gap-2 shrink-0" onClick={(e) => e.preventDefault()}>
+                <div className="flex gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                   <Button
                     variant="outline"
                     size="sm"
