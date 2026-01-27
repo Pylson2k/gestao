@@ -23,7 +23,9 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
 
   const fetchExpenses = useCallback(async () => {
     if (!user?.id || isFetching) {
-      setExpenses([])
+      if (!user?.id) {
+        setExpenses([])
+      }
       setIsLoading(false)
       return
     }

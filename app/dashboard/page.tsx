@@ -35,7 +35,7 @@ export default function DashboardPage() {
   const { user } = useAuth()
   const { lastClosing, closings } = useCashClosings()
   const { settings } = useCompany()
-  const { getTotalPaidByQuoteId } = usePayments()
+  const { payments } = usePayments()
 
   // Função para obter saudação baseada no horário
   const getGreeting = () => {
@@ -72,11 +72,13 @@ export default function DashboardPage() {
         if (completionDate < startDate) return false
         
         // Verificar se o orçamento foi totalmente pago
-        const totalPaid = getTotalPaidByQuoteId(quote.id)
+        const totalPaid = payments
+          .filter(p => p.quoteId === quote.id)
+          .reduce((sum, p) => sum + p.amount, 0)
         return totalPaid >= quote.total
       })
       .reduce((sum, quote) => sum + quote.total, 0)
-  }, [quotes, startDate, getTotalPaidByQuoteId])
+  }, [quotes, startDate, payments])
 
   // Calcular despesas desde o último fechamento (excluindo vales dos sócios)
   const expensesSinceLastClosing = useMemo(() => {
@@ -107,54 +109,77 @@ export default function DashboardPage() {
     }
   }, [expenses, startDate])
 
-  // Lucro líquido (receita - outras despesas, sem vales)
-  const profit = revenueSinceLastClosing - expensesSinceLastClosing.other
+  // Calcular todos os valores de lucro em um único useMemo para evitar recálculos
+  const profitCalculations = useMemo(() => {
+    // Lucro líquido (receita - outras despesas, sem vales)
+    const profit = revenueSinceLastClosing - expensesSinceLastClosing.other
 
-  // Porcentagem do caixa da empresa
-  const companyCashPercentage = settings.companyCashPercentage ?? 10
-  const companyCashPercentageValue = Math.max(0, Math.min(50, companyCashPercentage))
+    // Porcentagem do caixa da empresa
+    const companyCashPercentage = settings.companyCashPercentage ?? 10
+    const companyCashPercentageValue = Math.max(0, Math.min(50, companyCashPercentage))
 
-  // Calcular caixa da empresa em tempo real
-  const companyCash = profit * (companyCashPercentageValue / 100)
+    // Calcular caixa da empresa em tempo real
+    const companyCash = profit * (companyCashPercentageValue / 100)
 
-  // Lucro restante após desconto do caixa da empresa
-  const remainingProfit = profit - companyCash
+    // Lucro restante após desconto do caixa da empresa
+    const remainingProfit = profit - companyCash
 
-  // Dividir entre os sócios (50% cada)
-  const baseGustavoProfit = remainingProfit / 2
-  const baseGiovanniProfit = remainingProfit / 2
+    // Dividir entre os sócios (50% cada)
+    const baseGustavoProfit = remainingProfit / 2
+    const baseGiovanniProfit = remainingProfit / 2
 
-  // Descontar vales
-  const gustavoProfit = baseGustavoProfit - expensesSinceLastClosing.gustavoVales
-  const giovanniProfit = baseGiovanniProfit - expensesSinceLastClosing.giovanniVales
+    // Descontar vales
+    const gustavoProfit = baseGustavoProfit - expensesSinceLastClosing.gustavoVales
+    const giovanniProfit = baseGiovanniProfit - expensesSinceLastClosing.giovanniVales
+
+    return {
+      profit,
+      companyCash,
+      companyCashPercentageValue,
+      gustavoProfit,
+      giovanniProfit,
+    }
+  }, [revenueSinceLastClosing, expensesSinceLastClosing, settings.companyCashPercentage])
+
+  const profit = profitCalculations.profit
+  const companyCash = profitCalculations.companyCash
+  const companyCashPercentageValue = profitCalculations.companyCashPercentageValue
+  const gustavoProfit = profitCalculations.gustavoProfit
+  const giovanniProfit = profitCalculations.giovanniProfit
 
   // Caixa da empresa acumulado (de todos os fechamentos)
   const totalCompanyCash = useMemo(() => {
     return closings.reduce((sum, closing) => sum + (closing.companyCash || 0), 0)
   }, [closings])
 
-  // Usar profit para os cálculos (já considera separação de despesas)
-  const monthlyProfit = profit
 
   // Manter cálculos mensais para os cards de estatísticas (apenas orçamentos totalmente pagos)
-  const monthlyRevenue = calculateMonthlyRevenue(quotes, getTotalPaidByQuoteId)
+  const monthlyRevenue = useMemo(() => {
+    return calculateMonthlyRevenue(quotes, (quoteId: string) => {
+      return payments
+        .filter(p => p.quoteId === quoteId)
+        .reduce((sum, p) => sum + p.amount, 0)
+    })
+  }, [quotes, payments])
   const totalQuotes = quotes.length
   const approvedQuotes = quotes.filter((q) => q.status === 'approved').length
   const draftOrSentQuotes = quotes.filter((q) => q.status === 'sent' || q.status === 'draft').length
   
   // Calcular despesas do mês
-  const now = new Date()
-  const currentMonth = now.getMonth()
-  const currentYear = now.getFullYear()
-  const monthlyExpenses = expenses
-    .filter((expense) => {
-      const expenseDate = new Date(expense.date)
-      return (
-        expenseDate.getMonth() === currentMonth &&
-        expenseDate.getFullYear() === currentYear
-      )
-    })
-    .reduce((sum, expense) => sum + expense.amount, 0)
+  const monthlyExpenses = useMemo(() => {
+    const now = new Date()
+    const currentMonth = now.getMonth()
+    const currentYear = now.getFullYear()
+    return expenses
+      .filter((expense) => {
+        const expenseDate = new Date(expense.date)
+        return (
+          expenseDate.getMonth() === currentMonth &&
+          expenseDate.getFullYear() === currentYear
+        )
+      })
+      .reduce((sum, expense) => sum + expense.amount, 0)
+  }, [expenses])
 
   const recentQuotes = quotes.slice(0, 5)
 
@@ -170,20 +195,27 @@ export default function DashboardPage() {
     })
   }, [quotes])
 
-  const formattedRevenue = monthlyRevenue.toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  })
+  // Memoizar valores formatados para evitar recálculos
+  const formattedRevenue = useMemo(() => {
+    return monthlyRevenue.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    })
+  }, [monthlyRevenue])
 
-  const formattedExpenses = monthlyExpenses.toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  })
+  const formattedExpenses = useMemo(() => {
+    return monthlyExpenses.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    })
+  }, [monthlyExpenses])
 
-  const formattedProfit = monthlyProfit.toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  })
+  const formattedProfit = useMemo(() => {
+    return profit.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    })
+  }, [profit])
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -310,7 +342,7 @@ export default function DashboardPage() {
         {/* Lucro Líquido Total */}
         <Card className={cn(
           "border-2 transition-all duration-300 hover:shadow-xl hover:-translate-y-1",
-          monthlyProfit >= 0 
+          profit >= 0 
             ? "border-green-200/50 bg-gradient-to-br from-green-50/80 via-white to-green-50/40" 
             : "border-red-200/50 bg-gradient-to-br from-red-50/80 via-white to-red-50/40"
         )}>
@@ -320,17 +352,17 @@ export default function DashboardPage() {
                 <p className="text-sm sm:text-base font-medium text-muted-foreground mb-2">Lucro Líquido Total</p>
                 <p className={cn(
                   "text-2xl sm:text-3xl font-bold tracking-tight",
-                  monthlyProfit >= 0 ? "text-green-600" : "text-red-600"
+                  profit >= 0 ? "text-green-600" : "text-red-600"
                 )}>
                   {formattedProfit}
                 </p>
                 <p className="text-xs sm:text-sm text-muted-foreground mt-2 font-medium">
-                  {monthlyProfit >= 0 ? '✓ Lucro' : '⚠ Prejuízo'}
+                  {profit >= 0 ? '✓ Lucro' : '⚠ Prejuízo'}
                 </p>
               </div>
               <div className={cn(
                 "p-3 sm:p-4 rounded-2xl shadow-lg shrink-0 ml-3",
-                monthlyProfit >= 0 
+                profit >= 0 
                   ? "bg-gradient-to-br from-green-500 to-green-600" 
                   : "bg-gradient-to-br from-red-500 to-red-600"
               )}>
