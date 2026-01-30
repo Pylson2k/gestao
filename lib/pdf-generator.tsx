@@ -13,7 +13,7 @@ export function generateQuotePDF(quote: Quote, companySettings: CompanySettings)
   )
 
   const formatCurrency = (value: number) =>
-    value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+    value > 0 ? value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'
 
   const servicesRows = quote.services
     .map(
@@ -215,7 +215,7 @@ export function generateQuotePDF(quote: Quote, companySettings: CompanySettings)
             ${servicesRows}
             <tr class="subtotal-row">
               <td colspan="3" style="padding: 10px 8px; text-align: right; font-weight: 600;">Subtotal Servicos:</td>
-              <td style="padding: 10px 8px; text-align: right; font-weight: 600;">${formatCurrency(servicesTotal)}</td>
+              <td style="padding: 10px 8px; text-align: right; font-weight: 600;">${servicesTotal > 0 ? servicesTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</td>
             </tr>
           </tbody>
         </table>
@@ -242,7 +242,7 @@ export function generateQuotePDF(quote: Quote, companySettings: CompanySettings)
             ${materialsRows}
             <tr class="subtotal-row">
               <td colspan="3" style="padding: 10px 8px; text-align: right; font-weight: 600;">Subtotal Materiais:</td>
-              <td style="padding: 10px 8px; text-align: right; font-weight: 600;">${formatCurrency(materialsTotal)}</td>
+              <td style="padding: 10px 8px; text-align: right; font-weight: 600;">${materialsTotal > 0 ? materialsTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</td>
             </tr>
           </tbody>
         </table>
@@ -251,26 +251,33 @@ export function generateQuotePDF(quote: Quote, companySettings: CompanySettings)
           : ''
       }
 
+      ${quote.total > 0 ? `
       <div class="summary">
         <div class="summary-row">
           <span>Subtotal</span>
-          <span>${formatCurrency(quote.subtotal)}</span>
+          <span>${quote.subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
         </div>
         ${
           quote.discount > 0
             ? `
         <div class="summary-row">
           <span>Desconto</span>
-          <span>- ${formatCurrency(quote.discount)}</span>
+          <span>- ${quote.discount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
         </div>
         `
             : ''
         }
         <div class="summary-row total">
           <span>Total</span>
-          <span>${formatCurrency(quote.total)}</span>
+          <span>${quote.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
         </div>
       </div>
+      ` : `
+      <div class="summary" style="text-align: center; padding: 30px 20px;">
+        <p style="color: #6b7280; font-size: 14px; margin: 0;">Orçamento sem valores financeiros</p>
+        <p style="color: #9ca3af; font-size: 12px; margin: 8px 0 0 0;">Os valores serão definidos posteriormente</p>
+      </div>
+      `}
 
       ${
         quote.observations
@@ -423,16 +430,15 @@ export async function downloadPDF(html: string, filename: string = 'orcamento.pd
 }
 
 export function generateWhatsAppMessage(quote: Quote): string {
-  const formattedTotal = quote.total.toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  })
+  const formattedTotal = quote.total > 0 
+    ? quote.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+    : 'A definir'
 
   const message = `Ola ${quote.client.name}!
 
 Segue o orcamento *${quote.number}*:
 
-*Total: ${formattedTotal}*
+${quote.total > 0 ? `*Total: ${formattedTotal}*` : '*Valores a definir*'}
 
 Detalhes:
 - Servicos: ${quote.services.length} item(s)

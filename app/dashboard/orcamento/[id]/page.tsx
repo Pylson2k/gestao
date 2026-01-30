@@ -76,6 +76,7 @@ export default function QuoteDetailPage({
   const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage')
   const [discountValue, setDiscountValue] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
+  const [showWhatsAppInstructions, setShowWhatsAppInstructions] = useState(false)
 
   const quote = getQuoteById(id)
 
@@ -167,25 +168,51 @@ export default function QuoteDetailPage({
 
   const handleWhatsApp = async () => {
     try {
-      const message = generateWhatsAppMessage(quote)
-      const cleanPhone = quote.client.phone.replace(/\D/g, '')
-      const fullPhone = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`
-      const whatsappUrl = `https://wa.me/${fullPhone}?text=${message}`
+      // Primeiro, gerar e baixar o PDF
+      const html = generateQuotePDF(quote, companySettings)
+      const filename = `orcamento-${quote.number.replace(/\s+/g, '-')}.pdf`
       
-      // Tentar abrir WhatsApp
-      const whatsappWindow = window.open(whatsappUrl, '_blank')
+      // Mostrar mensagem de que está gerando o PDF
+      const downloadingMessage = document.createElement('div')
+      downloadingMessage.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #3b82f6;
+        color: white;
+        padding: 16px 24px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        z-index: 9999;
+        font-family: system-ui, -apple-system, sans-serif;
+        font-size: 14px;
+      `
+      downloadingMessage.textContent = '📄 Gerando PDF do orçamento...'
+      document.body.appendChild(downloadingMessage)
       
-      // Se não abrir (bloqueio de pop-up), criar link temporário
-      if (!whatsappWindow || whatsappWindow.closed || typeof whatsappWindow.closed === 'undefined') {
-        // Criar link temporário e clicar automaticamente
-        const link = document.createElement('a')
-        link.href = whatsappUrl
-        link.target = '_blank'
-        link.rel = 'noopener noreferrer'
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
+      try {
+        // Baixar o PDF
+        await downloadPDF(html, filename)
+        
+        // Atualizar mensagem
+        downloadingMessage.style.background = '#10b981'
+        downloadingMessage.textContent = '✅ PDF baixado com sucesso!'
+        
+        // Aguardar um pouco para o usuário ver a mensagem
+        await new Promise(resolve => setTimeout(resolve, 1500))
+      } catch (error) {
+        console.error('Erro ao gerar PDF:', error)
+        downloadingMessage.style.background = '#ef4444'
+        downloadingMessage.textContent = '❌ Erro ao gerar PDF'
+        setTimeout(() => document.body.removeChild(downloadingMessage), 3000)
+        throw error
       }
+      
+      // Remover mensagem
+      document.body.removeChild(downloadingMessage)
+      
+      // Mostrar dialog de instruções
+      setShowWhatsAppInstructions(true)
       
       if (quote.status === 'draft') {
         updateQuote(quote.id, { status: 'sent' })
@@ -212,8 +239,37 @@ export default function QuoteDetailPage({
       } catch {}
     } catch (error) {
       console.error('Erro ao abrir WhatsApp:', error)
-      alert('Erro ao abrir WhatsApp. Verifique se o número está correto.')
+      alert('Erro ao processar envio. Tente novamente.')
     }
+  }
+
+  const handleOpenWhatsAppWithPDF = () => {
+    // Mensagem simplificada para WhatsApp
+    const message = `Olá ${quote.client.name}!
+
+Segue o orçamento *${quote.number}*.
+
+Aguardo sua confirmação!`
+    
+    const cleanPhone = quote.client.phone.replace(/\D/g, '')
+    const fullPhone = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`
+    const whatsappUrl = `https://wa.me/${fullPhone}?text=${encodeURIComponent(message)}`
+    
+    // Tentar abrir WhatsApp
+    const whatsappWindow = window.open(whatsappUrl, '_blank')
+    
+    // Se não abrir (bloqueio de pop-up), criar link temporário
+    if (!whatsappWindow || whatsappWindow.closed || typeof whatsappWindow.closed === 'undefined') {
+      const link = document.createElement('a')
+      link.href = whatsappUrl
+      link.target = '_blank'
+      link.rel = 'noopener noreferrer'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    }
+    
+    setShowWhatsAppInstructions(false)
   }
 
   const handleViewQuote = async () => {
@@ -434,26 +490,39 @@ export default function QuoteDetailPage({
             <CardTitle className="text-xl sm:text-2xl font-bold tracking-tight">Resumo Financeiro</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex justify-between items-center py-3 sm:py-2">
-              <span className="text-muted-foreground font-medium text-base sm:text-sm">Subtotal</span>
-              <span className="text-foreground font-semibold text-lg sm:text-base">
-                {quote.subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-              </span>
-            </div>
-            {quote.discount > 0 && (
-              <div className="flex justify-between items-center py-3 sm:py-2 border-t border-border/50">
-                <span className="text-muted-foreground font-medium text-base sm:text-sm">Desconto</span>
-                <span className="text-destructive font-semibold text-lg sm:text-base">
-                  - {quote.discount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                </span>
+            {quote.total > 0 ? (
+              <>
+                <div className="flex justify-between items-center py-3 sm:py-2">
+                  <span className="text-muted-foreground font-medium text-base sm:text-sm">Subtotal</span>
+                  <span className="text-foreground font-semibold text-lg sm:text-base">
+                    {quote.subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </span>
+                </div>
+                {quote.discount > 0 && (
+                  <div className="flex justify-between items-center py-3 sm:py-2 border-t border-border/50">
+                    <span className="text-muted-foreground font-medium text-base sm:text-sm">Desconto</span>
+                    <span className="text-destructive font-semibold text-lg sm:text-base">
+                      - {quote.discount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </span>
+                  </div>
+                )}
+                <div className="border-t-2 border-primary/30 pt-4 mt-2 flex justify-between items-center bg-gradient-to-r from-primary/10 to-transparent p-4 rounded-lg">
+                  <span className="font-bold text-foreground text-xl sm:text-lg">Total</span>
+                  <span className="text-3xl sm:text-2xl font-bold text-primary">
+                    {quote.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="text-muted-foreground text-base sm:text-sm mb-2">
+                  Orçamento sem valores financeiros
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Os valores poderão ser adicionados posteriormente
+                </div>
               </div>
             )}
-            <div className="border-t-2 border-primary/30 pt-4 mt-2 flex justify-between items-center bg-gradient-to-r from-primary/10 to-transparent p-4 rounded-lg">
-              <span className="font-bold text-foreground text-xl sm:text-lg">Total</span>
-              <span className="text-3xl sm:text-2xl font-bold text-primary">
-                {quote.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-              </span>
-            </div>
             {(() => {
               const totalPaid = getTotalPaidByQuoteId(quote.id)
               const remaining = quote.total - totalPaid
@@ -528,13 +597,13 @@ export default function QuoteDetailPage({
                       <td className="py-4 sm:py-3 px-4 sm:px-3 text-foreground font-medium text-base sm:text-sm">{item.name}</td>
                       <td className="py-4 sm:py-3 px-4 sm:px-3 text-center text-foreground font-semibold text-base sm:text-sm">{item.quantity}</td>
                       <td className="py-4 sm:py-3 px-4 sm:px-3 text-right text-muted-foreground text-base sm:text-sm">
-                        {item.unitPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                        {item.unitPrice > 0 ? item.unitPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}
                       </td>
                       <td className="py-4 sm:py-3 px-4 sm:px-3 text-right font-bold text-foreground text-base sm:text-sm">
-                        {(item.quantity * item.unitPrice).toLocaleString('pt-BR', {
+                        {(item.quantity * item.unitPrice) > 0 ? (item.quantity * item.unitPrice).toLocaleString('pt-BR', {
                           style: 'currency',
                           currency: 'BRL',
-                        })}
+                        }) : '-'}
                       </td>
                     </tr>
                   ))}
@@ -571,13 +640,13 @@ export default function QuoteDetailPage({
                       <td className="py-4 sm:py-3 px-4 sm:px-3 text-foreground font-medium text-base sm:text-sm">{item.name}</td>
                       <td className="py-4 sm:py-3 px-4 sm:px-3 text-center text-foreground font-semibold text-base sm:text-sm">{item.quantity}</td>
                       <td className="py-4 sm:py-3 px-4 sm:px-3 text-right text-muted-foreground text-base sm:text-sm">
-                        {item.unitPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                        {item.unitPrice > 0 ? item.unitPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}
                       </td>
                       <td className="py-4 sm:py-3 px-4 sm:px-3 text-right font-bold text-foreground text-base sm:text-sm">
-                        {(item.quantity * item.unitPrice).toLocaleString('pt-BR', {
+                        {(item.quantity * item.unitPrice) > 0 ? (item.quantity * item.unitPrice).toLocaleString('pt-BR', {
                           style: 'currency',
                           currency: 'BRL',
-                        })}
+                        }) : '-'}
                       </td>
                     </tr>
                   ))}
@@ -784,6 +853,64 @@ export default function QuoteDetailPage({
           </div>
         </CardContent>
       </Card>
+
+      {/* Dialog de instruções WhatsApp */}
+      <Dialog open={showWhatsAppInstructions} onOpenChange={setShowWhatsAppInstructions}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageCircle className="w-5 h-5 text-green-600" />
+              PDF Baixado com Sucesso!
+            </DialogTitle>
+            <DialogDescription>
+              O orçamento foi salvo no seu dispositivo
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <p className="text-sm text-green-800 font-medium mb-2">
+                📄 Arquivo: orcamento-{quote.number.replace(/\s+/g, '-')}.pdf
+              </p>
+              <p className="text-xs text-green-700">
+                O PDF está salvo na pasta de Downloads do seu dispositivo
+              </p>
+            </div>
+            
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-foreground">Próximos passos:</p>
+              <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
+                <li>Clique no botão abaixo para abrir o WhatsApp</li>
+                <li>No WhatsApp, clique no ícone de anexo (📎)</li>
+                <li>Selecione "Documento" ou "Arquivo"</li>
+                <li>Escolha o PDF que foi baixado</li>
+                <li>Envie para o cliente!</li>
+              </ol>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-xs text-blue-800">
+                💡 <strong>Dica:</strong> O PDF já está pronto para ser anexado. Basta procurar por "{quote.number}" nos seus arquivos.
+              </p>
+            </div>
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowWhatsAppInstructions(false)}
+              className="w-full sm:w-auto"
+            >
+              Fechar
+            </Button>
+            <Button
+              onClick={handleOpenWhatsAppWithPDF}
+              className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
+            >
+              <MessageCircle className="w-4 h-4 mr-2" />
+              Abrir WhatsApp
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Dialog de desconto ao iniciar serviço */}
       <Dialog open={showDiscountDialog} onOpenChange={setShowDiscountDialog}>

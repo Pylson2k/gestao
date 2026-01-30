@@ -47,7 +47,7 @@ export function MaterialItemRow({ item, onChange, onRemove }: MaterialItemRowPro
       </div>
       <div className="col-span-3 sm:col-span-2 text-right">
         <span className="text-sm font-medium text-foreground">
-          {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+          {total > 0 ? total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}
         </span>
       </div>
       <div className="col-span-1">

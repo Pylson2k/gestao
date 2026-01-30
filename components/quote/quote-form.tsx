@@ -77,6 +77,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
 
   const [discount, setDiscount] = useState(initialData?.discount || 0)
   const [observations, setObservations] = useState(initialData?.observations || '')
+  const [withoutValues, setWithoutValues] = useState(false)
 
   const { subtotal, total } = useMemo(
     () => calculateQuoteTotals(services, materials, discount),
@@ -137,11 +138,21 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
         return
       }
 
-      const validServices = services.filter((s) => s && s.name && s.name.trim() && s.quantity > 0 && s.unitPrice > 0)
-      const validMaterials = materials.filter((m) => m && m.name && m.name.trim() && m.quantity > 0 && m.unitPrice > 0)
+      // Se for orçamento sem valores, valida apenas nome e quantidade
+      let validServices, validMaterials
+      if (withoutValues) {
+        validServices = services.filter((s) => s && s.name && s.name.trim() && s.quantity > 0)
+        validMaterials = materials.filter((m) => m && m.name && m.name.trim() && m.quantity > 0)
+      } else {
+        validServices = services.filter((s) => s && s.name && s.name.trim() && s.quantity > 0 && s.unitPrice > 0)
+        validMaterials = materials.filter((m) => m && m.name && m.name.trim() && m.quantity > 0 && m.unitPrice > 0)
+      }
 
       if (validServices.length === 0 && validMaterials.length === 0) {
-        setError('Adicione pelo menos um servico ou material com nome, quantidade e preco validos')
+        setError(withoutValues 
+          ? 'Adicione pelo menos um servico ou material com nome e quantidade validos'
+          : 'Adicione pelo menos um servico ou material com nome, quantidade e preco validos'
+        )
         setIsSubmitting(false)
         return
       }
@@ -397,32 +408,58 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
             <CardTitle className="text-xl font-bold tracking-tight">Resumo Financeiro</CardTitle>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div className="flex justify-between items-center py-2">
-              <span className="text-muted-foreground font-medium">Subtotal</span>
-              <span className="font-bold text-foreground text-lg">
-                {subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-              </span>
-            </div>
-            <div className="flex items-center justify-between gap-4 py-2 border-t border-border/50 pt-4">
-              <Label htmlFor="discount" className="text-sm font-medium text-muted-foreground">
-                Desconto (R$)
-              </Label>
-              <Input
-                id="discount"
-                type="number"
-                min={0}
-                step={0.01}
-                value={discount || ''}
-                onChange={(e) => setDiscount(Number(e.target.value) || 0)}
-                className="w-36 bg-background text-right rounded-xl border-2"
+            <div className="flex items-center space-x-2 pb-3 border-b border-border/50">
+              <input
+                type="checkbox"
+                id="withoutValues"
+                checked={withoutValues}
+                onChange={(e) => setWithoutValues(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300"
               />
+              <Label htmlFor="withoutValues" className="cursor-pointer text-sm font-medium">
+                Orçamento sem valores (apenas itens)
+              </Label>
             </div>
-            <div className="border-t-2 border-primary/30 pt-5 mt-2 flex justify-between items-center bg-gradient-to-r from-primary/10 to-transparent p-4 rounded-xl">
-              <span className="font-bold text-foreground text-lg">Total</span>
-              <span className="text-3xl font-bold text-primary tracking-tight">
-                {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-              </span>
-            </div>
+            
+            {!withoutValues ? (
+              <>
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-muted-foreground font-medium">Subtotal</span>
+                  <span className="font-bold text-foreground text-lg">
+                    {subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-4 py-2 border-t border-border/50 pt-4">
+                  <Label htmlFor="discount" className="text-sm font-medium text-muted-foreground">
+                    Desconto (R$)
+                  </Label>
+                  <Input
+                    id="discount"
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    value={discount || ''}
+                    onChange={(e) => setDiscount(Number(e.target.value) || 0)}
+                    className="w-36 bg-background text-right rounded-xl border-2"
+                  />
+                </div>
+                <div className="border-t-2 border-primary/30 pt-5 mt-2 flex justify-between items-center bg-gradient-to-r from-primary/10 to-transparent p-4 rounded-xl">
+                  <span className="font-bold text-foreground text-lg">Total</span>
+                  <span className="text-3xl font-bold text-primary tracking-tight">
+                    {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="text-muted-foreground text-sm mb-2">
+                  Orçamento sem valores financeiros
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Os valores poderão ser adicionados posteriormente
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
