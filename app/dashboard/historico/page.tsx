@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useQuotes } from '@/contexts/quotes-context'
 import { Button } from '@/components/ui/button'
@@ -39,12 +40,23 @@ const statusConfig = {
   cancelled: { label: 'Cancelado', className: 'bg-orange-500/10 text-orange-500' },
 }
 
+const validStatuses = ['draft', 'sent', 'approved', 'rejected', 'in_progress', 'completed', 'cancelled']
+
 export default function HistoryPage() {
+  const searchParams = useSearchParams()
   const { quotes } = useQuotes()
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
+
+  // Suporte a link direto: /dashboard/historico?status=sent ou ?status=approved
+  useEffect(() => {
+    const status = searchParams.get('status')
+    if (status && validStatuses.includes(status)) {
+      setStatusFilter(status)
+    }
+  }, [searchParams])
 
   const filteredQuotes = useMemo(() => {
     return quotes.filter((quote) => {

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { usePayments } from '@/contexts/payments-context'
 import { useQuotes } from '@/contexts/quotes-context'
 import { Button } from '@/components/ui/button'
@@ -47,7 +48,8 @@ const paymentMethodColors: Record<PaymentMethod, string> = {
 }
 
 export default function PagamentosPage() {
-  const { payments, addPayment, updatePayment, deletePayment, isLoading, refreshPayments } = usePayments()
+  const searchParams = useSearchParams()
+  const { payments, addPayment, updatePayment, deletePayment, isLoading, refreshPayments, getTotalPaidByQuoteId } = usePayments()
   const { quotes } = useQuotes()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null)
@@ -63,6 +65,33 @@ export default function PagamentosPage() {
   const [filterStartDate, setFilterStartDate] = useState('')
   const [filterEndDate, setFilterEndDate] = useState('')
   const [filterMethod, setFilterMethod] = useState<string>('all')
+
+  const hasOpenedFromUrl = useRef(false)
+  // Suporte a link direto: /dashboard/pagamentos?quoteId=xxx ou ?quoteId=xxx&openDialog=1
+  useEffect(() => {
+    const quoteId = searchParams.get('quoteId')
+    const openDialog = searchParams.get('openDialog') === '1'
+    if (quoteId) {
+      setFilterQuoteId(quoteId)
+      if (openDialog && !hasOpenedFromUrl.current && quotes.length > 0) {
+        const quote = quotes.find(q => q.id === quoteId)
+        if (quote) {
+          hasOpenedFromUrl.current = true
+          const paid = getTotalPaidByQuoteId(quoteId)
+          const remaining = Math.max(0, quote.total - paid)
+          setFormData({
+            quoteId,
+            amount: remaining > 0 ? remaining.toFixed(2) : '',
+            paymentDate: new Date().toISOString().split('T')[0],
+            paymentMethod: '' as PaymentMethod | '',
+            observations: '',
+          })
+          setEditingPayment(null)
+          setIsDialogOpen(true)
+        }
+      }
+    }
+  }, [searchParams, quotes, getTotalPaidByQuoteId])
 
   // Filtrar apenas orçamentos aprovados ou em progresso
   const availableQuotes = useMemo(() => {
@@ -556,7 +585,7 @@ export default function PagamentosPage() {
                   id="observations"
                   value={formData.observations}
                   onChange={(e) => setFormData({ ...formData, observations: e.target.value })}
-                  placeholder="Observações adicionais (opcional)"
+                  placeholder="Ex: link do comprovante PIX, referência do boleto (opcional)"
                   className="min-h-[100px] text-base sm:text-sm"
                 />
               </div>

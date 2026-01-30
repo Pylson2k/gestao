@@ -9,8 +9,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { DollarSign, TrendingUp, TrendingDown, Wallet, Calendar } from 'lucide-react'
+import { DollarSign, TrendingUp, TrendingDown, Wallet, Calendar, FileDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { exportToCSV } from '@/lib/export-utils'
 
 export default function RelatoriosFinanceirosPage() {
   const { quotes } = useQuotes()
@@ -144,6 +145,26 @@ export default function RelatoriosFinanceirosPage() {
     setEndDate(new Date().toISOString().split('T')[0])
   }
 
+  const exportParaContador = () => {
+    const periodLabel = `${new Date(startDate).toLocaleDateString('pt-BR')} a ${new Date(endDate).toLocaleDateString('pt-BR')}`
+    const summary = [
+      { 'Tipo': 'Resumo do Período', 'Período': periodLabel, '': '' },
+      { 'Tipo': 'Receita (serviços finalizados e pagos)', 'Período': '', '': formatCurrency(revenue) },
+      { 'Tipo': 'Despesas totais', 'Período': '', '': formatCurrency(expensesData.total) },
+      { 'Tipo': 'Despesas (outras)', 'Período': '', '': formatCurrency(expensesData.other) },
+      { 'Tipo': 'Vales Gustavo', 'Período': '', '': formatCurrency(expensesData.gustavoVales) },
+      { 'Tipo': 'Vales Giovanni', 'Período': '', '': formatCurrency(expensesData.giovanniVales) },
+      { 'Tipo': 'Lucro Líquido', 'Período': '', '': formatCurrency(netProfit) },
+    ]
+    const categoryRows = expensesByCategory.map(({ label, total }) => ({
+      'Tipo': 'Despesa por categoria',
+      'Período': label,
+      '': total.toFixed(2),
+    }))
+    const data = [...summary, { 'Tipo': '', 'Período': '', '': '' }, ...categoryRows]
+    exportToCSV(data, 'relatorio_contador_' + startDate + '_' + endDate, 'relatório contador')
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -188,6 +209,25 @@ export default function RelatoriosFinanceirosPage() {
               </Button>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Para o contador */}
+      <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <FileDown className="w-5 h-5" />
+            Para o contador
+          </CardTitle>
+          <p className="text-sm text-muted-foreground font-normal">
+            Exporte um resumo do período (receita, despesas, lucro e despesas por categoria) em CSV para enviar ao contador.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={exportParaContador} className="min-h-[48px]">
+            <FileDown className="w-5 h-5 mr-2" />
+            Exportar CSV do período
+          </Button>
         </CardContent>
       </Card>
 

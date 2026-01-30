@@ -20,11 +20,13 @@ import type { Client } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { useQuotes } from '@/contexts/quotes-context'
+import { usePayments } from '@/contexts/payments-context'
 import { exportClientsToCSV } from '@/lib/export-utils'
 
 export default function ClientesPage() {
   const { clients, addClient, updateClient, deleteClient, isLoading } = useClients()
   const { quotes } = useQuotes()
+  const { getTotalPaidByQuoteId } = usePayments()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingClient, setEditingClient] = useState<Client | null>(null)
   const [formData, setFormData] = useState({
@@ -278,8 +280,13 @@ export default function ClientesPage() {
                     const clientQuotes = quotes.filter(q => q.client.id === client.id)
                     const totalValue = clientQuotes.reduce((sum, q) => sum + q.total, 0)
                     const completedQuotes = clientQuotes.filter(q => q.status === 'completed')
-                    const completedValue = completedQuotes.reduce((sum, q) => sum + q.total, 0)
-                    
+                    let totalDebt = 0
+                    clientQuotes.forEach((q) => {
+                      if (q.status !== 'approved' && q.status !== 'in_progress' && q.status !== 'completed') return
+                      const paid = getTotalPaidByQuoteId(q.id)
+                      const debt = q.total - paid
+                      if (debt > 0) totalDebt += debt
+                    })
                     return (
                       <div className="pt-2 border-t space-y-1">
                         <div className="flex items-center justify-between text-xs">
@@ -294,9 +301,17 @@ export default function ClientesPage() {
                         )}
                         {totalValue > 0 && (
                           <div className="flex items-center justify-between text-xs">
-                            <span className="text-muted-foreground">Total:</span>
+                            <span className="text-muted-foreground">Total orçado:</span>
                             <span className="font-medium">
                               {totalValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            </span>
+                          </div>
+                        )}
+                        {totalDebt > 0 && (
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground">Saldo devedor:</span>
+                            <span className="font-semibold text-amber-600">
+                              {totalDebt.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                             </span>
                           </div>
                         )}

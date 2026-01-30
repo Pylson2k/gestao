@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { AlertTriangle, DollarSign, UserCircle, Phone, Mail, FileText, Calendar, TrendingUp } from 'lucide-react'
+import { AlertTriangle, DollarSign, UserCircle, Phone, Mail, FileText, Calendar, TrendingUp, MessageCircle } from 'lucide-react'
 import type { Client, Quote } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
@@ -361,12 +361,13 @@ export default function InadimplentesPage() {
                       getSeverityColor(severity)
                     )}
                   >
-                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                       <div className="flex-1">
-                        <div className="flex items-start gap-3 mb-3">
-                          <UserCircle className="w-6 h-6 text-primary mt-1 shrink-0" />
-                          <div className="flex-1">
-                            <h3 className="font-bold text-lg mb-1">{item.client.name}</h3>
+                        <div className="flex items-start justify-between gap-3 mb-3">
+                          <div className="flex items-start gap-3 flex-1 min-w-0">
+                            <UserCircle className="w-6 h-6 text-primary mt-1 shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-bold text-lg mb-1">{item.client.name}</h3>
                             <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
                               <div className="flex items-center gap-1">
                                 <Phone className="w-4 h-4" />
@@ -379,7 +380,22 @@ export default function InadimplentesPage() {
                                 </div>
                               )}
                             </div>
+                            </div>
                           </div>
+                          <Button
+                            size="sm"
+                            className="shrink-0 bg-green-600 hover:bg-green-700"
+                            onClick={() => {
+                              const msg = `Olá ${item.client.name}!\n\nIdentificamos um saldo pendente de *${item.totalDebt.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}* referente ao(s) orçamento(s) em nosso sistema.\n\nPor favor, entre em contato para regularizar. Obrigado!`
+                              const cleanPhone = item.client.phone.replace(/\D/g, '')
+                              const fullPhone = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`
+                              const url = `https://wa.me/${fullPhone}?text=${encodeURIComponent(msg)}`
+                              window.open(url, '_blank')
+                            }}
+                          >
+                            <MessageCircle className="w-4 h-4 mr-2" />
+                            Cobrar por WhatsApp
+                          </Button>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">

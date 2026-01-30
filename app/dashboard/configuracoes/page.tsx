@@ -2,19 +2,38 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useCompany } from '@/contexts/company-context'
+import { useAuth } from '@/contexts/auth-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
-import { Settings, Upload, X, CheckCircle2, Loader2 } from 'lucide-react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Settings, Upload, X, CheckCircle2, Loader2, Database, Download, AlertTriangle } from 'lucide-react'
 
 export default function SettingsPage() {
   const { settings, updateSettings, updateLogo, removeLogo, isLoading } = useCompany()
+  const { user } = useAuth()
   const [formData, setFormData] = useState(settings)
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const restoreFileRef = useRef<HTMLInputElement>(null)
+  const [backupLoading, setBackupLoading] = useState(false)
+  const [restoreLoading, setRestoreLoading] = useState(false)
+  const [backupError, setBackupError] = useState<string | null>(null)
+  const [restoreResult, setRestoreResult] = useState<{ success: boolean; message: string } | null>(null)
+  const [restoreConfirmOpen, setRestoreConfirmOpen] = useState(false)
+  const [pendingRestore, setPendingRestore] = useState<{ text: string; counts: { clients: number; quotes: number; payments: number; expenses: number } } | null>(null)
 
   // Atualizar formData quando settings mudarem
   useEffect(() => {
@@ -132,6 +151,92 @@ export default function SettingsPage() {
     }
   }
 
+  const handleExportBackup = async () => {
+    if (!user?.id) return
+    setBackupLoading(true)
+    setBackupError(null)
+    try {
+      const res = await fetch('/api/backup', {
+        headers: { 'x-user-id': user.id },
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setBackupError(data.error || 'Erro ao exportar backup')
+        return
+      }
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `backup-${data.exportedAt?.slice(0, 10) || new Date().toISOString().slice(0, 10)}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (e: any) {
+      setBackupError(e?.message || 'Erro ao exportar backup')
+    } finally {
+      setBackupLoading(false)
+    }
+  }
+
+  const handleRestoreFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user?.id) return
+    setRestoreResult(null)
+    setBackupError(null)
+    try {
+      const text = await file.text()
+      const body = JSON.parse(text)
+      if (!Array.isArray(body.clients) || !Array.isArray(body.quotes)) {
+        setRestoreResult({ success: false, message: 'Arquivo inválido. Use um backup exportado por este sistema.' })
+        return
+      }
+      const clients = body.clients?.length ?? 0
+      const quotes = body.quotes?.length ?? 0
+      const payments = body.payments?.length ?? 0
+      const expenses = body.expenses?.length ?? 0
+      if (clients === 0 && quotes === 0) {
+        setRestoreResult({
+          success: false,
+          message: 'Este backup está vazio (sem clientes e orçamentos). Restaurar apagaria todos os dados. Use um arquivo que contenha dados.',
+        })
+        return
+      }
+      setPendingRestore({ text, counts: { clients, quotes, payments, expenses } })
+      setRestoreConfirmOpen(true)
+    } catch (e: any) {
+      setRestoreResult({ success: false, message: e?.message || 'Erro ao processar arquivo. Verifique se é um JSON válido.' })
+    }
+    if (restoreFileRef.current) restoreFileRef.current.value = ''
+  }
+
+  const handleRestoreConfirm = async () => {
+    if (!user?.id || !pendingRestore) return
+    setRestoreLoading(true)
+    setRestoreResult(null)
+    setRestoreConfirmOpen(false)
+    try {
+      const res = await fetch('/api/backup/restore', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
+        body: pendingRestore.text,
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setRestoreResult({ success: false, message: data.error || 'Erro ao restaurar backup' })
+        return
+      }
+      setRestoreResult({
+        success: true,
+        message: `Restaurado: ${data.restored?.clients ?? 0} clientes, ${data.restored?.quotes ?? 0} orçamentos e demais dados. Recarregue a página para ver as alterações.`,
+      })
+    } catch (e: any) {
+      setRestoreResult({ success: false, message: e?.message || 'Erro ao restaurar backup' })
+    } finally {
+      setRestoreLoading(false)
+      setPendingRestore(null)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
@@ -176,6 +281,45 @@ export default function SettingsPage() {
           <span>Configuracoes salvas com sucesso!</span>
         </div>
       )}
+
+      <AlertDialog open={restoreConfirmOpen} onOpenChange={setRestoreConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar restauração</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>Este backup contém:</p>
+                <ul className="list-disc list-inside text-sm">
+                  {pendingRestore && (
+                    <>
+                      <li>{pendingRestore.counts.clients} clientes</li>
+                      <li>{pendingRestore.counts.quotes} orçamentos</li>
+                      <li>{pendingRestore.counts.payments} pagamentos</li>
+                      <li>{pendingRestore.counts.expenses} despesas</li>
+                    </>
+                  )}
+                </ul>
+                <p className="font-medium text-destructive">
+                  Restaurar substituirá TODOS os dados atuais por estes. Esta ação não pode ser desfeita.
+                </p>
+                <p>Tem certeza que deseja continuar?</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault()
+                handleRestoreConfirm()
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Sim, restaurar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -368,6 +512,82 @@ export default function SettingsPage() {
                   Porcentagem do lucro líquido destinada ao caixa da empresa (0% a 50%). 
                   O restante será dividido igualmente entre os sócios.
                 </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Backup e Restauração */}
+          <Card className="border-border lg:col-span-2 border-amber-500/30 bg-amber-500/5">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Database className="w-5 h-5" />
+                Backup e Restauração
+              </CardTitle>
+              <CardDescription>
+                Faça backup dos seus dados regularmente. Se o banco desconectar ou você perder dados, use um arquivo de backup para restaurar clientes, orçamentos, pagamentos, despesas e configurações.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {backupError && (
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive border border-destructive/20 text-sm">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  {backupError}
+                </div>
+              )}
+              {restoreResult && (
+                <div className={`flex items-center gap-2 p-3 rounded-lg border text-sm ${restoreResult.success ? 'bg-accent/10 text-accent border-accent/20' : 'bg-destructive/10 text-destructive border-destructive/20'}`}>
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  {restoreResult.message}
+                </div>
+              )}
+              <div className="flex flex-wrap gap-4 items-end">
+                <div className="space-y-2">
+                  <Label>Exportar backup</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleExportBackup}
+                    disabled={backupLoading || !user?.id}
+                  >
+                    {backupLoading ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Download className="w-4 h-4 mr-2" />
+                    )}
+                    Baixar backup (JSON)
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    Salve o arquivo em local seguro (nuvem, pendrive). Recomendado: fazer backup semanal.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Restaurar backup</Label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      ref={restoreFileRef}
+                      type="file"
+                      accept=".json,application/json"
+                      onChange={handleRestoreFileSelect}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => restoreFileRef.current?.click()}
+                      disabled={restoreLoading || !user?.id}
+                    >
+                      {restoreLoading ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Upload className="w-4 h-4 mr-2" />
+                      )}
+                      Escolher arquivo e restaurar
+                    </Button>
+                  </div>
+                  <p className="text-xs text-amber-600 dark:text-amber-500">
+                    Atenção: a restauração substitui os dados atuais pelos do arquivo. Use apenas arquivos exportados por este sistema.
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>

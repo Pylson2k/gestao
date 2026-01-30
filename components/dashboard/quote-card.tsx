@@ -18,7 +18,7 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { cn } from '@/lib/utils'
 import type { Quote } from '@/lib/types'
-import { FileText, ChevronRight, Play, X, CheckCircle2 } from 'lucide-react'
+import { FileText, ChevronRight, Play, X, CheckCircle2, CreditCard } from 'lucide-react'
 import { useQuotes } from '@/contexts/quotes-context'
 import { usePayments } from '@/contexts/payments-context'
 
@@ -190,6 +190,23 @@ export function QuoteCard({ quote }: QuoteCardProps) {
                 <p className="font-bold text-lg sm:text-xl text-foreground">{formattedTotal}</p>
               </div>
               
+              {/* Ação rápida: Registrar pagamento (aprovado, em serviço ou finalizado) */}
+              {(quote.status === 'approved' || quote.status === 'in_progress' || quote.status === 'completed') && quote.total > 0 && (
+                <Link
+                  href={`/dashboard/pagamentos?quoteId=${quote.id}&openDialog=1`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="shrink-0"
+                >
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-green-600 border-green-600 hover:bg-green-50 min-h-[40px] sm:min-h-[36px] text-sm touch-manipulation"
+                  >
+                    <CreditCard className="w-4 h-4 sm:w-3 sm:h-3 mr-1" />
+                    <span className="hidden sm:inline">Pagamento</span>
+                  </Button>
+                </Link>
+              )}
               {/* Botões de ação para orçamentos aprovados */}
               {quote.status === 'approved' && (
                 <div className="flex gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>

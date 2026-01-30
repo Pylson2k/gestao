@@ -24,7 +24,10 @@ import {
   TrendingUp,
   TrendingDown,
   AlertCircle,
-  Wallet
+  Wallet,
+  Calendar,
+  ListTodo,
+  ArrowRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { InstallPrompt } from '@/components/pwa/install-prompt'
@@ -35,7 +38,7 @@ export default function DashboardPage() {
   const { user } = useAuth()
   const { lastClosing, closings } = useCashClosings()
   const { settings } = useCompany()
-  const { payments } = usePayments()
+  const { payments, getTotalPaidByQuoteId } = usePayments()
 
   // Função para obter saudação baseada no horário
   const getGreeting = () => {
@@ -195,6 +198,109 @@ export default function DashboardPage() {
     })
   }, [quotes])
 
+  // Inadimplência total (orçamentos com saldo devedor)
+  const overdueDebtSummary = useMemo(() => {
+    let totalDebt = 0
+    let countQuotes = 0
+    const now = new Date()
+    quotes.forEach((q) => {
+      if (q.status !== 'approved' && q.status !== 'in_progress' && q.status !== 'completed') return
+      const paid = getTotalPaidByQuoteId(q.id)
+      const debt = q.total - paid
+      if (debt > 0) {
+        totalDebt += debt
+        countQuotes += 1
+      }
+    })
+    return { totalDebt, countQuotes }
+  }, [quotes, getTotalPaidByQuoteId])
+
+  // Resumo do dia: entradas (pagamentos de hoje) e saídas (despesas de hoje)
+  const todaySummary = useMemo(() => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const endToday = new Date(today)
+    endToday.setHours(23, 59, 59, 999)
+    const paymentsToday = payments.filter((p) => {
+      const d = new Date(p.paymentDate)
+      return d >= today && d <= endToday
+    })
+    const expensesToday = expenses.filter((e) => {
+      const d = new Date(e.date)
+      return d >= today && d <= endToday
+    })
+    const revenueToday = paymentsToday.reduce((s, p) => s + p.amount, 0)
+    const expensesAmountToday = expensesToday.reduce((s, e) => s + e.amount, 0)
+    return { revenueToday, expensesAmountToday, paymentsToday: paymentsToday.length, expensesToday: expensesToday.length }
+  }, [payments, expenses])
+
+  // Resumo da semana (últimos 7 dias)
+  const weekSummary = useMemo(() => {
+    const end = new Date()
+    const start = new Date()
+    start.setDate(start.getDate() - 6)
+    start.setHours(0, 0, 0, 0)
+    end.setHours(23, 59, 59, 999)
+    const paymentsWeek = payments.filter((p) => {
+      const d = new Date(p.paymentDate)
+      return d >= start && d <= end
+    })
+    const expensesWeek = expenses.filter((e) => {
+      const d = new Date(e.date)
+      return d >= start && d <= end
+    })
+    const revenueWeek = paymentsWeek.reduce((s, p) => s + p.amount, 0)
+    const expensesAmountWeek = expensesWeek.reduce((s, e) => s + e.amount, 0)
+    return { revenueWeek, expensesAmountWeek }
+  }, [payments, expenses])
+
+  // Próximas ações (o que fazer agora)
+  const nextActions = useMemo(() => {
+    const actions: Array<{ id: string; type: 'remind' | 'start_service' | 'collect' | 'close_cash'; label: string; sublabel?: string; href: string; count?: number }> = []
+    const threeDaysAgo = new Date()
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3)
+
+    // Orçamentos enviados há 3+ dias sem resposta
+    const sentLongAgo = quotes.filter((q) => q.status === 'sent' && new Date(q.createdAt) < threeDaysAgo)
+    if (sentLongAgo.length > 0) {
+      actions.push({
+        id: 'remind',
+        type: 'remind',
+        label: 'Lembrar clientes',
+        sublabel: `${sentLongAgo.length} orçamento(s) enviado(s) há mais de 3 dias sem resposta`,
+        href: '/dashboard/historico?status=sent',
+        count: sentLongAgo.length,
+      })
+    }
+
+    // Serviços aprovados não iniciados
+    const approvedNotStarted = quotes.filter((q) => q.status === 'approved')
+    if (approvedNotStarted.length > 0) {
+      actions.push({
+        id: 'start',
+        type: 'start_service',
+        label: 'Iniciar serviços',
+        sublabel: `${approvedNotStarted.length} orçamento(s) aprovado(s) aguardando início`,
+        href: '/dashboard/historico?status=approved',
+        count: approvedNotStarted.length,
+      })
+    }
+
+    // Pagamentos em atraso (inadimplência)
+    if (overdueDebtSummary.countQuotes > 0) {
+      actions.push({
+        id: 'collect',
+        type: 'collect',
+        label: 'Cobrar clientes',
+        sublabel: `${overdueDebtSummary.countQuotes} orçamento(s) com saldo devedor (${overdueDebtSummary.totalDebt.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
+        href: '/dashboard/inadimplentes',
+        count: overdueDebtSummary.countQuotes,
+      })
+    }
+
+    return actions
+  }, [quotes, overdueDebtSummary])
+
   // Memoizar valores formatados para evitar recálculos
   const formattedRevenue = useMemo(() => {
     return monthlyRevenue.toLocaleString('pt-BR', {
@@ -219,7 +325,139 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      {/* Alertas */}
+      {/* Header - saudação */}
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+          {greeting}, {userName}!
+        </h1>
+        <p className="text-muted-foreground text-sm sm:text-base mt-1">
+          Visão geral do negócio · O que fazer agora
+        </p>
+      </div>
+
+      {/* Próximas Ações - o cérebro sugere o que fazer */}
+      {nextActions.length > 0 && (
+        <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-white to-primary/5 shadow-md">
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <ListTodo className="w-5 h-5 text-primary" />
+              </div>
+              <h2 className="text-lg font-bold text-foreground">Próximas ações</h2>
+            </div>
+            <ul className="space-y-3">
+              {nextActions.map((action) => (
+                <li key={action.id}>
+                  <Link href={action.href}>
+                    <div className="flex items-center justify-between gap-3 p-3 rounded-xl border border-border/50 hover:bg-accent/30 hover:border-primary/30 transition-all group">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-foreground group-hover:text-primary">{action.label}</p>
+                        {action.sublabel && (
+                          <p className="text-sm text-muted-foreground mt-0.5">{action.sublabel}</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {action.count != null && action.count > 0 && (
+                          <span className="flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full bg-primary/20 text-primary text-xs font-bold">
+                            {action.count}
+                          </span>
+                        )}
+                        <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary" />
+                      </div>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Resumo do dia e da semana */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Card className="border-border/50 bg-white/80">
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Calendar className="w-5 h-5 text-muted-foreground" />
+              <h3 className="font-semibold text-foreground">Hoje</h3>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Entradas</span>
+                <span className="font-semibold text-green-600">
+                  {todaySummary.revenueToday.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Saídas</span>
+                <span className="font-semibold text-red-600">
+                  {todaySummary.expensesAmountToday.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </span>
+              </div>
+              <div className="pt-2 border-t border-border/50 flex justify-between text-sm font-medium">
+                <span>Saldo do dia</span>
+                <span className={todaySummary.revenueToday - todaySummary.expensesAmountToday >= 0 ? 'text-green-600' : 'text-red-600'}>
+                  {(todaySummary.revenueToday - todaySummary.expensesAmountToday).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-border/50 bg-white/80">
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <TrendingUp className="w-5 h-5 text-muted-foreground" />
+              <h3 className="font-semibold text-foreground">Últimos 7 dias</h3>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Receita</span>
+                <span className="font-semibold text-green-600">
+                  {weekSummary.revenueWeek.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Despesas</span>
+                <span className="font-semibold text-red-600">
+                  {weekSummary.expensesAmountWeek.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </span>
+              </div>
+              <div className="pt-2 border-t border-border/50 flex justify-between text-sm font-medium">
+                <span>Saldo da semana</span>
+                <span className={weekSummary.revenueWeek - weekSummary.expensesAmountWeek >= 0 ? 'text-green-600' : 'text-red-600'}>
+                  {(weekSummary.revenueWeek - weekSummary.expensesAmountWeek).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Inadimplência em destaque */}
+      {overdueDebtSummary.totalDebt > 0 && (
+        <Link href="/dashboard/inadimplentes">
+          <Card className="border-2 border-amber-300/60 bg-gradient-to-r from-amber-50/80 via-white to-amber-50/40 shadow-md hover:shadow-lg hover:border-amber-400/60 transition-all cursor-pointer">
+            <CardContent className="p-4 sm:p-5">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+                <div className="p-3 rounded-xl bg-amber-500/20 shrink-0">
+                  <AlertCircle className="w-6 h-6 sm:w-5 sm:h-5 text-amber-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-foreground text-base sm:text-lg">
+                    Inadimplência: {overdueDebtSummary.totalDebt.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </p>
+                  <p className="text-sm text-muted-foreground font-medium">
+                    {overdueDebtSummary.countQuotes} orçamento(s) com saldo devedor · Clique para cobrar
+                  </p>
+                </div>
+                <ArrowRight className="w-5 h-5 text-amber-600 shrink-0" />
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+      )}
+
+      {/* Alertas - orçamentos enviados há 3+ dias sem resposta */}
       {overduePendingQuotes.length > 0 && (
         <Card className="border-2 border-orange-300/50 bg-gradient-to-r from-orange-50/80 via-white to-orange-50/40 shadow-lg animate-pulse">
           <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
@@ -294,16 +532,6 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </Link>
-      </div>
-
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
-            {greeting}, {userName}!
-          </h1>
-          <p className="text-muted-foreground text-sm sm:text-base mt-1">Gerencie seus orçamentos e acompanhe seu faturamento</p>
-        </div>
       </div>
 
       {/* Stats Grid */}

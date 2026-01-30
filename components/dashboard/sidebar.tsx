@@ -27,26 +27,53 @@ import {
   CreditCard,
   AlertTriangle,
 } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useCompany } from '@/contexts/company-context'
+import { useQuotes } from '@/contexts/quotes-context'
+import { usePayments } from '@/contexts/payments-context'
+
+function PendingCountBadge() {
+  const { quotes } = useQuotes()
+  const { getTotalPaidByQuoteId } = usePayments()
+  const count = useMemo(() => {
+    let n = 0
+    const threeDaysAgo = new Date()
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3)
+    quotes.forEach((q) => {
+      if (q.status === 'sent' && new Date(q.createdAt) < threeDaysAgo) n++
+      if (q.status === 'approved') n++
+      if (q.status === 'approved' || q.status === 'in_progress' || q.status === 'completed') {
+        const paid = getTotalPaidByQuoteId(q.id)
+        if (q.total - paid > 0) n++
+      }
+    })
+    return n
+  }, [quotes, getTotalPaidByQuoteId])
+  if (count === 0) return null
+  return (
+    <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-amber-500 text-white text-xs font-bold">
+      {count > 99 ? '99+' : count}
+    </span>
+  )
+}
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Novo Orcamento', href: '/dashboard/novo-orcamento', icon: FileText },
-  { name: 'Historico', href: '/dashboard/historico', icon: History },
-  { name: 'Faturamento', href: '/dashboard/faturamento', icon: DollarSign },
-  { name: 'Pagamentos', href: '/dashboard/pagamentos', icon: CreditCard },
-  { name: 'Inadimplentes', href: '/dashboard/inadimplentes', icon: AlertTriangle },
-  { name: 'Clientes', href: '/dashboard/clientes', icon: UserCircle },
-  { name: 'Servicos', href: '/dashboard/servicos', icon: Wrench },
-  { name: 'Funcionarios', href: '/dashboard/funcionarios', icon: Users },
-  { name: 'Fechamento de Caixa', href: '/dashboard/fechamento-caixa', icon: Wallet },
-  { name: 'Relatorios de Fechamentos', href: '/dashboard/relatorios-fechamentos', icon: Calendar },
-  { name: 'Despesas', href: '/dashboard/despesas', icon: Receipt },
-  { name: 'Relatorios Financeiros', href: '/dashboard/relatorios-financeiros', icon: BarChart3 },
-  { name: 'Auditoria', href: '/dashboard/auditoria', icon: Shield },
-  { name: 'Configuracoes', href: '/dashboard/configuracoes', icon: Settings },
-  { name: 'Perfil', href: '/dashboard/perfil', icon: User },
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, showBadge: true },
+  { name: 'Novo Orcamento', href: '/dashboard/novo-orcamento', icon: FileText, showBadge: false },
+  { name: 'Historico', href: '/dashboard/historico', icon: History, showBadge: false },
+  { name: 'Faturamento', href: '/dashboard/faturamento', icon: DollarSign, showBadge: false },
+  { name: 'Pagamentos', href: '/dashboard/pagamentos', icon: CreditCard, showBadge: false },
+  { name: 'Inadimplentes', href: '/dashboard/inadimplentes', icon: AlertTriangle, showBadge: false },
+  { name: 'Clientes', href: '/dashboard/clientes', icon: UserCircle, showBadge: false },
+  { name: 'Servicos', href: '/dashboard/servicos', icon: Wrench, showBadge: false },
+  { name: 'Funcionarios', href: '/dashboard/funcionarios', icon: Users, showBadge: false },
+  { name: 'Fechamento de Caixa', href: '/dashboard/fechamento-caixa', icon: Wallet, showBadge: false },
+  { name: 'Relatorios de Fechamentos', href: '/dashboard/relatorios-fechamentos', icon: Calendar, showBadge: false },
+  { name: 'Despesas', href: '/dashboard/despesas', icon: Receipt, showBadge: false },
+  { name: 'Relatorios Financeiros', href: '/dashboard/relatorios-financeiros', icon: BarChart3, showBadge: false },
+  { name: 'Auditoria', href: '/dashboard/auditoria', icon: Shield, showBadge: false },
+  { name: 'Configuracoes', href: '/dashboard/configuracoes', icon: Settings, showBadge: false },
+  { name: 'Perfil', href: '/dashboard/perfil', icon: User, showBadge: false },
 ]
 
 export function Sidebar() {
@@ -127,9 +154,10 @@ export function Sidebar() {
                   isActive ? 'scale-110' : 'group-hover:scale-110'
                 )} />
                 <span className={cn(
-                  'transition-all',
+                  'transition-all flex-1',
                   isActive ? 'font-semibold' : ''
                 )}>{item.name}</span>
+                {item.showBadge && <PendingCountBadge />}
               </Link>
             )
           })}
