@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils'
 import type { Quote } from '@/lib/types'
 import { FileText, ChevronRight, Play, X, CheckCircle2 } from 'lucide-react'
 import { useQuotes } from '@/contexts/quotes-context'
+import { usePayments } from '@/contexts/payments-context'
 
 interface QuoteCardProps {
   quote: Quote
@@ -37,6 +38,7 @@ const statusConfig = {
 
 export function QuoteCard({ quote }: QuoteCardProps) {
   const { updateQuote } = useQuotes()
+  const { getTotalPaidByQuoteId } = usePayments()
   const [showDiscountDialog, setShowDiscountDialog] = useState(false)
   const [hasDiscount, setHasDiscount] = useState(false)
   const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage')
@@ -49,6 +51,14 @@ export function QuoteCard({ quote }: QuoteCardProps) {
     style: 'currency',
     currency: 'BRL',
   })
+
+  const totalPaid = getTotalPaidByQuoteId(quote.id)
+  const paymentStatus =
+    quote.total === 0
+      ? { label: 'Sem valor', className: 'bg-muted text-muted-foreground' }
+      : totalPaid >= quote.total
+        ? { label: 'Pago', className: 'bg-green-500/10 text-green-500' }
+        : { label: 'Pendente', className: 'bg-amber-500/10 text-amber-600' }
 
   const handleStartServiceClick = () => {
     setShowDiscountDialog(true)
@@ -166,6 +176,9 @@ export function QuoteCard({ quote }: QuoteCardProps) {
                   <h3 className="font-semibold text-base sm:text-sm text-foreground truncate">{quote.number}</h3>
                   <Badge variant="secondary" className={cn('text-xs font-medium px-2 py-0.5 shrink-0', status.className)}>
                     {status.label}
+                  </Badge>
+                  <Badge variant="secondary" className={cn('text-xs font-medium px-2 py-0.5 shrink-0', paymentStatus.className)}>
+                    {paymentStatus.label}
                   </Badge>
                 </div>
                 <p className="text-sm sm:text-base font-medium text-foreground truncate mb-1">{quote.client.name}</p>
