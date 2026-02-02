@@ -1,6 +1,8 @@
 'use client'
 
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react'
+
+const STALE_MS = 10 * 60 * 1000
 import type { CompanySettings } from '@/lib/types'
 import { useAuth } from './auth-context'
 
@@ -26,6 +28,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<CompanySettings>(defaultSettings)
   const [isLoading, setIsLoading] = useState(true)
   const [isFetching, setIsFetching] = useState(false)
+  const lastFetchedAt = useRef<number>(0)
 
   const fetchSettings = useCallback(async () => {
     if (!user?.id || isFetching) {
@@ -35,13 +38,14 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
 
     setIsFetching(true)
     try {
-      const response = await fetch('/api/company', {
+      const response = await fetch('/api/bootstrap', {
         headers: {
           'x-user-id': user.id,
         },
       })
 
       if (response.ok) {
+        lastFetchedAt.current = Date.now()
         const data = await response.json()
         setSettings({
           name: data.name || defaultSettings.name,
@@ -69,14 +73,14 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     }
   }, [fetchSettings, user?.id])
 
-  // Atualizar dados apenas quando a janela ganha foco (evita polling constante)
+  // Refetch no focus só se passou 10 min
   useEffect(() => {
     if (!user?.id) return
 
     const handleFocus = () => {
-      if (!isFetching && !isLoading) {
-        fetchSettings()
-      }
+      if (isFetching || isLoading) return
+      if (Date.now() - lastFetchedAt.current < STALE_MS) return
+      fetchSettings()
     }
 
     window.addEventListener('focus', handleFocus)

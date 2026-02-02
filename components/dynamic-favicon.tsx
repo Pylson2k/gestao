@@ -56,8 +56,8 @@ export function DynamicFavicon() {
 
     updateFavicon()
     
-    // Atualizar periodicamente (a cada 2 minutos) para pegar mudanças
-    const interval = setInterval(updateFavicon, 2 * 60 * 1000)
+    // Atualizar a cada 30 min (reduz tráfego Neon; dado quase estático)
+    const interval = setInterval(updateFavicon, 30 * 60 * 1000)
     
     return () => clearInterval(interval)
   }, [])

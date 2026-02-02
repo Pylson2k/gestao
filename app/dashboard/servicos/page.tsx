@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
+
+const STALE_MS = 10 * 60 * 1000
 import { useServices } from '@/contexts/services-context'
 import { useAuth } from '@/contexts/auth-context'
 import { Button } from '@/components/ui/button'
@@ -59,10 +61,10 @@ export default function ServicosPage() {
   const [filterActive, setFilterActive] = useState<string>('all')
   const [searchTerm, setSearchTerm] = useState('')
 
-  // Buscar todos os serviços (incluindo inativos) para a página
   const [allServices, setAllServices] = useState<Service[]>([])
   const [isFetchingServices, setIsFetchingServices] = useState(false)
-  
+  const lastFetchedAt = useRef<number>(0)
+
   const fetchAllServices = useCallback(async () => {
     if (!user?.id || isFetchingServices) return
     
@@ -74,6 +76,7 @@ export default function ServicosPage() {
         },
       })
       if (response.ok) {
+        lastFetchedAt.current = Date.now()
         const data = await response.json()
         setAllServices(data.map((s: any) => ({
           ...s,
@@ -92,14 +95,14 @@ export default function ServicosPage() {
     fetchAllServices()
   }, [fetchAllServices])
 
-  // Atualizar dados apenas quando a janela ganha foco (evita polling constante)
+  // Refetch no focus só se passou 10 min
   useEffect(() => {
     if (!user?.id) return
 
     const handleFocus = () => {
-      if (!isFetchingServices) {
-        fetchAllServices()
-      }
+      if (isFetchingServices) return
+      if (Date.now() - lastFetchedAt.current < STALE_MS) return
+      fetchAllServices()
     }
 
     window.addEventListener('focus', handleFocus)

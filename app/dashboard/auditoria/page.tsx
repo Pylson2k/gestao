@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
+
+const STALE_MS = 10 * 60 * 1000
 import { useAuth } from '@/contexts/auth-context'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -193,6 +195,7 @@ export default function AuditoriaPage() {
   const [filterAction, setFilterAction] = useState<string>('all')
   const [filterEntityType, setFilterEntityType] = useState<string>('all')
   const [isFetching, setIsFetching] = useState(false)
+  const lastFetchedAt = useRef<number>(0)
 
   const fetchLogs = useCallback(async () => {
     if (!user?.id || isFetching) return
@@ -214,6 +217,7 @@ export default function AuditoriaPage() {
       })
 
       if (response.ok) {
+        lastFetchedAt.current = Date.now()
         const data = await response.json()
         setLogs(data)
       }
@@ -229,14 +233,14 @@ export default function AuditoriaPage() {
     fetchLogs()
   }, [fetchLogs])
 
-  // Atualizar dados apenas quando a janela ganha foco (evita polling constante)
+  // Refetch no focus só se passou 10 min
   useEffect(() => {
     if (!user?.id) return
 
     const handleFocus = () => {
-      if (!isFetching && !isLoading) {
-        fetchLogs()
-      }
+      if (isFetching || isLoading) return
+      if (Date.now() - lastFetchedAt.current < STALE_MS) return
+      fetchLogs()
     }
 
     window.addEventListener('focus', handleFocus)

@@ -1,6 +1,8 @@
 'use client'
 
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react'
+
+const STALE_MS = 10 * 60 * 1000
 import { useAuth } from './auth-context'
 import type { Employee } from '@/lib/types'
 
@@ -20,6 +22,7 @@ export function EmployeesProvider({ children }: { children: ReactNode }) {
   const [employees, setEmployees] = useState<Employee[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isFetching, setIsFetching] = useState(false)
+  const lastFetchedAt = useRef<number>(0)
 
   const fetchEmployees = useCallback(async () => {
     if (!user?.id || isFetching) {
@@ -36,6 +39,7 @@ export function EmployeesProvider({ children }: { children: ReactNode }) {
       })
 
       if (response.ok) {
+        lastFetchedAt.current = Date.now()
         const data = await response.json()
         // Parse dates
         const parsedData = data.map((emp: any) => ({
@@ -60,14 +64,14 @@ export function EmployeesProvider({ children }: { children: ReactNode }) {
     }
   }, [fetchEmployees, user?.id])
 
-  // Atualizar dados apenas quando a janela ganha foco (evita polling constante)
+  // Refetch no focus só se passou 10 min
   useEffect(() => {
     if (!user?.id) return
 
     const handleFocus = () => {
-      if (!isFetching && !isLoading) {
-        fetchEmployees()
-      }
+      if (isFetching || isLoading) return
+      if (Date.now() - lastFetchedAt.current < STALE_MS) return
+      fetchEmployees()
     }
 
     window.addEventListener('focus', handleFocus)

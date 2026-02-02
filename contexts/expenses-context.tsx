@@ -1,6 +1,8 @@
 'use client'
 
-import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react'
+import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect, useRef } from 'react'
+
+const STALE_MS = 10 * 60 * 1000
 import { useAuth } from './auth-context'
 import type { Expense, ExpenseCategory } from '@/lib/types'
 
@@ -20,6 +22,7 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isFetching, setIsFetching] = useState(false)
+  const lastFetchedAt = useRef<number>(0)
 
   const fetchExpenses = useCallback(async () => {
     if (!user?.id || isFetching) {
@@ -39,6 +42,7 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
       })
 
       if (response.ok) {
+        lastFetchedAt.current = Date.now()
         const data = await response.json()
         setExpenses(data.map((exp: any) => ({
           ...exp,
@@ -61,14 +65,14 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
     }
   }, [fetchExpenses, user?.id])
 
-  // Atualizar dados apenas quando a janela ganha foco (evita polling constante)
+  // Refetch no focus só se passou 10 min
   useEffect(() => {
     if (!user?.id) return
 
     const handleFocus = () => {
-      if (!isFetching && !isLoading) {
-        fetchExpenses()
-      }
+      if (isFetching || isLoading) return
+      if (Date.now() - lastFetchedAt.current < STALE_MS) return
+      fetchExpenses()
     }
 
     window.addEventListener('focus', handleFocus)

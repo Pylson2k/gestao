@@ -25,8 +25,8 @@ export function DynamicTitle() {
 
     updateTitle()
     
-    // Atualizar periodicamente (a cada 2 minutos) para pegar mudanças
-    const interval = setInterval(updateTitle, 2 * 60 * 1000)
+    // Atualizar a cada 30 min (reduz tráfego Neon)
+    const interval = setInterval(updateTitle, 30 * 60 * 1000)
     
     return () => clearInterval(interval)
   }, [])

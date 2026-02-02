@@ -1,6 +1,8 @@
 'use client'
 
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react'
+
+const STALE_MS = 10 * 60 * 1000 // 10 min — refetch no focus só se passou mais que isso
 import type { Quote, Client, ServiceItem, MaterialItem } from '@/lib/types'
 import { useAuth } from './auth-context'
 
@@ -20,8 +22,8 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const [quotes, setQuotes] = useState<Quote[]>([])
   const [isLoading, setIsLoading] = useState(true)
-
   const [isFetching, setIsFetching] = useState(false)
+  const lastFetchedAt = useRef<number>(0)
 
   const fetchQuotes = useCallback(async () => {
     if (!user?.id || isFetching) {
@@ -38,6 +40,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
       })
 
       if (response.ok) {
+        lastFetchedAt.current = Date.now()
         const data = await response.json()
         // Transform Prisma data to Quote format
         const transformedQuotes: Quote[] = data.map((q: any) => ({
@@ -99,14 +102,14 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     }
   }, [fetchQuotes, user?.id])
 
-  // Atualizar dados apenas quando a janela ganha foco (evita polling constante)
+  // Refetch no focus só se passou 10 min (reduz tráfego Neon)
   useEffect(() => {
     if (!user?.id) return
 
     const handleFocus = () => {
-      if (!isFetching && !isLoading) {
-        fetchQuotes()
-      }
+      if (isFetching || isLoading) return
+      if (Date.now() - lastFetchedAt.current < STALE_MS) return
+      fetchQuotes()
     }
 
     window.addEventListener('focus', handleFocus)
