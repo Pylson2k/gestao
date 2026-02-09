@@ -77,11 +77,13 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
 
   const [discount, setDiscount] = useState(initialData?.discount || 0)
   const [observations, setObservations] = useState(initialData?.observations || '')
+  const [totalOverride, setTotalOverride] = useState<number | null>(null)
 
-  const { subtotal, total } = useMemo(
+  const { subtotal, total: calculatedTotal } = useMemo(
     () => calculateQuoteTotals(services, materials, discount),
     [services, materials, discount]
   )
+  const total = totalOverride !== null ? totalOverride : calculatedTotal
 
   const addService = () => {
     setServices([
@@ -394,11 +396,28 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
                 className="w-36 bg-background text-right rounded-xl border-2"
               />
             </div>
-            <div className="border-t-2 border-primary/30 pt-5 mt-2 flex justify-between items-center bg-gradient-to-r from-primary/10 to-transparent p-4 rounded-xl">
-              <span className="font-bold text-foreground text-lg">Total</span>
-              <span className="text-3xl font-bold text-primary tracking-tight">
-                {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-              </span>
+            <div className="border-t-2 border-primary/30 pt-5 mt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-gradient-to-r from-primary/10 to-transparent p-4 rounded-xl">
+              <Label htmlFor="total" className="font-bold text-foreground text-lg">
+                Total do orçamento
+              </Label>
+              <Input
+                id="total"
+                type="number"
+                min={0}
+                step={0.01}
+                placeholder="Digite o valor total"
+                value={totalOverride !== null ? totalOverride : (calculatedTotal || '')}
+                onChange={(e) => {
+                  const v = e.target.value
+                  if (v === '' || v === undefined) {
+                    setTotalOverride(null)
+                    return
+                  }
+                  const n = Number(v)
+                  if (!Number.isNaN(n) && n >= 0) setTotalOverride(n)
+                }}
+                className="w-full sm:w-48 text-right text-xl font-bold text-primary h-12 rounded-xl border-2"
+              />
             </div>
           </CardContent>
         </Card>
