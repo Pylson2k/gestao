@@ -12,13 +12,15 @@ interface MaterialItemRowProps {
 }
 
 export function MaterialItemRow({ item, onChange, onRemove }: MaterialItemRowProps) {
-  const total = item.quantity * item.unitPrice
+  const qty = Number(item.quantity) || 0
+  const price = Number(item.unitPrice) || 0
+  const total = qty * price
 
   return (
     <div className="grid grid-cols-12 gap-2 items-center">
       <div className="col-span-12 sm:col-span-5">
         <Input
-          placeholder="Nome do material"
+          placeholder="Nome do material (opcional)"
           value={item.name}
           onChange={(e) => onChange({ ...item, name: e.target.value })}
           className="bg-background"
@@ -28,20 +30,26 @@ export function MaterialItemRow({ item, onChange, onRemove }: MaterialItemRowPro
         <Input
           type="number"
           placeholder="Qtd"
-          min={1}
-          value={item.quantity || ''}
-          onChange={(e) => onChange({ ...item, quantity: Number(e.target.value) || 0 })}
+          min={0}
+          value={item.quantity == null || item.quantity === 0 ? '' : item.quantity}
+          onChange={(e) => {
+            const v = e.target.value
+            onChange({ ...item, quantity: v === '' ? 0 : Number(v) || 0 })
+          }}
           className="bg-background"
         />
       </div>
       <div className="col-span-4 sm:col-span-2">
         <Input
           type="number"
-          placeholder="Valor"
+          placeholder="Valor unit."
           min={0}
           step={0.01}
-          value={item.unitPrice || ''}
-          onChange={(e) => onChange({ ...item, unitPrice: Number(e.target.value) || 0 })}
+          value={item.unitPrice == null || item.unitPrice === 0 ? '' : item.unitPrice}
+          onChange={(e) => {
+            const v = e.target.value
+            onChange({ ...item, unitPrice: v === '' ? 0 : Number(v) || 0 })
+          }}
           className="bg-background"
         />
       </div>

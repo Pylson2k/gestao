@@ -77,11 +77,15 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
 
   const [discount, setDiscount] = useState(initialData?.discount || 0)
   const [observations, setObservations] = useState(initialData?.observations || '')
+  const [totalDirect, setTotalDirect] = useState<string>(
+    initialData?.total != null && initialData.total > 0 ? String(initialData.total) : ''
+  )
 
-  const { subtotal, total } = useMemo(
+  const { subtotal, total: totalCalculated } = useMemo(
     () => calculateQuoteTotals(services, materials, discount),
     [services, materials, discount]
   )
+  const total = totalDirect !== '' && !Number.isNaN(Number(totalDirect)) ? Number(totalDirect) : totalCalculated
 
   const addService = () => {
     setServices([
@@ -97,9 +101,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
   }
 
   const removeService = (index: number) => {
-    if (services.length > 1) {
-      setServices(services.filter((_, i) => i !== index))
-    }
+    setServices(services.filter((_, i) => i !== index))
   }
 
   const addMaterial = () => {
@@ -116,9 +118,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
   }
 
   const removeMaterial = (index: number) => {
-    if (materials.length > 1) {
-      setMaterials(materials.filter((_, i) => i !== index))
-    }
+    setMaterials(materials.filter((_, i) => i !== index))
   }
 
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -130,27 +130,10 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
     setIsSubmitting(true)
 
     try {
-      // Validações básicas
-      if (!client.name || !client.phone || !client.address) {
-        setError('Preencha todos os dados do cliente')
-        setIsSubmitting(false)
-        return
-      }
-
-      // Valida nome e quantidade; valores são opcionais
-      const validServices = services.filter((s) => s && s.name && s.name.trim() && s.quantity > 0)
-      const validMaterials = materials.filter((m) => m && m.name && m.name.trim() && m.quantity > 0)
-
-      if (validServices.length === 0 && validMaterials.length === 0) {
-        setError('Adicione pelo menos um servico ou material com nome e quantidade validos')
-        setIsSubmitting(false)
-        return
-      }
-
       const quoteData = {
         client: { ...client, id: client.id || Date.now().toString() },
-        services: validServices,
-        materials: validMaterials,
+        services,
+        materials,
         subtotal,
         discount,
         total,
@@ -190,7 +173,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
           <h1 className="text-3xl font-bold text-foreground tracking-tight mb-1">
             {initialData ? 'Editar Orçamento' : 'Novo Orçamento'}
           </h1>
-          <p className="text-muted-foreground text-sm font-medium">Preencha os dados do orçamento</p>
+          <p className="text-muted-foreground text-sm font-medium">Todos os campos são opcionais — preencha como quiser</p>
         </div>
       </div>
 
@@ -234,10 +217,9 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
               <Label htmlFor="clientName">Nome</Label>
               <Input
                 id="clientName"
-                placeholder="Nome do cliente"
+                placeholder="Nome do cliente (opcional)"
                 value={client.name}
                 onChange={(e) => setClient({ ...client, name: e.target.value })}
-                required
                 className="bg-background"
                 disabled={!!selectedClientId && selectedClientId !== 'new'}
               />
@@ -246,10 +228,9 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
               <Label htmlFor="clientPhone">Telefone</Label>
               <Input
                 id="clientPhone"
-                placeholder="(11) 99999-9999"
+                placeholder="(11) 99999-9999 (opcional)"
                 value={client.phone}
                 onChange={(e) => setClient({ ...client, phone: e.target.value })}
-                required
                 className="bg-background"
                 disabled={!!selectedClientId && selectedClientId !== 'new'}
               />
@@ -259,28 +240,25 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
             <Label htmlFor="clientAddress">Endereco</Label>
             <Input
               id="clientAddress"
-              placeholder="Endereco completo"
+              placeholder="Endereço (opcional)"
               value={client.address}
               onChange={(e) => setClient({ ...client, address: e.target.value })}
-              required
               className="bg-background"
               disabled={!!selectedClientId && selectedClientId !== 'new'}
             />
           </div>
-          {client.email !== undefined && (
-            <div className="space-y-2">
-              <Label htmlFor="clientEmail">Email (opcional)</Label>
-              <Input
-                id="clientEmail"
-                type="email"
-                placeholder="email@exemplo.com"
-                value={client.email || ''}
-                onChange={(e) => setClient({ ...client, email: e.target.value })}
-                className="bg-background"
-                disabled={!!selectedClientId && selectedClientId !== 'new'}
-              />
-            </div>
-          )}
+          <div className="space-y-2">
+            <Label htmlFor="clientEmail">Email</Label>
+            <Input
+              id="clientEmail"
+              type="email"
+              placeholder="email@exemplo.com (opcional)"
+              value={client.email ?? ''}
+              onChange={(e) => setClient({ ...client, email: e.target.value })}
+              className="bg-background"
+              disabled={!!selectedClientId && selectedClientId !== 'new'}
+            />
+          </div>
         </CardContent>
       </Card>
 
@@ -418,11 +396,23 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
                 className="w-36 bg-background text-right rounded-xl border-2"
               />
             </div>
-            <div className="border-t-2 border-primary/30 pt-5 mt-2 flex justify-between items-center bg-gradient-to-r from-primary/10 to-transparent p-4 rounded-xl">
-              <span className="font-bold text-foreground text-lg">Total</span>
-              <span className="text-3xl font-bold text-primary tracking-tight">
-                {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-              </span>
+            <div className="border-t-2 border-primary/30 pt-5 mt-2 space-y-2">
+              <Label htmlFor="totalDirect" className="text-sm font-medium text-muted-foreground">
+                Total (deixe vazio para usar subtotal − desconto)
+              </Label>
+              <Input
+                id="totalDirect"
+                type="number"
+                min={0}
+                step={0.01}
+                placeholder={totalCalculated.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                value={totalDirect}
+                onChange={(e) => setTotalDirect(e.target.value)}
+                className="text-2xl font-bold text-primary h-12 bg-background"
+              />
+              <p className="text-xs text-muted-foreground">
+                {totalDirect === '' ? 'Calculado: ' + totalCalculated.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'Total informado: ' + total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </p>
             </div>
           </CardContent>
         </Card>

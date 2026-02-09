@@ -145,27 +145,27 @@ export async function POST(request: NextRequest) {
         userId,
         client: {
           id: `client-${Date.now()}`,
-          name: client.name,
-          phone: client.phone,
-          address: client.address,
-          email: client.email,
+          name: client?.name ?? '',
+          phone: client?.phone ?? '',
+          address: client?.address ?? '',
+          email: client?.email ?? '',
         },
-        services: services.map((s: any, i: number) => ({
+        services: (Array.isArray(services) ? services : []).map((s: any, i: number) => ({
           id: `svc-${Date.now()}-${i}`,
-          name: s.name,
-          quantity: s.quantity,
-          unitPrice: s.unitPrice,
+          name: s?.name ?? '',
+          quantity: s?.quantity ?? 0,
+          unitPrice: s?.unitPrice ?? 0,
         })),
-        materials: materials.map((m: any, i: number) => ({
+        materials: (Array.isArray(materials) ? materials : []).map((m: any, i: number) => ({
           id: `mat-${Date.now()}-${i}`,
-          name: m.name,
-          quantity: m.quantity,
-          unitPrice: m.unitPrice,
+          name: m?.name ?? '',
+          quantity: m?.quantity ?? 0,
+          unitPrice: m?.unitPrice ?? 0,
         })),
-        subtotal,
-        discount: discount || 0,
-        total,
-        observations,
+        subtotal: subtotal ?? 0,
+        discount: discount ?? 0,
+        total: total ?? 0,
+        observations: observations ?? '',
         status,
         createdAt: new Date().toISOString(),
       }
@@ -180,76 +180,54 @@ export async function POST(request: NextRequest) {
     const dbUserId = await getDbUserId(userId)
     console.log('Creating quote with userId:', userId, 'mapped to dbUserId:', dbUserId)
 
-    // Validar arrays
-    const validServices = Array.isArray(services) ? services.filter((s: any) => s && s.name && s.name.trim()) : []
-    const validMaterials = Array.isArray(materials) ? materials.filter((m: any) => m && m.name && m.name.trim()) : []
+    // Serviços e materiais opcionais; aceita qualquer valor (nome vazio também)
+    const validServices = Array.isArray(services) ? services.filter((s: any) => s != null) : []
+    const validMaterials = Array.isArray(materials) ? materials.filter((m: any) => m != null) : []
 
-    if (validServices.length === 0 && validMaterials.length === 0) {
-      return NextResponse.json(
-        { error: 'Adicione pelo menos um servico ou material' },
-        { status: 400 }
-      )
-    }
-
-    // Generate quote number (otimizado - busca apenas o último número)
+    // Número do orçamento único em toda a tabela (não por usuário)
     const year = new Date().getFullYear()
-    const lastQuote = await prisma.quote.findFirst({
-      where: {
-        number: {
-          startsWith: `ORC-${year}-`,
-        },
-        userId: dbUserId, // Filtrar por usuário para melhor performance
-      },
+    const prefix = `ORC-${year}-`
+    const quotesFromYear = await prisma.quote.findMany({
+      where: { number: { startsWith: prefix } },
       select: { number: true },
-      orderBy: { createdAt: 'desc' },
     })
-    
-    let count = 0
-    if (lastQuote) {
-      const match = lastQuote.number.match(/ORC-\d+-(\d+)/)
+    let maxNum = 0
+    for (const q of quotesFromYear) {
+      const match = q.number.match(/ORC-\d+-(\d+)/)
       if (match) {
-        count = parseInt(match[1], 10)
+        const n = parseInt(match[1], 10)
+        if (n > maxNum) maxNum = n
       }
     }
-    const number = `ORC-${year}-${String(count + 1).padStart(3, '0')}`
+    const number = `ORC-${year}-${String(maxNum + 1).padStart(3, '0')}`
 
-    // Create or find client (otimizado - usa upsert quando possível)
-    let clientRecord = await prisma.client.findFirst({
-      where: {
-        name: client.name,
-        phone: client.phone || '',
+    // Sempre criar novo cliente (permite mesmo telefone em vários clientes)
+    const clientRecord = await prisma.client.create({
+      data: {
+        name: (client?.name ?? '').trim() || 'Cliente',
+        phone: (client?.phone ?? '').trim() || '',
+        address: (client?.address ?? '').trim() || '',
+        email: (client?.email ?? '').trim() || null,
       },
-      select: { id: true }, // Apenas o ID necessário
+      select: { id: true },
     })
-
-    if (!clientRecord) {
-      clientRecord = await prisma.client.create({
-        data: {
-          name: client.name,
-          phone: client.phone || '',
-          address: client.address || '',
-          email: client.email || '',
-        },
-        select: { id: true },
-      })
-    }
 
     const createQuoteWithNumber = async (quoteNumber: string) => {
       const data: any = {
         number: quoteNumber,
         userId: dbUserId,
         clientId: clientRecord.id,
-        subtotal,
-        discount: discount || 0,
-        total,
-        observations: observations || '',
+        subtotal: Number(subtotal) || 0,
+        discount: Number(discount) || 0,
+        total: Number(total) || 0,
+        observations: observations ?? '',
         status,
       }
       if (validServices.length > 0) {
         data.services = {
           create: validServices.map((s: any) => ({
-            name: s.name,
-            quantity: Number(s.quantity) || 1,
+            name: (s.name ?? '').toString().trim() || 'Serviço',
+            quantity: Math.max(0, Math.floor(Number(s.quantity))) || 0,
             unitPrice: Number(s.unitPrice) || 0,
           })),
         }
@@ -257,8 +235,8 @@ export async function POST(request: NextRequest) {
       if (validMaterials.length > 0) {
         data.materials = {
           create: validMaterials.map((m: any) => ({
-            name: m.name,
-            quantity: Number(m.quantity) || 1,
+            name: (m.name ?? '').toString().trim() || 'Material',
+            quantity: Math.max(0, Math.floor(Number(m.quantity))) || 0,
             unitPrice: Number(m.unitPrice) || 0,
           })),
         }
@@ -300,10 +278,10 @@ export async function POST(request: NextRequest) {
       action: 'create_quote',
       entityType: 'quote',
       entityId: quote.id,
-      description: `Orçamento ${quote.number} criado - Cliente: ${client.name} - Total: R$ ${quote.total.toFixed(2)}`,
+      description: `Orçamento ${quote.number} criado - Cliente: ${client?.name ?? 'Cliente'} - Total: R$ ${quote.total.toFixed(2)}`,
       newValue: {
         number: quote.number,
-        client: client.name,
+        client: client?.name ?? 'Cliente',
         total: quote.total,
         subtotal: quote.subtotal,
         discount: quote.discount,
