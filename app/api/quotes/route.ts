@@ -126,8 +126,17 @@ export async function POST(request: NextRequest) {
     // Se não tem DATABASE_URL, usa modo de emergência
     if (!process.env.DATABASE_URL) {
       const year = new Date().getFullYear()
-      const count = getMemoryQuotes().length
-      const number = `ORC-${year}-${String(count + 1).padStart(3, '0')}`
+      const prefix = `ORC-${year}-`
+      const existing = getMemoryQuotes()
+      let maxNum = 0
+      for (const q of existing) {
+        const match = (q.number || '').match(/ORC-\d+-(\d+)/)
+        if (match) {
+          const n = parseInt(match[1], 10)
+          if (n > maxNum) maxNum = n
+        }
+      }
+      const number = `ORC-${year}-${String(maxNum + 1).padStart(3, '0')}`
       const id = `mem-${Date.now()}`
       
       const quote = {
@@ -225,47 +234,63 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Create quote
-    const quoteData: any = {
-      number,
-      userId: dbUserId,
-      clientId: clientRecord.id,
-      subtotal,
-      discount: discount || 0,
-      total,
-      observations: observations || '',
-      status,
-    }
-
-    // Adicionar services apenas se houver
-    if (validServices.length > 0) {
-      quoteData.services = {
-        create: validServices.map((s: any) => ({
-          name: s.name,
-          quantity: Number(s.quantity) || 1,
-          unitPrice: Number(s.unitPrice) || 0,
-        })),
+    const createQuoteWithNumber = async (quoteNumber: string) => {
+      const data: any = {
+        number: quoteNumber,
+        userId: dbUserId,
+        clientId: clientRecord.id,
+        subtotal,
+        discount: discount || 0,
+        total,
+        observations: observations || '',
+        status,
       }
-    }
-
-    // Adicionar materials apenas se houver
-    if (validMaterials.length > 0) {
-      quoteData.materials = {
-        create: validMaterials.map((m: any) => ({
-          name: m.name,
-          quantity: Number(m.quantity) || 1,
-          unitPrice: Number(m.unitPrice) || 0,
-        })),
+      if (validServices.length > 0) {
+        data.services = {
+          create: validServices.map((s: any) => ({
+            name: s.name,
+            quantity: Number(s.quantity) || 1,
+            unitPrice: Number(s.unitPrice) || 0,
+          })),
+        }
       }
+      if (validMaterials.length > 0) {
+        data.materials = {
+          create: validMaterials.map((m: any) => ({
+            name: m.name,
+            quantity: Number(m.quantity) || 1,
+            unitPrice: Number(m.unitPrice) || 0,
+          })),
+        }
+      }
+      return prisma.quote.create({
+        data,
+        include: {
+          client: true,
+          services: true,
+          materials: true,
+        },
+      })
     }
 
-    const quote = await prisma.quote.create({
-      data: quoteData,
-      include: {
-        client: true,
-        services: true,
-        materials: true,
-      },
+    const quote = await createQuoteWithNumber(number).catch(async (err: any) => {
+      if (err?.code === 'P2002') {
+        const again = await prisma.quote.findMany({
+          where: { number: { startsWith: `ORC-${year}-` } },
+          select: { number: true },
+        })
+        let max = 0
+        for (const q of again) {
+          const m = q.number.match(/ORC-\d+-(\d+)/)
+          if (m) {
+            const n = parseInt(m[1], 10)
+            if (n > max) max = n
+          }
+        }
+        const newNumber = `ORC-${year}-${String(max + 1).padStart(3, '0')}`
+        return createQuoteWithNumber(newNumber)
+      }
+      throw err
     })
 
     // Log de auditoria (assíncrono - não bloqueia a resposta)
