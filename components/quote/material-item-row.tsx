@@ -20,7 +20,7 @@ export function MaterialItemRow({ item, onChange, onRemove }: MaterialItemRowPro
     <div className="grid grid-cols-12 gap-2 items-center">
       <div className="col-span-12 sm:col-span-5">
         <Input
-          placeholder="Nome do material (opcional)"
+          placeholder="Descricao do material (opcional)"
           value={item.name}
           onChange={(e) => onChange({ ...item, name: e.target.value })}
           className="bg-background"
@@ -31,11 +31,8 @@ export function MaterialItemRow({ item, onChange, onRemove }: MaterialItemRowPro
           type="number"
           placeholder="Qtd"
           min={0}
-          value={item.quantity == null || item.quantity === 0 ? '' : item.quantity}
-          onChange={(e) => {
-            const v = e.target.value
-            onChange({ ...item, quantity: v === '' ? 0 : Number(v) || 0 })
-          }}
+          value={item.quantity === undefined || item.quantity === null ? '' : item.quantity}
+          onChange={(e) => onChange({ ...item, quantity: e.target.value === '' ? 0 : Number(e.target.value) })}
           className="bg-background"
         />
       </div>
@@ -45,11 +42,8 @@ export function MaterialItemRow({ item, onChange, onRemove }: MaterialItemRowPro
           placeholder="Valor unit."
           min={0}
           step={0.01}
-          value={item.unitPrice == null || item.unitPrice === 0 ? '' : item.unitPrice}
-          onChange={(e) => {
-            const v = e.target.value
-            onChange({ ...item, unitPrice: v === '' ? 0 : Number(v) || 0 })
-          }}
+          value={item.unitPrice === undefined || item.unitPrice === null ? '' : item.unitPrice}
+          onChange={(e) => onChange({ ...item, unitPrice: e.target.value === '' ? 0 : Number(e.target.value) })}
           className="bg-background"
         />
       </div>

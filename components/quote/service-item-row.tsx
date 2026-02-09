@@ -12,13 +12,15 @@ interface ServiceItemRowProps {
 }
 
 export function ServiceItemRow({ item, onChange, onRemove }: ServiceItemRowProps) {
-  const total = item.quantity * item.unitPrice
+  const qty = Number(item.quantity) || 0
+  const price = Number(item.unitPrice) || 0
+  const total = qty * price
 
   return (
     <div className="grid grid-cols-12 gap-2 items-center">
       <div className="col-span-12 sm:col-span-5">
         <Input
-          placeholder="Nome do servico"
+          placeholder="Descricao do servico (opcional)"
           value={item.name}
           onChange={(e) => onChange({ ...item, name: e.target.value })}
           className="bg-background"
@@ -28,20 +30,20 @@ export function ServiceItemRow({ item, onChange, onRemove }: ServiceItemRowProps
         <Input
           type="number"
           placeholder="Qtd"
-          min={1}
-          value={item.quantity || ''}
-          onChange={(e) => onChange({ ...item, quantity: Number(e.target.value) || 0 })}
+          min={0}
+          value={item.quantity === undefined || item.quantity === null ? '' : item.quantity}
+          onChange={(e) => onChange({ ...item, quantity: e.target.value === '' ? 0 : Number(e.target.value) })}
           className="bg-background"
         />
       </div>
       <div className="col-span-4 sm:col-span-2">
         <Input
           type="number"
-          placeholder="Valor"
+          placeholder="Valor unit."
           min={0}
           step={0.01}
-          value={item.unitPrice || ''}
-          onChange={(e) => onChange({ ...item, unitPrice: Number(e.target.value) || 0 })}
+          value={item.unitPrice === undefined || item.unitPrice === null ? '' : item.unitPrice}
+          onChange={(e) => onChange({ ...item, unitPrice: e.target.value === '' ? 0 : Number(e.target.value) })}
           className="bg-background"
         />
       </div>

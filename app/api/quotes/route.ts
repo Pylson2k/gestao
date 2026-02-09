@@ -138,38 +138,40 @@ export async function POST(request: NextRequest) {
       }
       const number = `ORC-${year}-${String(maxNum + 1).padStart(3, '0')}`
       const id = `mem-${Date.now()}`
-      
+      const safeServices = Array.isArray(services) ? services.filter((s: any) => s != null) : []
+      const safeMaterials = Array.isArray(materials) ? materials.filter((m: any) => m != null) : []
+
       const quote = {
         id,
         number,
         userId,
         client: {
           id: `client-${Date.now()}`,
-          name: client?.name ?? '',
-          phone: client?.phone ?? '',
-          address: client?.address ?? '',
-          email: client?.email ?? '',
+          name: (client?.name ?? '').trim() || 'Cliente',
+          phone: (client?.phone ?? '').trim() || '',
+          address: (client?.address ?? '').trim() || '',
+          email: (client?.email ?? '').trim() || undefined,
         },
-        services: (Array.isArray(services) ? services : []).map((s: any, i: number) => ({
+        services: safeServices.map((s: any, i: number) => ({
           id: `svc-${Date.now()}-${i}`,
-          name: s?.name ?? '',
-          quantity: s?.quantity ?? 0,
-          unitPrice: s?.unitPrice ?? 0,
+          name: (s.name ?? '').toString().trim() || 'Serviço',
+          quantity: Number(s.quantity) || 1,
+          unitPrice: Number(s.unitPrice) || 0,
         })),
-        materials: (Array.isArray(materials) ? materials : []).map((m: any, i: number) => ({
+        materials: safeMaterials.map((m: any, i: number) => ({
           id: `mat-${Date.now()}-${i}`,
-          name: m?.name ?? '',
-          quantity: m?.quantity ?? 0,
-          unitPrice: m?.unitPrice ?? 0,
+          name: (m.name ?? '').toString().trim() || 'Material',
+          quantity: Number(m.quantity) || 1,
+          unitPrice: Number(m.unitPrice) || 0,
         })),
-        subtotal: subtotal ?? 0,
-        discount: discount ?? 0,
-        total: total ?? 0,
-        observations: observations ?? '',
+        subtotal: Number(subtotal) || 0,
+        discount: Number(discount) || 0,
+        total: Number(total) || 0,
+        observations: (observations ?? '').trim() || '',
         status,
         createdAt: new Date().toISOString(),
       }
-      
+
       addMemoryQuote(quote)
       return NextResponse.json(quote, { status: 201 })
     }
@@ -180,11 +182,10 @@ export async function POST(request: NextRequest) {
     const dbUserId = await getDbUserId(userId)
     console.log('Creating quote with userId:', userId, 'mapped to dbUserId:', dbUserId)
 
-    // Serviços e materiais opcionais; aceita qualquer valor (nome vazio também)
+    // Sem obrigatoriedade: aceita listas vazias e dados de cliente opcionais
     const validServices = Array.isArray(services) ? services.filter((s: any) => s != null) : []
     const validMaterials = Array.isArray(materials) ? materials.filter((m: any) => m != null) : []
 
-    // Número do orçamento único em toda a tabela (não por usuário)
     const year = new Date().getFullYear()
     const prefix = `ORC-${year}-`
     const quotesFromYear = await prisma.quote.findMany({
@@ -199,14 +200,17 @@ export async function POST(request: NextRequest) {
         if (n > maxNum) maxNum = n
       }
     }
-    const number = `ORC-${year}-${String(maxNum + 1).padStart(3, '0')}`
+    let number = `ORC-${year}-${String(maxNum + 1).padStart(3, '0')}`
 
-    // Sempre criar novo cliente (permite mesmo telefone em vários clientes)
+    // Sempre cria novo cliente (permite mesmo telefone para clientes diferentes)
+    const clientName = (client?.name ?? '').trim() || 'Cliente'
+    const clientPhone = (client?.phone ?? '').trim() || ''
+    const clientAddress = (client?.address ?? '').trim() || ''
     const clientRecord = await prisma.client.create({
       data: {
-        name: (client?.name ?? '').trim() || 'Cliente',
-        phone: (client?.phone ?? '').trim() || '',
-        address: (client?.address ?? '').trim() || '',
+        name: clientName,
+        phone: clientPhone,
+        address: clientAddress,
         email: (client?.email ?? '').trim() || null,
       },
       select: { id: true },
@@ -220,14 +224,14 @@ export async function POST(request: NextRequest) {
         subtotal: Number(subtotal) || 0,
         discount: Number(discount) || 0,
         total: Number(total) || 0,
-        observations: observations ?? '',
+        observations: (observations ?? '').trim() || null,
         status,
       }
       if (validServices.length > 0) {
         data.services = {
           create: validServices.map((s: any) => ({
             name: (s.name ?? '').toString().trim() || 'Serviço',
-            quantity: Math.max(0, Math.floor(Number(s.quantity))) || 0,
+            quantity: Math.max(0, Number(s.quantity) || 0) || 1,
             unitPrice: Number(s.unitPrice) || 0,
           })),
         }
@@ -236,7 +240,7 @@ export async function POST(request: NextRequest) {
         data.materials = {
           create: validMaterials.map((m: any) => ({
             name: (m.name ?? '').toString().trim() || 'Material',
-            quantity: Math.max(0, Math.floor(Number(m.quantity))) || 0,
+            quantity: Math.max(0, Number(m.quantity) || 0) || 1,
             unitPrice: Number(m.unitPrice) || 0,
           })),
         }
@@ -253,20 +257,8 @@ export async function POST(request: NextRequest) {
 
     const quote = await createQuoteWithNumber(number).catch(async (err: any) => {
       if (err?.code === 'P2002') {
-        const again = await prisma.quote.findMany({
-          where: { number: { startsWith: `ORC-${year}-` } },
-          select: { number: true },
-        })
-        let max = 0
-        for (const q of again) {
-          const m = q.number.match(/ORC-\d+-(\d+)/)
-          if (m) {
-            const n = parseInt(m[1], 10)
-            if (n > max) max = n
-          }
-        }
-        const newNumber = `ORC-${year}-${String(max + 1).padStart(3, '0')}`
-        return createQuoteWithNumber(newNumber)
+        const fallbackNumber = `ORC-${year}-${Date.now()}`
+        return createQuoteWithNumber(fallbackNumber)
       }
       throw err
     })
@@ -278,10 +270,10 @@ export async function POST(request: NextRequest) {
       action: 'create_quote',
       entityType: 'quote',
       entityId: quote.id,
-      description: `Orçamento ${quote.number} criado - Cliente: ${client?.name ?? 'Cliente'} - Total: R$ ${quote.total.toFixed(2)}`,
+      description: `Orçamento ${quote.number} criado - Cliente: ${quote.client?.name || 'Cliente'} - Total: R$ ${quote.total.toFixed(2)}`,
       newValue: {
         number: quote.number,
-        client: client?.name ?? 'Cliente',
+        client: quote.client?.name ?? '',
         total: quote.total,
         subtotal: quote.subtotal,
         discount: quote.discount,

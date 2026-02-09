@@ -77,15 +77,11 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
 
   const [discount, setDiscount] = useState(initialData?.discount || 0)
   const [observations, setObservations] = useState(initialData?.observations || '')
-  const [totalDirect, setTotalDirect] = useState<string>(
-    initialData?.total != null && initialData.total > 0 ? String(initialData.total) : ''
-  )
 
-  const { subtotal, total: totalCalculated } = useMemo(
+  const { subtotal, total } = useMemo(
     () => calculateQuoteTotals(services, materials, discount),
     [services, materials, discount]
   )
-  const total = totalDirect !== '' && !Number.isNaN(Number(totalDirect)) ? Number(totalDirect) : totalCalculated
 
   const addService = () => {
     setServices([
@@ -173,7 +169,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
           <h1 className="text-3xl font-bold text-foreground tracking-tight mb-1">
             {initialData ? 'Editar Orçamento' : 'Novo Orçamento'}
           </h1>
-          <p className="text-muted-foreground text-sm font-medium">Todos os campos são opcionais — preencha como quiser</p>
+          <p className="text-muted-foreground text-sm font-medium">Preencha como quiser — nada é obrigatório</p>
         </div>
       </div>
 
@@ -240,25 +236,27 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
             <Label htmlFor="clientAddress">Endereco</Label>
             <Input
               id="clientAddress"
-              placeholder="Endereço (opcional)"
+              placeholder="Endereco (opcional)"
               value={client.address}
               onChange={(e) => setClient({ ...client, address: e.target.value })}
               className="bg-background"
               disabled={!!selectedClientId && selectedClientId !== 'new'}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="clientEmail">Email</Label>
-            <Input
-              id="clientEmail"
-              type="email"
-              placeholder="email@exemplo.com (opcional)"
-              value={client.email ?? ''}
-              onChange={(e) => setClient({ ...client, email: e.target.value })}
-              className="bg-background"
-              disabled={!!selectedClientId && selectedClientId !== 'new'}
-            />
-          </div>
+          {client.email !== undefined && (
+            <div className="space-y-2">
+              <Label htmlFor="clientEmail">Email (opcional)</Label>
+              <Input
+                id="clientEmail"
+                type="email"
+                placeholder="email@exemplo.com"
+                value={client.email || ''}
+                onChange={(e) => setClient({ ...client, email: e.target.value })}
+                className="bg-background"
+                disabled={!!selectedClientId && selectedClientId !== 'new'}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -396,23 +394,11 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
                 className="w-36 bg-background text-right rounded-xl border-2"
               />
             </div>
-            <div className="border-t-2 border-primary/30 pt-5 mt-2 space-y-2">
-              <Label htmlFor="totalDirect" className="text-sm font-medium text-muted-foreground">
-                Total (deixe vazio para usar subtotal − desconto)
-              </Label>
-              <Input
-                id="totalDirect"
-                type="number"
-                min={0}
-                step={0.01}
-                placeholder={totalCalculated.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                value={totalDirect}
-                onChange={(e) => setTotalDirect(e.target.value)}
-                className="text-2xl font-bold text-primary h-12 bg-background"
-              />
-              <p className="text-xs text-muted-foreground">
-                {totalDirect === '' ? 'Calculado: ' + totalCalculated.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'Total informado: ' + total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-              </p>
+            <div className="border-t-2 border-primary/30 pt-5 mt-2 flex justify-between items-center bg-gradient-to-r from-primary/10 to-transparent p-4 rounded-xl">
+              <span className="font-bold text-foreground text-lg">Total</span>
+              <span className="text-3xl font-bold text-primary tracking-tight">
+                {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </span>
             </div>
           </CardContent>
         </Card>

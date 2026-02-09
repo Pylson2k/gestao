@@ -389,9 +389,9 @@ export function useQuotes() {
 }
 
 export function calculateQuoteTotals(services: ServiceItem[], materials: MaterialItem[], discount: number) {
-  const servicesTotal = services.reduce((sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0), 0)
-  const materialsTotal = materials.reduce((sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0), 0)
+  const servicesTotal = services.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
+  const materialsTotal = materials.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
   const subtotal = servicesTotal + materialsTotal
-  const total = Math.max(0, subtotal - (Number(discount) || 0))
+  const total = subtotal - discount
   return { subtotal, total }
 }

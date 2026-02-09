@@ -90,15 +90,36 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { name, phone, address, email } = body
 
+    // Validações
+    if (!name || name.trim() === '') {
+      return NextResponse.json(
+        { error: 'Nome e obrigatorio' },
+        { status: 400 }
+      )
+    }
+
+    if (!phone || phone.trim() === '') {
+      return NextResponse.json(
+        { error: 'Telefone e obrigatorio' },
+        { status: 400 }
+      )
+    }
+
+    if (!address || address.trim() === '') {
+      return NextResponse.json(
+        { error: 'Endereco e obrigatorio' },
+        { status: 400 }
+      )
+    }
+
     const { prisma } = await import('@/lib/prisma')
 
-    // Permite cadastrar outro cliente mesmo com mesmo nome/telefone (tudo opcional)
     const client = await prisma.client.create({
       data: {
-        name: (name ?? '').toString().trim() || 'Cliente',
-        phone: (phone ?? '').toString().trim() || '',
-        address: (address ?? '').toString().trim() || '',
-        email: (email ?? '').toString().trim() || null,
+        name: name.trim(),
+        phone: phone.trim(),
+        address: address.trim(),
+        email: email?.trim() || null,
       },
     })
 
