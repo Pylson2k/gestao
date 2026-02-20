@@ -18,7 +18,7 @@ import {
 import { Plus, Trash2, Edit, UserCircle, Phone, MapPin, Mail, FileText, DollarSign, Calendar, Download } from 'lucide-react'
 import type { Client } from '@/lib/types'
 import { cn } from '@/lib/utils'
-import Link from 'next/link'
+import { AppLink as Link } from '@/components/app-link'
 import { useQuotes } from '@/contexts/quotes-context'
 import { usePayments } from '@/contexts/payments-context'
 import { exportClientsToCSV } from '@/lib/export-utils'

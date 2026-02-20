@@ -122,4 +122,12 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Um toque/clique só: remove atraso de 300ms e duplo toque em mobile */
+  a,
+  button,
+  [role="button"],
+  input[type="submit"],
+  input[type="button"] {
+    touch-action: manipulation;
+  }
 }

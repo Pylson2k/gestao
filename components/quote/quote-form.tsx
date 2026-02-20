@@ -23,7 +23,7 @@ import { ServiceItemRow } from './service-item-row'
 import { MaterialItemRow } from './material-item-row'
 import type { Client, ServiceItem, MaterialItem, Quote } from '@/lib/types'
 import { Plus, Save, ArrowLeft, UserCircle, Loader2 } from 'lucide-react'
-import Link from 'next/link'
+import { AppLink as Link } from '@/components/app-link'
 
 interface QuoteFormProps {
   initialData?: Quote

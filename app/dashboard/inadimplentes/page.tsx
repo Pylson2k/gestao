@@ -19,7 +19,7 @@ import {
 import { AlertTriangle, DollarSign, UserCircle, Phone, Mail, FileText, Calendar, TrendingUp, MessageCircle } from 'lucide-react'
 import type { Client, Quote } from '@/lib/types'
 import { cn } from '@/lib/utils'
-import Link from 'next/link'
+import { AppLink as Link } from '@/components/app-link'
 
 interface ClientDebtInfo {
   client: Client
