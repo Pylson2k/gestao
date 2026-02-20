@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useState, useEffect } from 'react'
+import { use, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useQuotes } from '@/contexts/quotes-context'
@@ -68,7 +68,7 @@ export default function QuoteDetailPage({
   const router = useRouter()
   const { getQuoteById, updateQuote, deleteQuote } = useQuotes()
   const { settings: companySettings } = useCompany()
-  const { getPaymentsByQuoteId, getTotalPaidByQuoteId, refreshPayments } = usePayments()
+  const { getPaymentsByQuoteId, getTotalPaidByQuoteId } = usePayments()
 
   // TODOS os hooks devem ser chamados ANTES de qualquer early return
   const [showDiscountDialog, setShowDiscountDialog] = useState(false)
@@ -79,16 +79,6 @@ export default function QuoteDetailPage({
   const [showWhatsAppInstructions, setShowWhatsAppInstructions] = useState(false)
 
   const quote = getQuoteById(id)
-
-  // Carregar pagamentos quando a página carregar
-  useEffect(() => {
-    if (quote?.id) {
-      refreshPayments(quote.id).catch(err => {
-        console.error('Error refreshing payments:', err)
-      })
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [quote?.id])
 
   if (!quote) {
     return (

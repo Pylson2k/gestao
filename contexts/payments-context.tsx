@@ -26,13 +26,14 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const [isFetching, setIsFetching] = useState(false)
   const lastFetchedAt = useRef<number>(0)
+  const fetchingRef = useRef(false)
 
   const fetchPayments = useCallback(async (quoteId?: string) => {
-    if (!user?.id || isFetching) {
+    if (!user?.id || fetchingRef.current) {
       setIsLoading(false)
       return
     }
-
+    fetchingRef.current = true
     setIsFetching(true)
     try {
       const url = quoteId ? `/api/payments?quoteId=${quoteId}` : '/api/payments'
@@ -80,8 +81,9 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false)
       setIsFetching(false)
+      fetchingRef.current = false
     }
-  }, [user?.id, isFetching])
+  }, [user?.id])
 
   useEffect(() => {
     if (user?.id) {

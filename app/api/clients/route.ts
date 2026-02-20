@@ -33,25 +33,15 @@ export async function GET(request: NextRequest) {
 
     const clients = await prisma.client.findMany({
       where,
-      include: {
-        quotes: {
-          select: {
-            id: true,
-            number: true,
-            status: true,
-            total: true,
-            createdAt: true,
-          },
-          orderBy: {
-            createdAt: 'desc',
-          },
-          take: 5, // Últimos 5 orçamentos
-        },
-        _count: {
-          select: {
-            quotes: true,
-          },
-        },
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        address: true,
+        email: true,
+        createdAt: true,
+        updatedAt: true,
+        _count: { select: { quotes: true } },
       },
       orderBy: {
         name: 'asc',
