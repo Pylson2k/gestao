@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useEffect } from 'react'
-import { AppLink as Link } from '@/components/app-link'
+import { Link } from '@/components/app-link'
 import { useQuotes } from '@/contexts/quotes-context'
 import { useExpenses } from '@/contexts/expenses-context'
 import { useAuth } from '@/contexts/auth-context'

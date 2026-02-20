@@ -2,7 +2,7 @@
 
 import { use, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { AppLink as Link } from '@/components/app-link'
+import { Link } from '@/components/app-link'
 import { useQuotes } from '@/contexts/quotes-context'
 import { useCompany } from '@/contexts/company-context'
 import { usePayments } from '@/contexts/payments-context'

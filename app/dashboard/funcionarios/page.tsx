@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { AppLink as Link } from '@/components/app-link'
+import { Link } from '@/components/app-link'
 import { useEmployees } from '@/contexts/employees-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { AppLink as Link } from '@/components/app-link'
+import { Link } from '@/components/app-link'
 import { useQuotes } from '@/contexts/quotes-context'
 import { usePayments } from '@/contexts/payments-context'
 import { Button } from '@/components/ui/button'
