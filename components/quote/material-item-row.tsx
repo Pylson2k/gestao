@@ -1,64 +1,287 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import type { MaterialItem } from '@/lib/types'
+import {
+  DEFAULT_MATERIAL_UNIT,
+  MATERIAL_UNITS,
+  formatQuantityDisplay,
+  normalizeStoredQuantity,
+  parseQuantityInput,
+} from '@/lib/material-units'
 import { Trash2 } from 'lucide-react'
+
+const QUICK_FRACTIONS = ['1/2', '1/4', '3/4', '1 1/2'] as const
+const QUICK_WHOLE = [1, 2, 5, 10] as const
 
 interface MaterialItemRowProps {
   item: MaterialItem
   onChange: (item: MaterialItem) => void
   onRemove: () => void
+  /** Exibe colunas de preço e total (orçamento / lista com valores). */
+  showPrices?: boolean
+  /** Na última linha, Enter após quantidade (sem preço) ou após valor (com preço) chama esta função — ex.: adicionar linha. */
+  isLastRow?: boolean
+  onAddLine?: () => void
 }
 
-export function MaterialItemRow({ item, onChange, onRemove }: MaterialItemRowProps) {
-  const qty = Number(item.quantity) || 0
+export function MaterialItemRow({
+  item,
+  onChange,
+  onRemove,
+  showPrices = true,
+  isLastRow = false,
+  onAddLine,
+}: MaterialItemRowProps) {
+  const nameInputRef = useRef<HTMLInputElement>(null)
+  const qtyInputRef = useRef<HTMLInputElement>(null)
+  const priceInputRef = useRef<HTMLInputElement>(null)
+
+  const qtyNum = Number(item.quantity)
+  const safeQty = Number.isFinite(qtyNum) && qtyNum > 0 ? qtyNum : 1
+  const [quantityText, setQuantityText] = useState(() => formatQuantityDisplay(safeQty))
+
+  useEffect(() => {
+    const n = Number(item.quantity)
+    const base = Number.isFinite(n) && n > 0 ? n : 1
+    setQuantityText(formatQuantityDisplay(base))
+  }, [item.id, item.quantity])
+
+  const unit = item.unit && MATERIAL_UNITS.some((u) => u.value === item.unit) ? item.unit : DEFAULT_MATERIAL_UNIT
   const price = Number(item.unitPrice) || 0
-  const total = qty * price
+  const total = safeQty * price
+
+  const commitQuantity = (text: string, fallback: number) => {
+    const parsed = parseQuantityInput(text)
+    const n = normalizeStoredQuantity(parsed, fallback)
+    onChange({ ...item, quantity: n })
+    setQuantityText(formatQuantityDisplay(n))
+  }
+
+  const applyQuickFraction = (chip: string) => {
+    const parsed = parseQuantityInput(chip)
+    const n = normalizeStoredQuantity(parsed, safeQty)
+    onChange({ ...item, quantity: n })
+    setQuantityText(formatQuantityDisplay(n))
+    qtyInputRef.current?.focus()
+  }
+
+  const applyWholeNumber = (n: number) => {
+    const val = normalizeStoredQuantity(n, 1)
+    onChange({ ...item, quantity: val })
+    setQuantityText(formatQuantityDisplay(val))
+    qtyInputRef.current?.focus()
+  }
+
+  const applyOneUnidade = () => {
+    onChange({ ...item, unit: 'unidade', quantity: 1 })
+    setQuantityText(formatQuantityDisplay(1))
+    qtyInputRef.current?.focus()
+  }
+
+  const applyOneMetro = () => {
+    onChange({ ...item, unit: 'metro', quantity: 1 })
+    setQuantityText(formatQuantityDisplay(1))
+    qtyInputRef.current?.focus()
+  }
+
+  const handleNameEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter') return
+    e.preventDefault()
+    e.stopPropagation()
+    qtyInputRef.current?.focus()
+  }
+
+  const handleQtyEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter') return
+    e.preventDefault()
+    e.stopPropagation()
+    commitQuantity(quantityText, safeQty)
+    requestAnimationFrame(() => {
+      if (showPrices) {
+        priceInputRef.current?.focus()
+      } else if (isLastRow && onAddLine) {
+        onAddLine()
+      }
+    })
+  }
+
+  const handlePriceEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter') return
+    e.preventDefault()
+    e.stopPropagation()
+    ;(e.target as HTMLInputElement).blur()
+    if (isLastRow && onAddLine) {
+      requestAnimationFrame(() => onAddLine())
+    }
+  }
+
+  const qtyCol = (
+    <div className="space-y-1.5">
+      <Input
+        ref={qtyInputRef}
+        inputMode="decimal"
+        placeholder="Ex.: 1, 0,5 ou 1/2"
+        aria-label="Quantidade"
+        value={quantityText}
+        onChange={(e) => setQuantityText(e.target.value)}
+        onBlur={() => commitQuantity(quantityText, safeQty)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') handleQtyEnter(e)
+        }}
+        className="bg-background min-h-[40px]"
+      />
+      <div className="flex flex-wrap gap-1">
+        <Button
+          type="button"
+          variant="default"
+          size="sm"
+          className="h-7 px-2 text-xs font-medium"
+          onClick={applyOneUnidade}
+        >
+          1 un.
+        </Button>
+        <Button
+          type="button"
+          variant="default"
+          size="sm"
+          className="h-7 px-2 text-xs font-medium"
+          onClick={applyOneMetro}
+        >
+          1 m
+        </Button>
+        {QUICK_WHOLE.map((n) => (
+          <Button
+            key={n}
+            type="button"
+            variant="secondary"
+            size="sm"
+            className="h-7 min-w-[1.75rem] px-2 text-xs font-normal text-muted-foreground"
+            onClick={() => applyWholeNumber(n)}
+          >
+            {n}
+          </Button>
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-1 items-center">
+        <span className="text-[10px] uppercase tracking-wide text-muted-foreground mr-0.5">Frações</span>
+        {QUICK_FRACTIONS.map((chip) => (
+          <Button
+            key={chip}
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-7 px-2 text-xs font-normal text-muted-foreground"
+            onClick={() => applyQuickFraction(chip)}
+          >
+            {chip}
+          </Button>
+        ))}
+      </div>
+    </div>
+  )
+
+  const unitCol = (
+    <Select
+      value={unit}
+      onValueChange={(v) => onChange({ ...item, unit: v, quantity: safeQty })}
+    >
+      <SelectTrigger className="min-h-[40px] bg-background w-full" aria-label="Unidade de medida">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {MATERIAL_UNITS.map((u) => (
+          <SelectItem key={u.value} value={u.value}>
+            {u.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  )
+
+  if (!showPrices) {
+    return (
+      <div className="grid grid-cols-12 gap-2 items-start">
+        <div className="col-span-12 sm:col-span-5">
+          <Input
+            ref={nameInputRef}
+            placeholder="Descrição do material"
+            value={item.name}
+            onChange={(e) => onChange({ ...item, name: e.target.value })}
+            onKeyDown={handleNameEnter}
+            className="bg-background min-h-[40px]"
+          />
+        </div>
+        <div className="col-span-12 sm:col-span-3">{qtyCol}</div>
+        <div className="col-span-10 sm:col-span-3">{unitCol}</div>
+        <div className="col-span-2 sm:col-span-1 flex justify-end pt-1 sm:pt-0">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onRemove}
+            className="text-muted-foreground hover:text-destructive shrink-0"
+            aria-label="Remover linha"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="grid grid-cols-12 gap-2 items-center">
-      <div className="col-span-12 sm:col-span-5">
+    <div className="grid grid-cols-12 gap-2 items-start">
+      <div className="col-span-12 sm:col-span-3">
         <Input
-          placeholder="Descricao do material (opcional)"
+          ref={nameInputRef}
+          placeholder="Descrição do material (opcional)"
           value={item.name}
           onChange={(e) => onChange({ ...item, name: e.target.value })}
-          className="bg-background"
+          onKeyDown={handleNameEnter}
+          className="bg-background min-h-[40px]"
         />
       </div>
-      <div className="col-span-4 sm:col-span-2">
+      <div className="col-span-12 sm:col-span-3">{qtyCol}</div>
+      <div className="col-span-12 sm:col-span-2">{unitCol}</div>
+      <div className="col-span-6 sm:col-span-2">
         <Input
-          type="number"
-          placeholder="Qtd"
-          min={0}
-          value={item.quantity === undefined || item.quantity === null ? '' : item.quantity}
-          onChange={(e) => onChange({ ...item, quantity: e.target.value === '' ? 0 : Number(e.target.value) })}
-          className="bg-background"
-        />
-      </div>
-      <div className="col-span-4 sm:col-span-2">
-        <Input
+          ref={priceInputRef}
           type="number"
           placeholder="Valor unit."
           min={0}
           step={0.01}
           value={item.unitPrice === undefined || item.unitPrice === null ? '' : item.unitPrice}
-          onChange={(e) => onChange({ ...item, unitPrice: e.target.value === '' ? 0 : Number(e.target.value) })}
-          className="bg-background"
+          onChange={(e) =>
+            onChange({ ...item, unitPrice: e.target.value === '' ? 0 : Number(e.target.value) })
+          }
+          onKeyDown={handlePriceEnter}
+          className="bg-background min-h-[40px]"
+          aria-label="Valor unitário"
         />
       </div>
-      <div className="col-span-3 sm:col-span-2 text-right">
+      <div className="col-span-5 sm:col-span-1 text-right pt-2 sm:pt-2">
         <span className="text-sm font-medium text-foreground">
           {total > 0 ? total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}
         </span>
       </div>
-      <div className="col-span-1">
+      <div className="col-span-1 flex justify-end pt-1">
         <Button
           type="button"
           variant="ghost"
           size="icon"
           onClick={onRemove}
-          className="text-muted-foreground hover:text-destructive"
+          className="text-muted-foreground hover:text-destructive shrink-0"
+          aria-label="Remover linha"
         >
           <Trash2 className="w-4 h-4" />
         </Button>

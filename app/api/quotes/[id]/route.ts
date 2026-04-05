@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getMemoryQuoteById, updateMemoryQuote, deleteMemoryQuote } from '@/lib/emergency-store'
 import { getDbUserId, getOwnerDbUserIds } from '@/lib/user-mapping'
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log'
+import { resolveMaterialQuantity, resolveMaterialUnit } from '@/lib/material-units'
 
 // GET - Get single quote
 export async function GET(
@@ -226,7 +227,8 @@ export async function PUT(
         data: body.materials.map((m: any) => ({
           quoteId: id,
           name: m.name,
-          quantity: m.quantity,
+          quantity: resolveMaterialQuantity(m.quantity),
+          unit: resolveMaterialUnit(m.unit),
           unitPrice: m.unitPrice,
         })),
       })

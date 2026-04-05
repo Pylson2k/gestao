@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getMemoryQuotes, addMemoryQuote } from '@/lib/emergency-store'
 import { getDbUserId, getOwnerDbUserIds } from '@/lib/user-mapping'
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log'
+import { resolveMaterialQuantity, resolveMaterialUnit } from '@/lib/material-units'
 
 // GET - List all quotes for a user
 export async function GET(request: NextRequest) {
@@ -65,6 +66,7 @@ export async function GET(request: NextRequest) {
             id: true,
             name: true,
             quantity: true,
+            unit: true,
             unitPrice: true,
           },
         },
@@ -165,7 +167,8 @@ export async function POST(request: NextRequest) {
         materials: safeMaterials.map((m: any, i: number) => ({
           id: `mat-${Date.now()}-${i}`,
           name: (m.name ?? '').toString().trim() || 'Material',
-          quantity: Number(m.quantity) || 1,
+          quantity: resolveMaterialQuantity(m.quantity),
+          unit: resolveMaterialUnit(m.unit),
           unitPrice: Number(m.unitPrice) || 0,
         })),
         subtotal: Number(subtotal) || 0,
@@ -278,7 +281,8 @@ export async function POST(request: NextRequest) {
         data.materials = {
           create: validMaterials.map((m: any) => ({
             name: (m.name ?? '').toString().trim() || 'Material',
-            quantity: Math.max(0, Number(m.quantity) || 0) || 1,
+            quantity: resolveMaterialQuantity(m.quantity),
+            unit: resolveMaterialUnit(m.unit),
             unitPrice: Number(m.unitPrice) || 0,
           })),
         }

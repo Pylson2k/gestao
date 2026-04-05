@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/auth-context'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { generateStandaloneMaterialListPDF, downloadPDF, openViewWindow } from '@/lib/pdf-generator'
+import { formatQuantityWithUnitPdf, resolveMaterialUnit } from '@/lib/material-units'
 import type { MaterialList } from '@/lib/types'
 import {
   ArrowLeft,
@@ -65,6 +66,7 @@ export default function ListaMateriaisDetailPage({
           id: it.id,
           name: it.name,
           quantity: it.quantity,
+          unit: resolveMaterialUnit(it.unit),
           unitPrice: it.unitPrice,
         })),
         createdAt: new Date(data.createdAt),
@@ -260,7 +262,10 @@ export default function ListaMateriaisDetailPage({
               <li key={it.id} className="py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
                 <span className="font-medium">{it.name}</span>
                 <span className="text-sm text-muted-foreground">
-                  Qtd: <strong className="text-foreground">{it.quantity}</strong>
+                  Qtd:{' '}
+                  <strong className="text-foreground">
+                    {formatQuantityWithUnitPdf(Number(it.quantity), it.unit)}
+                  </strong>
                   {list.includePrices && (
                     <>
                       {' · '}

@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { resolveMaterialUnit } from '@/lib/material-units'
 import { getOwnerDbUserIds } from '@/lib/user-mapping'
 
 export const dynamic = 'force-dynamic'
@@ -159,6 +160,7 @@ export async function POST(request: NextRequest) {
         quoteId: q.id,
         name: m.name,
         quantity: Number(m.quantity),
+        unit: resolveMaterialUnit(m.unit),
         unitPrice: Number(m.unitPrice),
       }))
     )
@@ -194,6 +196,7 @@ export async function POST(request: NextRequest) {
               id: it.id,
               name: it.name,
               quantity: Number(it.quantity),
+              unit: resolveMaterialUnit(it.unit),
               unitPrice: Number(it.unitPrice ?? 0),
             })),
           },

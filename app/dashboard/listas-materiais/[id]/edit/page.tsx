@@ -7,6 +7,7 @@ import { useMaterialLists } from '@/contexts/material-lists-context'
 import { MaterialListForm } from '@/components/material-list/material-list-form'
 import { Button } from '@/components/ui/button'
 import type { MaterialList } from '@/lib/types'
+import { resolveMaterialUnit } from '@/lib/material-units'
 import { Package } from 'lucide-react'
 
 export default function EditListaMateriaisPage({
@@ -53,6 +54,7 @@ export default function EditListaMateriaisPage({
           id: it.id,
           name: it.name,
           quantity: it.quantity,
+          unit: resolveMaterialUnit(it.unit),
           unitPrice: it.unitPrice,
         })),
         createdAt: new Date(data.createdAt),

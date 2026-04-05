@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getOwnerDbUserIds } from '@/lib/user-mapping'
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log'
+import { resolveMaterialQuantity, resolveMaterialUnit } from '@/lib/material-units'
 
 export async function GET(
   request: NextRequest,
@@ -77,14 +78,15 @@ export async function PATCH(
       includePrices !== undefined ||
       (clientId !== undefined && clientId !== null)
 
-    let validItems: { name: string; quantity: number; unitPrice: number }[] | null = null
+    let validItems: { name: string; quantity: number; unit: string; unitPrice: number }[] | null = null
     if (items !== undefined) {
       const rawItems = Array.isArray(items) ? items : []
       validItems = rawItems
         .filter((it: any) => it && String(it.name ?? '').trim() !== '')
         .map((it: any) => ({
           name: String(it.name).trim(),
-          quantity: Math.max(1, Number(it.quantity) || 1),
+          quantity: resolveMaterialQuantity(it.quantity),
+          unit: resolveMaterialUnit(it.unit),
           unitPrice: Math.max(0, Number(it.unitPrice) || 0),
         }))
       if (validItems.length === 0) {
@@ -115,6 +117,7 @@ export async function PATCH(
           create: validItems.map((it) => ({
             name: it.name,
             quantity: it.quantity,
+            unit: it.unit,
             unitPrice: it.unitPrice,
           })),
         }

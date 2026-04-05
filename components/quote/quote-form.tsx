@@ -22,6 +22,12 @@ import {
 import { ServiceItemRow } from './service-item-row'
 import { MaterialItemRow } from './material-item-row'
 import type { Client, ServiceItem, MaterialItem, Quote } from '@/lib/types'
+import {
+  DEFAULT_MATERIAL_UNIT,
+  normalizeStoredQuantity,
+  QUANTITY_HELP_TEXT,
+  resolveMaterialUnit,
+} from '@/lib/material-units'
 import { Plus, Save, ArrowLeft, UserCircle, Loader2 } from 'lucide-react'
 import { Link } from '@/components/app-link'
 
@@ -71,9 +77,16 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
     initialData?.services || [{ id: '1', name: '', quantity: 1, unitPrice: 0 }]
   )
 
-  const [materials, setMaterials] = useState<MaterialItem[]>(
-    initialData?.materials || [{ id: '1', name: '', quantity: 1, unitPrice: 0 }]
-  )
+  const [materials, setMaterials] = useState<MaterialItem[]>(() => {
+    if (initialData?.materials?.length) {
+      return initialData.materials.map((m) => ({
+        ...m,
+        unit: resolveMaterialUnit(m.unit),
+        quantity: normalizeStoredQuantity(Number(m.quantity), 1),
+      }))
+    }
+    return [{ id: '1', name: '', quantity: 1, unit: DEFAULT_MATERIAL_UNIT, unitPrice: 0 }]
+  })
 
   const [discount, setDiscount] = useState(initialData?.discount || 0)
   const [observations, setObservations] = useState(initialData?.observations || '')
@@ -105,7 +118,13 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
   const addMaterial = () => {
     setMaterials([
       ...materials,
-      { id: Date.now().toString(), name: '', quantity: 1, unitPrice: 0 },
+      {
+        id: Date.now().toString(),
+        name: '',
+        quantity: 1,
+        unit: DEFAULT_MATERIAL_UNIT,
+        unitPrice: 0,
+      },
     ])
   }
 
@@ -309,6 +328,9 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
+          <p className="text-xs text-muted-foreground -mt-1">
+            Enter: descrição → quantidade → valor; na última linha, Enter no valor adiciona outro serviço.
+          </p>
           <div className="hidden sm:grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground px-1">
             <div className="col-span-5">Descricao</div>
             <div className="col-span-2">Quantidade</div>
@@ -320,6 +342,8 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
             <ServiceItemRow
               key={item.id}
               item={item}
+              isLastRow={index === services.length - 1}
+              onAddLine={addService}
               onChange={(updated) => updateService(index, updated)}
               onRemove={() => removeService(index)}
             />
@@ -337,17 +361,22 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
           </Button>
         </CardHeader>
         <CardContent className="space-y-3">
+          <p className="text-xs text-muted-foreground -mt-1">{QUANTITY_HELP_TEXT}</p>
           <div className="hidden sm:grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground px-1">
-            <div className="col-span-5">Descricao</div>
-            <div className="col-span-2">Quantidade</div>
+            <div className="col-span-3">Descricao</div>
+            <div className="col-span-3">Quantidade</div>
+            <div className="col-span-2">Unidade</div>
             <div className="col-span-2">Valor Unit.</div>
-            <div className="col-span-2 text-right">Total</div>
+            <div className="col-span-1 text-right">Total</div>
             <div className="col-span-1" />
           </div>
           {materials.map((item, index) => (
             <MaterialItemRow
               key={item.id}
               item={item}
+              showPrices
+              isLastRow={index === materials.length - 1}
+              onAddLine={addMaterial}
               onChange={(updated) => updateMaterial(index, updated)}
               onRemove={() => removeMaterial(index)}
             />

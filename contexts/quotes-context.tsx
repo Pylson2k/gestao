@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react'
 import type { Quote, Client, ServiceItem, MaterialItem, Payment } from '@/lib/types'
+import { resolveMaterialUnit } from '@/lib/material-units'
 import { useAuth } from './auth-context'
 
 const STALE_MS = 10 * 60 * 1000 // 10 min — refetch no focus só se passou mais que isso
@@ -79,6 +80,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
             id: m.id,
             name: m.name,
             quantity: m.quantity,
+            unit: resolveMaterialUnit(m.unit),
             unitPrice: m.unitPrice,
           })),
           subtotal: q.subtotal,
@@ -188,6 +190,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
           id: m.id,
           name: m.name,
           quantity: m.quantity,
+          unit: resolveMaterialUnit(m.unit),
           unitPrice: m.unitPrice,
         })),
         subtotal: data.subtotal,
@@ -332,6 +335,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
           id: m.id,
           name: m.name,
           quantity: m.quantity,
+          unit: resolveMaterialUnit(m.unit),
           unitPrice: m.unitPrice,
         })),
         subtotal: data.subtotal,

@@ -96,7 +96,8 @@ model MaterialItem {
   id        String   @id @default(cuid())
   quoteId   String
   name      String
-  quantity  Int
+  quantity  Float
+  unit      String   @default("unidade")
   unitPrice Float
   
   quote     Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
@@ -129,7 +130,8 @@ model MaterialListItem {
   id             String   @id @default(cuid())
   materialListId String
   name           String
-  quantity       Int
+  quantity       Float
+  unit           String   @default("unidade")
   unitPrice      Float    @default(0)
 
   materialList MaterialList @relation(fields: [materialListId], references: [id], onDelete: Cascade)

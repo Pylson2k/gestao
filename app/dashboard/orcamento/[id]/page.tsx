@@ -28,6 +28,7 @@ import {
   openViewWindow,
 } from '@/lib/pdf-generator'
 import { cn } from '@/lib/utils'
+import { formatQuantityWithUnitPdf } from '@/lib/material-units'
 import {
   ArrowLeft,
   FileText,
@@ -734,7 +735,7 @@ Aguardo sua confirmação!`
                 <thead>
                   <tr className="bg-gradient-to-r from-slate-50 to-slate-100 border-b-2 border-slate-200">
                     <th className="text-left py-4 sm:py-3 px-4 sm:px-3 font-bold text-slate-700 uppercase text-sm sm:text-xs tracking-wider">Descrição</th>
-                    <th className="text-center py-4 sm:py-3 px-4 sm:px-3 font-bold text-slate-700 uppercase text-sm sm:text-xs tracking-wider">Qtd</th>
+                    <th className="text-center py-4 sm:py-3 px-4 sm:px-3 font-bold text-slate-700 uppercase text-sm sm:text-xs tracking-wider">Qtd / un.</th>
                     <th className="text-right py-4 sm:py-3 px-4 sm:px-3 font-bold text-slate-700 uppercase text-sm sm:text-xs tracking-wider">Valor Unit.</th>
                     <th className="text-right py-4 sm:py-3 px-4 sm:px-3 font-bold text-slate-700 uppercase text-sm sm:text-xs tracking-wider">Total</th>
                   </tr>
@@ -746,7 +747,9 @@ Aguardo sua confirmação!`
                       index % 2 === 0 ? "bg-white" : "bg-slate-50/30"
                     )}>
                       <td className="py-4 sm:py-3 px-4 sm:px-3 text-foreground font-medium text-base sm:text-sm">{item.name}</td>
-                      <td className="py-4 sm:py-3 px-4 sm:px-3 text-center text-foreground font-semibold text-base sm:text-sm">{item.quantity}</td>
+                      <td className="py-4 sm:py-3 px-4 sm:px-3 text-center text-foreground font-semibold text-base sm:text-sm">
+                        {formatQuantityWithUnitPdf(Number(item.quantity), item.unit)}
+                      </td>
                       <td className="py-4 sm:py-3 px-4 sm:px-3 text-right text-muted-foreground text-base sm:text-sm">
                         {item.unitPrice > 0 ? item.unitPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}
                       </td>

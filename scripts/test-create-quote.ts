@@ -81,10 +81,10 @@ async function testCreateQuote() {
     // Criar item de material
     console.log('📦 Testando criação de item de material...')
     const materialResult = await client.query(`
-      INSERT INTO material_items (id, "quoteId", name, quantity, "unitPrice")
-      VALUES (gen_random_uuid()::text, $1, $2, $3, $4)
+      INSERT INTO material_items (id, "quoteId", name, quantity, unit, "unitPrice")
+      VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5)
       RETURNING id, name;
-    `, [quoteId, 'Material Teste', 2, 250])
+    `, [quoteId, 'Material Teste', 2, 'unidade', 250])
 
     console.log(`✅ Item de material criado: ${materialResult.rows[0].name}\n`)
 

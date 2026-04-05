@@ -1,4 +1,5 @@
 import type { Quote, CompanySettings, MaterialList } from './types'
+import { formatQuantityWithUnitPdf } from './material-units'
 
 /**
  * Lista de materiais independente de orçamento — documento formal para o cliente.
@@ -32,7 +33,7 @@ export function generateStandaloneMaterialListPDF(
       (item) =>
         `<tr>
           <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb;">${escapeHtml(item.name)}</td>
-          <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: center; font-weight: 600;">${item.quantity}</td>
+          <td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: center; font-weight: 600;">${formatQuantityWithUnitPdf(item.quantity, item.unit)}</td>
         </tr>`
     )
     .join('')
@@ -42,7 +43,7 @@ export function generateStandaloneMaterialListPDF(
       (item) =>
         `<tr>
           <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${escapeHtml(item.name)}</td>
-          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: center;">${item.quantity}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: center;">${formatQuantityWithUnitPdf(item.quantity, item.unit)}</td>
           <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${formatCurrency(item.unitPrice)}</td>
           <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${formatCurrency(item.quantity * item.unitPrice)}</td>
         </tr>`
@@ -55,7 +56,7 @@ export function generateStandaloneMaterialListPDF(
           <thead>
             <tr>
               <th>Descricao</th>
-              <th style="text-align: center;">Qtd</th>
+              <th style="text-align: center;">Qtd / un.</th>
               <th style="text-align: right;">Valor unit.</th>
               <th style="text-align: right;">Total</th>
             </tr>
@@ -75,7 +76,7 @@ export function generateStandaloneMaterialListPDF(
           <thead>
             <tr>
               <th style="width: 75%;">Descricao do material</th>
-              <th style="text-align: center; width: 25%;">Quantidade</th>
+              <th style="text-align: center; width: 25%;">Quantidade / un.</th>
             </tr>
           </thead>
           <tbody>
@@ -253,7 +254,7 @@ export function generateMaterialsListPDF(quote: Quote, companySettings: CompanyS
             (item) =>
               `<tr>
           <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${item.name}</td>
-          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: center;">${item.quantity}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: center;">${formatQuantityWithUnitPdf(item.quantity, item.unit)}</td>
           <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${formatCurrency(item.unitPrice)}</td>
           <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${formatCurrency(item.quantity * item.unitPrice)}</td>
         </tr>`
@@ -397,7 +398,7 @@ export function generateMaterialsListPDF(quote: Quote, companySettings: CompanyS
           <thead>
             <tr>
               <th>Descricao</th>
-              <th>Qtd</th>
+              <th>Qtd / un.</th>
               <th>Valor Unit.</th>
               <th>Total</th>
             </tr>
@@ -462,7 +463,7 @@ export function generateQuotePDF(quote: Quote, companySettings: CompanySettings)
       (item) =>
         `<tr>
           <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${item.name}</td>
-          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: center;">${item.quantity}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: center;">${formatQuantityWithUnitPdf(item.quantity, item.unit)}</td>
           <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${formatCurrency(item.unitPrice)}</td>
           <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${formatCurrency(item.quantity * item.unitPrice)}</td>
         </tr>`
@@ -663,7 +664,7 @@ export function generateQuotePDF(quote: Quote, companySettings: CompanySettings)
           <thead>
             <tr>
               <th>Descricao</th>
-              <th>Qtd</th>
+              <th>Qtd / un.</th>
               <th>Valor Unit.</th>
               <th>Total</th>
             </tr>

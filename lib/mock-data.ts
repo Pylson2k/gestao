@@ -23,8 +23,8 @@ export const mockQuotes: Quote[] = [
       { id: 's2', name: 'Troca de disjuntor', quantity: 2, unitPrice: 120 },
     ],
     materials: [
-      { id: 'm1', name: 'Tomada 20A', quantity: 5, unitPrice: 25 },
-      { id: 'm2', name: 'Disjuntor 32A', quantity: 2, unitPrice: 45 },
+      { id: 'm1', name: 'Tomada 20A', quantity: 5, unit: 'unidade', unitPrice: 25 },
+      { id: 'm2', name: 'Disjuntor 32A', quantity: 2, unit: 'unidade', unitPrice: 45 },
     ],
     subtotal: 855,
     discount: 55,
@@ -48,8 +48,8 @@ export const mockQuotes: Quote[] = [
       { id: 's4', name: 'Passagem de fiacao', quantity: 1, unitPrice: 350 },
     ],
     materials: [
-      { id: 'm3', name: 'Luminaria LED', quantity: 8, unitPrice: 89 },
-      { id: 'm4', name: 'Cabo flexivel 2.5mm (m)', quantity: 50, unitPrice: 3 },
+      { id: 'm3', name: 'Luminaria LED', quantity: 8, unit: 'unidade', unitPrice: 89 },
+      { id: 'm4', name: 'Cabo flexivel 2.5mm (m)', quantity: 50, unit: 'metro', unitPrice: 3 },
     ],
     subtotal: 1542,
     discount: 0,
@@ -72,8 +72,8 @@ export const mockQuotes: Quote[] = [
       { id: 's5', name: 'Reparo em quadro eletrico', quantity: 1, unitPrice: 450 },
     ],
     materials: [
-      { id: 'm5', name: 'Disjuntor DR', quantity: 1, unitPrice: 180 },
-      { id: 'm6', name: 'Barramento', quantity: 1, unitPrice: 65 },
+      { id: 'm5', name: 'Disjuntor DR', quantity: 1, unit: 'unidade', unitPrice: 180 },
+      { id: 'm6', name: 'Barramento', quantity: 1, unit: 'unidade', unitPrice: 65 },
     ],
     subtotal: 695,
     discount: 45,
@@ -96,8 +96,8 @@ export const mockQuotes: Quote[] = [
       { id: 's7', name: 'Instalacao de interruptores inteligentes', quantity: 6, unitPrice: 150 },
     ],
     materials: [
-      { id: 'm7', name: 'Interruptor inteligente WiFi', quantity: 6, unitPrice: 189 },
-      { id: 'm8', name: 'Hub de automacao', quantity: 1, unitPrice: 350 },
+      { id: 'm7', name: 'Interruptor inteligente WiFi', quantity: 6, unit: 'unidade', unitPrice: 189 },
+      { id: 'm8', name: 'Hub de automacao', quantity: 1, unit: 'unidade', unitPrice: 350 },
     ],
     subtotal: 3384,
     discount: 184,

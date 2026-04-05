@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from 'react'
 import type { MaterialList, MaterialListItem } from '@/lib/types'
+import { resolveMaterialUnit } from '@/lib/material-units'
 import { useAuth } from './auth-context'
 
 const STALE_MS = 10 * 60 * 1000
@@ -33,6 +34,7 @@ function mapListFromApi(data: any): MaterialList {
       id: it.id,
       name: it.name,
       quantity: it.quantity,
+      unit: resolveMaterialUnit(it.unit),
       unitPrice: it.unitPrice,
     })),
     createdAt: new Date(data.createdAt),

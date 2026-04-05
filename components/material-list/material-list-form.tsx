@@ -20,7 +20,13 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { MaterialItemRow } from '@/components/quote/material-item-row'
 import type { MaterialList, MaterialItem } from '@/lib/types'
-import { Plus, Save, ArrowLeft, Loader2, Package, Trash2 } from 'lucide-react'
+import {
+  DEFAULT_MATERIAL_UNIT,
+  normalizeStoredQuantity,
+  QUANTITY_HELP_TEXT,
+  resolveMaterialUnit,
+} from '@/lib/material-units'
+import { Plus, Save, ArrowLeft, Loader2, Package } from 'lucide-react'
 
 interface MaterialListFormProps {
   initialData?: MaterialList
@@ -41,16 +47,20 @@ export function MaterialListForm({ initialData }: MaterialListFormProps) {
       ? initialData.items.map((it) => ({
           id: it.id,
           name: it.name,
-          quantity: it.quantity,
+          quantity: normalizeStoredQuantity(Number(it.quantity), 1),
+          unit: resolveMaterialUnit(it.unit),
           unitPrice: it.unitPrice,
         }))
-      : [{ id: '1', name: '', quantity: 1, unitPrice: 0 }]
+      : [{ id: '1', name: '', quantity: 1, unit: DEFAULT_MATERIAL_UNIT, unitPrice: 0 }]
   )
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
   const addRow = () => {
-    setItems([...items, { id: Date.now().toString(), name: '', quantity: 1, unitPrice: 0 }])
+    setItems([
+      ...items,
+      { id: Date.now().toString(), name: '', quantity: 1, unit: DEFAULT_MATERIAL_UNIT, unitPrice: 0 },
+    ])
   }
 
   const updateRow = (index: number, item: MaterialItem) => {
@@ -74,7 +84,8 @@ export function MaterialListForm({ initialData }: MaterialListFormProps) {
       .filter((it) => it.name.trim() !== '')
       .map((it) => ({
         name: it.name.trim(),
-        quantity: Math.max(1, Number(it.quantity) || 1),
+        quantity: normalizeStoredQuantity(Number(it.quantity), 1),
+        unit: resolveMaterialUnit(it.unit),
         unitPrice: includePrices ? Math.max(0, Number(it.unitPrice) || 0) : 0,
       }))
     if (payloadItems.length === 0) {
@@ -221,62 +232,30 @@ export function MaterialListForm({ initialData }: MaterialListFormProps) {
           </Button>
         </CardHeader>
         <CardContent className="space-y-3">
+          <p className="text-xs text-muted-foreground -mt-1 mb-2">{QUANTITY_HELP_TEXT}</p>
           <div className="hidden sm:grid grid-cols-12 gap-2 text-xs font-semibold text-muted-foreground px-1">
-            <span className="col-span-5">Descrição</span>
-            <span className="col-span-2">Qtd</span>
+            <span className={includePrices ? 'col-span-3' : 'col-span-5'}>Descrição</span>
+            <span className={includePrices ? 'col-span-3' : 'col-span-3'}>Quantidade</span>
+            <span className={includePrices ? 'col-span-2' : 'col-span-3'}>Unidade</span>
             {includePrices && (
               <>
                 <span className="col-span-2">Valor unit.</span>
-                <span className="col-span-2 text-right">Total</span>
+                <span className="col-span-1 text-right">Total</span>
               </>
             )}
             <span className="col-span-1" />
           </div>
-          {items.map((item, index) =>
-            includePrices ? (
-              <MaterialItemRow
-                key={item.id}
-                item={item}
-                onChange={(it) => updateRow(index, it)}
-                onRemove={() => removeRow(index)}
-              />
-            ) : (
-              <div key={item.id} className="grid grid-cols-12 gap-2 items-center">
-                <div className="col-span-12 sm:col-span-8">
-                  <Input
-                    placeholder="Descrição do material"
-                    value={item.name}
-                    onChange={(e) => updateRow(index, { ...item, name: e.target.value })}
-                  />
-                </div>
-                <div className="col-span-10 sm:col-span-3">
-                  <Input
-                    type="number"
-                    min={1}
-                    placeholder="Qtd"
-                    value={item.quantity}
-                    onChange={(e) =>
-                      updateRow(index, {
-                        ...item,
-                        quantity: e.target.value === '' ? 1 : Number(e.target.value),
-                      })
-                    }
-                  />
-                </div>
-                <div className="col-span-2 sm:col-span-1 flex justify-end">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeRow(index)}
-                    className="text-muted-foreground hover:text-destructive"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            )
-          )}
+          {items.map((item, index) => (
+            <MaterialItemRow
+              key={item.id}
+              item={item}
+              showPrices={includePrices}
+              isLastRow={index === items.length - 1}
+              onAddLine={addRow}
+              onChange={(it) => updateRow(index, it)}
+              onRemove={() => removeRow(index)}
+            />
+          ))}
         </CardContent>
       </Card>
     </form>

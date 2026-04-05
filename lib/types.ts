@@ -25,6 +25,8 @@ export interface MaterialItem {
   id: string
   name: string
   quantity: number
+  /** Chave de unidade (ex.: unidade, metro, m2) — ver MATERIAL_UNITS */
+  unit: string
   unitPrice: number
 }
 
@@ -33,6 +35,7 @@ export interface MaterialListItem {
   id: string
   name: string
   quantity: number
+  unit: string
   unitPrice: number
 }
 

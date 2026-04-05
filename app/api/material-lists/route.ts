@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDbUserId, getOwnerDbUserIds } from '@/lib/user-mapping'
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log'
+import { resolveMaterialQuantity, resolveMaterialUnit } from '@/lib/material-units'
 
 export async function GET(request: NextRequest) {
   try {
@@ -33,6 +34,7 @@ export async function GET(request: NextRequest) {
             id: true,
             name: true,
             quantity: true,
+            unit: true,
             unitPrice: true,
           },
           orderBy: { id: 'asc' },
@@ -75,7 +77,8 @@ export async function POST(request: NextRequest) {
       .filter((it: any) => it && String(it.name ?? '').trim() !== '')
       .map((it: any) => ({
         name: String(it.name).trim(),
-        quantity: Math.max(1, Number(it.quantity) || 1),
+        quantity: resolveMaterialQuantity(it.quantity),
+        unit: resolveMaterialUnit(it.unit),
         unitPrice: Math.max(0, Number(it.unitPrice) || 0),
       }))
 
@@ -126,6 +129,7 @@ export async function POST(request: NextRequest) {
             create: validItems.map((it) => ({
               name: it.name,
               quantity: it.quantity,
+              unit: it.unit,
               unitPrice: it.unitPrice,
             })),
           },
