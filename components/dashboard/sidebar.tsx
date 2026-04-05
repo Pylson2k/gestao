@@ -26,6 +26,7 @@ import {
   Calendar,
   CreditCard,
   AlertTriangle,
+  Package,
 } from 'lucide-react'
 import { useState, useEffect, useMemo } from 'react'
 import { useCompany } from '@/contexts/company-context'
@@ -64,6 +65,7 @@ const navigation = [
   { name: 'Faturamento', href: '/dashboard/faturamento', icon: DollarSign, showBadge: false },
   { name: 'Pagamentos', href: '/dashboard/pagamentos', icon: CreditCard, showBadge: false },
   { name: 'Inadimplentes', href: '/dashboard/inadimplentes', icon: AlertTriangle, showBadge: false },
+  { name: 'Listas de materiais', href: '/dashboard/listas-materiais', icon: Package, showBadge: false },
   { name: 'Clientes', href: '/dashboard/clientes', icon: UserCircle, showBadge: false },
   { name: 'Servicos', href: '/dashboard/servicos', icon: Wrench, showBadge: false },
   { name: 'Funcionarios', href: '/dashboard/funcionarios', icon: Users, showBadge: false },

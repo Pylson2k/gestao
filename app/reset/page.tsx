@@ -54,7 +54,7 @@ export default function ResetPage() {
       setMessage('Informe a chave administrativa (mesmo valor de ADMIN_OPERATIONS_SECRET no servidor).')
       return
     }
-    if (!confirm('⚠️ ATENÇÃO: Esta ação irá DELETAR TODOS os dados do banco (orçamentos, despesas, clientes, funcionários, serviços, fechamentos e logs de auditoria), mantendo APENAS os usuários.\n\nEsta ação NÃO PODE ser desfeita!\n\nDeseja continuar?')) {
+    if (!confirm('⚠️ ATENÇÃO: Esta ação irá DELETAR TODOS os dados do banco (orçamentos, listas de materiais, despesas, clientes, funcionários, serviços, fechamentos e logs de auditoria), mantendo APENAS os usuários.\n\nEsta ação NÃO PODE ser desfeita!\n\nDeseja continuar?')) {
       return
     }
 
@@ -80,6 +80,7 @@ export default function ResetPage() {
           `🔧 ${data.deleted.services} serviços`,
           `👥 ${data.deleted.employees} funcionários`,
           `📄 ${data.deleted.quotes} orçamentos`,
+          `📦 ${data.deleted.materialLists ?? 0} listas de materiais`,
           `👤 ${data.deleted.clients} clientes`,
           `⚙️ ${data.deleted.companySettings} configurações`,
         ].join('\n')
@@ -182,6 +183,7 @@ export default function ResetPage() {
                   <p className="font-semibold">Será deletado:</p>
                   <ul className="list-disc list-inside space-y-1 ml-2">
                     <li>Todos os orçamentos</li>
+                    <li>Todas as listas de materiais</li>
                     <li>Todas as despesas</li>
                     <li>Todos os clientes</li>
                     <li>Todos os funcionários</li>

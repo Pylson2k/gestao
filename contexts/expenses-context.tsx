@@ -1,10 +1,10 @@
 'use client'
 
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect, useRef } from 'react'
-
-const STALE_MS = 10 * 60 * 1000
 import { useAuth } from './auth-context'
 import type { Expense, ExpenseCategory } from '@/lib/types'
+
+const STALE_MS = 10 * 60 * 1000
 
 interface ExpensesContextType {
   expenses: Expense[]

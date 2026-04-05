@@ -25,6 +25,7 @@ model User {
   updatedAt         DateTime @updatedAt
   
   quotes            Quote[]
+  materialLists     MaterialList[]
   expenses          Expense[]
   auditLogs         AuditLog[]
   employees         Employee[]
@@ -44,7 +45,8 @@ model Client {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
-  quotes    Quote[]
+  quotes         Quote[]
+  materialLists  MaterialList[]
   
   @@map("clients")
 }
@@ -100,6 +102,39 @@ model MaterialItem {
   quote     Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
   
   @@map("material_items")
+}
+
+/// Lista de materiais independente de orçamento (documento para o cliente comprar itens).
+model MaterialList {
+  id             String   @id @default(cuid())
+  number         String   @unique
+  userId         String
+  clientId       String
+  title          String?
+  observations   String?  @db.Text
+  /// Quando true, o PDF inclui colunas de valores e subtotal.
+  includePrices  Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  client  Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  items   MaterialListItem[]
+
+  @@index([userId, createdAt])
+  @@map("material_lists")
+}
+
+model MaterialListItem {
+  id             String   @id @default(cuid())
+  materialListId String
+  name           String
+  quantity       Int
+  unitPrice      Float    @default(0)
+
+  materialList MaterialList @relation(fields: [materialListId], references: [id], onDelete: Cascade)
+
+  @@map("material_list_items")
 }
 
 model CompanySettings {

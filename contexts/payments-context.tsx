@@ -1,11 +1,11 @@
 'use client'
 
 import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react'
-
-const STALE_MS = 10 * 60 * 1000
 import type { Payment } from '@/lib/types'
 import { useAuth } from './auth-context'
 import { useQuotes } from './quotes-context'
+
+const STALE_MS = 10 * 60 * 1000
 
 interface PaymentsContextType {
   payments: Payment[]

@@ -32,6 +32,7 @@ export async function POST(request: Request) {
       services: await prisma.service.count(),
       employees: await prisma.employee.count(),
       quotes: await prisma.quote.count(),
+      materialLists: await prisma.materialList.count(),
       clients: await prisma.client.count(),
       companySettings: await prisma.companySettings.count(),
       users: await prisma.user.count(),
@@ -59,6 +60,9 @@ export async function POST(request: Request) {
     
     // 7. Quotes (referencia User e Client)
     await prisma.quote.deleteMany({})
+
+    // 7b. Listas de materiais (referencia User e Client)
+    await prisma.materialList.deleteMany({})
     
     // 8. Clients
     await prisma.client.deleteMany({})
@@ -95,6 +99,7 @@ export async function POST(request: Request) {
         services: countsBefore.services,
         employees: countsBefore.employees,
         quotes: countsBefore.quotes,
+        materialLists: countsBefore.materialLists,
         clients: countsBefore.clients,
         companySettings: countsBefore.companySettings,
       },

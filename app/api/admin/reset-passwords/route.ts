@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { hash } from 'bcryptjs'
-import { prisma } from '@/lib/prisma'
 import { consolidateDataToSingleOwner } from '@/lib/single-owner-migration'
 
 export async function POST(request: Request) {
@@ -24,6 +23,7 @@ export async function POST(request: Request) {
       )
     }
 
+    const { prisma } = await import('@/lib/prisma')
     const hashedPassword = await hash('gustavo123', 10)
 
     await prisma.user.upsert({

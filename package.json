@@ -15,6 +15,7 @@
     "postinstall": "prisma generate",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
+    "db:sync": "node scripts/setup-env.cjs && prisma db push",
     "db:primeiro-uso": "tsx scripts/primeiro-uso.ts",
     "db:check": "tsx scripts/test-database.ts",
     "db:migrate": "prisma migrate dev",

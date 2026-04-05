@@ -1,8 +1,6 @@
 'use client'
 
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
-
-const STALE_MS = 10 * 60 * 1000
 import { useAuth } from '@/contexts/auth-context'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -18,6 +16,8 @@ import {
 } from '@/components/ui/select'
 import { Shield, Calendar, Filter, AlertTriangle, CheckCircle, XCircle, Edit, Trash2, Plus, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
+
+const STALE_MS = 10 * 60 * 1000
 
 interface AuditLog {
   id: string
@@ -49,6 +49,11 @@ const actionLabels: Record<string, string> = {
   toggle_quote_delinquency_list: 'Lista de Inadimplentes',
   view_quote: 'Visualizar Orçamento',
   download_quote_pdf: 'Baixar PDF',
+  download_materials_list_pdf: 'PDF lista (orçamento)',
+  create_material_list: 'Criar lista de materiais',
+  update_material_list: 'Atualizar lista de materiais',
+  delete_material_list: 'Excluir lista de materiais',
+  download_material_list_pdf: 'PDF lista de materiais',
   send_quote_whatsapp: 'Enviar WhatsApp',
   // Despesas
   create_expense: 'Criar Despesa',
@@ -96,6 +101,11 @@ const actionColors: Record<string, string> = {
   toggle_quote_delinquency_list: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
   view_quote: 'bg-cyan-500/10 text-cyan-500 border-cyan-500/20',
   download_quote_pdf: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20',
+  download_materials_list_pdf: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20',
+  create_material_list: 'bg-green-500/10 text-green-500 border-green-500/20',
+  update_material_list: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
+  delete_material_list: 'bg-red-500/10 text-red-500 border-red-500/20',
+  download_material_list_pdf: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20',
   send_quote_whatsapp: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
   // Despesas
   create_expense: 'bg-green-500/10 text-green-500 border-green-500/20',
@@ -143,6 +153,11 @@ const actionIcons: Record<string, any> = {
   toggle_quote_delinquency_list: AlertTriangle,
   view_quote: CheckCircle,
   download_quote_pdf: CheckCircle,
+  download_materials_list_pdf: CheckCircle,
+  create_material_list: Plus,
+  update_material_list: Edit,
+  delete_material_list: Trash2,
+  download_material_list_pdf: CheckCircle,
   send_quote_whatsapp: CheckCircle,
   // Despesas
   create_expense: Plus,
@@ -379,6 +394,7 @@ export default function AuditoriaPage() {
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="quote">Orçamento</SelectItem>
+                  <SelectItem value="material_list">Lista de materiais</SelectItem>
                   <SelectItem value="expense">Despesa</SelectItem>
                   <SelectItem value="client">Cliente</SelectItem>
                   <SelectItem value="employee">Funcionário</SelectItem>
@@ -469,6 +485,7 @@ export default function AuditoriaPage() {
                         </Badge>
                         <Badge variant="outline" className="text-xs font-medium px-2 py-1">
                           {log.entityType === 'quote' ? 'Orçamento' : 
+                           log.entityType === 'material_list' ? 'Lista de materiais' :
                            log.entityType === 'expense' ? 'Despesa' :
                            log.entityType === 'client' ? 'Cliente' :
                            log.entityType === 'employee' ? 'Funcionário' :

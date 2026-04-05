@@ -1,10 +1,10 @@
 'use client'
 
 import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react'
-
-const STALE_MS = 10 * 60 * 1000
 import type { CompanySettings } from '@/lib/types'
 import { useAuth } from './auth-context'
+
+const STALE_MS = 10 * 60 * 1000
 
 const defaultSettings: CompanySettings = {
   name: 'ServiPro',

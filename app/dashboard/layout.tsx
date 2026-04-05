@@ -9,6 +9,7 @@ import { CompanyProvider } from '@/contexts/company-context'
 import { ExpensesProvider } from '@/contexts/expenses-context'
 import { EmployeesProvider } from '@/contexts/employees-context'
 import { ClientsProvider } from '@/contexts/clients-context'
+import { MaterialListsProvider } from '@/contexts/material-lists-context'
 import { ServicesProvider } from '@/contexts/services-context'
 import { CashClosingsProvider } from '@/contexts/cash-closings-context'
 import { PaymentsProvider } from '@/contexts/payments-context'
@@ -57,13 +58,15 @@ export default function DashboardLayout({
         <ExpensesProvider>
           <EmployeesProvider>
             <ClientsProvider>
-              <ServicesProvider>
-                <CashClosingsProvider>
-                  <PaymentsProvider>
-                    <DashboardContent>{children}</DashboardContent>
-                  </PaymentsProvider>
-                </CashClosingsProvider>
-              </ServicesProvider>
+              <MaterialListsProvider>
+                <ServicesProvider>
+                  <CashClosingsProvider>
+                    <PaymentsProvider>
+                      <DashboardContent>{children}</DashboardContent>
+                    </PaymentsProvider>
+                  </CashClosingsProvider>
+                </ServicesProvider>
+              </MaterialListsProvider>
             </ClientsProvider>
           </EmployeesProvider>
         </ExpensesProvider>

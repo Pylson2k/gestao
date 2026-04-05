@@ -1,8 +1,6 @@
 'use client'
 
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
-
-const STALE_MS = 10 * 60 * 1000
 import { useServices } from '@/contexts/services-context'
 import { useAuth } from '@/contexts/auth-context'
 import { Button } from '@/components/ui/button'
@@ -30,6 +28,8 @@ import { Plus, Trash2, Edit, Wrench, CheckCircle, XCircle, DollarSign, Download 
 import type { Service } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { exportServicesToCSV } from '@/lib/export-utils'
+
+const STALE_MS = 10 * 60 * 1000
 
 const unitOptions = [
   { value: 'unidade', label: 'Unidade' },

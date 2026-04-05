@@ -35,12 +35,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Exportar na ordem das dependências (para documentação) e com todos os campos
-    const [clients, quotes, payments, expenses, employees, services, companySettings, cashClosings] = await Promise.all([
+    const [clients, quotes, payments, expenses, employees, services, companySettings, cashClosings, materialLists] =
+      await Promise.all([
       prisma.client.findMany({
         where: {
-          quotes: {
-            some: { userId: { in: ownerIds } },
-          },
+          OR: [
+            { quotes: { some: { userId: { in: ownerIds } } } },
+            { materialLists: { some: { userId: { in: ownerIds } } } },
+          ],
         },
       }),
       prisma.quote.findMany({
@@ -69,10 +71,14 @@ export async function GET(request: NextRequest) {
       prisma.cashClosing.findMany({
         where: { userId: { in: ownerIds } },
       }),
+      prisma.materialList.findMany({
+        where: { userId: { in: ownerIds } },
+        include: { items: true },
+      }),
     ])
 
     const backup = {
-      version: 1,
+      version: 2,
       exportedAt: new Date().toISOString(),
       clients,
       quotes,
@@ -82,6 +88,7 @@ export async function GET(request: NextRequest) {
       services,
       companySettings,
       cashClosings,
+      materialLists,
     }
 
     return NextResponse.json(backup)

@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
       services = [],
       companySettings = [],
       cashClosings = [],
+      materialLists = [],
     } = body
 
     if (!Array.isArray(clients) || !Array.isArray(quotes)) {
@@ -50,11 +51,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Impedir restauração de backup vazio (evita zerar os dados por engano)
-    if (clients.length === 0 && quotes.length === 0) {
+    const listCount = Array.isArray(materialLists) ? materialLists.length : 0
+    if (clients.length === 0 && quotes.length === 0 && listCount === 0) {
       return NextResponse.json(
         {
           error:
-            'Backup vazio. Este arquivo não tem clientes nem orçamentos. Restaurar apagaria todos os seus dados. Use um arquivo de backup que contenha dados.',
+            'Backup vazio. Este arquivo não tem clientes, orçamentos nem listas de materiais. Restaurar apagaria todos os seus dados. Use um arquivo de backup que contenha dados.',
         },
         { status: 400 }
       )
@@ -80,6 +82,9 @@ export async function POST(request: NextRequest) {
       where: { quote: { userId: { in: ownerIds } } },
     })
     await prisma.quote.deleteMany({
+      where: { userId: { in: ownerIds } },
+    })
+    await prisma.materialList.deleteMany({
       where: { userId: { in: ownerIds } },
     })
     const clientIdsFromBackup = clients.map((c: any) => c.id)
@@ -167,6 +172,32 @@ export async function POST(request: NextRequest) {
       await prisma.materialItem.createMany({
         data: materialItems,
         skipDuplicates: true,
+      })
+    }
+
+    // 4b. Listas de materiais independentes
+    const safeMaterialLists = Array.isArray(materialLists) ? materialLists : []
+    for (const ml of safeMaterialLists) {
+      await prisma.materialList.create({
+        data: {
+          id: ml.id,
+          number: ml.number,
+          userId: ml.userId,
+          clientId: ml.clientId,
+          title: ml.title ?? null,
+          observations: ml.observations ?? null,
+          includePrices: Boolean(ml.includePrices),
+          createdAt: toDate(ml.createdAt),
+          updatedAt: ml.updatedAt ? toDate(ml.updatedAt) : toDate(ml.createdAt),
+          items: {
+            create: (ml.items || []).map((it: any) => ({
+              id: it.id,
+              name: it.name,
+              quantity: Number(it.quantity),
+              unitPrice: Number(it.unitPrice ?? 0),
+            })),
+          },
+        },
       })
     }
 
@@ -289,6 +320,7 @@ export async function POST(request: NextRequest) {
       restored: {
         clients: clients.length,
         quotes: quotes.length,
+        materialLists: safeMaterialLists.length,
         payments: payments.length,
         expenses: expenses.length,
         employees: employees.length,

@@ -1,10 +1,10 @@
 'use client'
 
 import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react'
-
-const STALE_MS = 10 * 60 * 1000 // 10 min — refetch no focus só se passou mais que isso
 import type { Quote, Client, ServiceItem, MaterialItem, Payment } from '@/lib/types'
 import { useAuth } from './auth-context'
+
+const STALE_MS = 10 * 60 * 1000 // 10 min — refetch no focus só se passou mais que isso
 
 function mapPaymentsFromApi(payments: any[] | undefined): Payment[] | undefined {
   if (!payments) return undefined

@@ -23,9 +23,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Switch } from '@/components/ui/switch'
 import {
   generateQuotePDF,
+  generateMaterialsListPDF,
   downloadPDF,
-  generateWhatsAppMessage,
-  openWhatsApp,
   openViewWindow,
 } from '@/lib/pdf-generator'
 import { cn } from '@/lib/utils'
@@ -49,6 +48,7 @@ import {
   DollarSign,
   CreditCard,
   AlertTriangle,
+  Package,
 } from 'lucide-react'
 
 const statusConfig = {
@@ -156,6 +156,62 @@ export default function QuoteDetailPage({
     } catch (error) {
       console.error('Erro ao baixar PDF:', error)
       alert('Erro ao baixar PDF. Tente visualizar o orçamento e usar a opção de impressão do navegador.')
+    }
+  }
+
+  const handleDownloadMaterialsListPDF = async () => {
+    if (!quote.materials.length) {
+      alert('Este orçamento não possui materiais cadastrados.')
+      return
+    }
+    try {
+      const html = generateMaterialsListPDF(quote, companySettings)
+      const filename = `lista-materiais-${quote.number.replace(/\s+/g, '-')}.pdf`
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+
+      if (isMobile) {
+        const viewWindow = window.open('', '_blank')
+        if (viewWindow) {
+          viewWindow.document.write(html)
+          viewWindow.document.close()
+          setTimeout(() => {
+            if (viewWindow && !viewWindow.closed) {
+              viewWindow.focus()
+              try {
+                downloadPDF(html, filename).catch(() => {})
+              } catch {}
+            }
+          }, 500)
+        } else {
+          alert('Por favor, permita pop-ups para baixar o PDF')
+        }
+      } else {
+        await downloadPDF(html, filename)
+      }
+
+      try {
+        const userId = sessionStorage.getItem('servipro_user')
+          ? JSON.parse(sessionStorage.getItem('servipro_user')!).id
+          : null
+        if (userId) {
+          await fetch('/api/audit/action', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-user-id': userId,
+            },
+            body: JSON.stringify({
+              action: 'download_materials_list_pdf',
+              entityType: 'quote',
+              entityId: quote.id,
+              description: `PDF lista de materiais do orçamento ${quote.number} baixado`,
+            }),
+          })
+        }
+      } catch {}
+    } catch (error) {
+      console.error('Erro ao baixar lista de materiais:', error)
+      alert('Erro ao baixar PDF da lista de materiais. Tente novamente ou use impressão do navegador.')
     }
   }
 
@@ -440,6 +496,20 @@ Aguardo sua confirmação!`
           >
             <Download className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
             Baixar PDF
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleDownloadMaterialsListPDF}
+            disabled={quote.materials.length === 0}
+            title={
+              quote.materials.length === 0
+                ? 'Adicione materiais ao orçamento para gerar a lista'
+                : 'PDF apenas com cliente e materiais'
+            }
+            className="rounded-xl border-2 hover:bg-accent/50 min-h-[48px] text-base sm:text-sm px-6 py-3 sm:py-2 touch-manipulation disabled:opacity-50"
+          >
+            <Package className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
+            Lista de materiais
           </Button>
           <Button 
             onClick={handleWhatsApp} 

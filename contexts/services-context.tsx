@@ -1,10 +1,10 @@
 'use client'
 
 import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react'
-
-const STALE_MS = 10 * 60 * 1000
 import { useAuth } from './auth-context'
 import type { Service } from '@/lib/types'
+
+const STALE_MS = 10 * 60 * 1000
 
 interface ServicesContextType {
   services: Service[]

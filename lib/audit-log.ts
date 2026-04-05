@@ -15,6 +15,11 @@ export type AuditAction =
   | 'toggle_quote_delinquency_list'
   | 'view_quote'
   | 'download_quote_pdf'
+  | 'download_materials_list_pdf'
+  | 'create_material_list'
+  | 'update_material_list'
+  | 'delete_material_list'
+  | 'download_material_list_pdf'
   | 'send_quote_whatsapp'
   // Despesas
   | 'create_expense'
@@ -54,7 +59,7 @@ export type AuditAction =
   | 'export_csv'
   | 'export_pdf'
 
-export type EntityType = 'quote' | 'expense' | 'client' | 'employee' | 'service' | 'cash_closing' | 'payment' | 'company_settings' | 'user' | 'export'
+export type EntityType = 'quote' | 'material_list' | 'expense' | 'client' | 'employee' | 'service' | 'cash_closing' | 'payment' | 'company_settings' | 'user' | 'export'
 
 interface AuditLogData {
   userId: string

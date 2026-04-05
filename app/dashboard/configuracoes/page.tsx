@@ -33,7 +33,10 @@ export default function SettingsPage() {
   const [backupError, setBackupError] = useState<string | null>(null)
   const [restoreResult, setRestoreResult] = useState<{ success: boolean; message: string } | null>(null)
   const [restoreConfirmOpen, setRestoreConfirmOpen] = useState(false)
-  const [pendingRestore, setPendingRestore] = useState<{ text: string; counts: { clients: number; quotes: number; payments: number; expenses: number } } | null>(null)
+  const [pendingRestore, setPendingRestore] = useState<{
+    text: string
+    counts: { clients: number; quotes: number; materialLists: number; payments: number; expenses: number }
+  } | null>(null)
 
   // Atualizar formData quando settings mudarem
   useEffect(() => {
@@ -192,16 +195,18 @@ export default function SettingsPage() {
       }
       const clients = body.clients?.length ?? 0
       const quotes = body.quotes?.length ?? 0
+      const materialLists = body.materialLists?.length ?? 0
       const payments = body.payments?.length ?? 0
       const expenses = body.expenses?.length ?? 0
-      if (clients === 0 && quotes === 0) {
+      if (clients === 0 && quotes === 0 && materialLists === 0) {
         setRestoreResult({
           success: false,
-          message: 'Este backup está vazio (sem clientes e orçamentos). Restaurar apagaria todos os dados. Use um arquivo que contenha dados.',
+          message:
+            'Este backup está vazio (sem clientes, orçamentos nem listas de materiais). Restaurar apagaria todos os dados. Use um arquivo que contenha dados.',
         })
         return
       }
-      setPendingRestore({ text, counts: { clients, quotes, payments, expenses } })
+      setPendingRestore({ text, counts: { clients, quotes, materialLists, payments, expenses } })
       setRestoreConfirmOpen(true)
     } catch (e: any) {
       setRestoreResult({ success: false, message: e?.message || 'Erro ao processar arquivo. Verifique se é um JSON válido.' })
@@ -227,7 +232,7 @@ export default function SettingsPage() {
       }
       setRestoreResult({
         success: true,
-        message: `Restaurado: ${data.restored?.clients ?? 0} clientes, ${data.restored?.quotes ?? 0} orçamentos e demais dados. Recarregue a página para ver as alterações.`,
+        message: `Restaurado: ${data.restored?.clients ?? 0} clientes, ${data.restored?.quotes ?? 0} orçamentos, ${data.restored?.materialLists ?? 0} listas de materiais e demais dados. Recarregue a página para ver as alterações.`,
       })
     } catch (e: any) {
       setRestoreResult({ success: false, message: e?.message || 'Erro ao restaurar backup' })
@@ -294,6 +299,7 @@ export default function SettingsPage() {
                     <>
                       <li>{pendingRestore.counts.clients} clientes</li>
                       <li>{pendingRestore.counts.quotes} orçamentos</li>
+                      <li>{pendingRestore.counts.materialLists} listas de materiais</li>
                       <li>{pendingRestore.counts.payments} pagamentos</li>
                       <li>{pendingRestore.counts.expenses} despesas</li>
                     </>

@@ -186,6 +186,7 @@ export async function DELETE(
         _count: {
           select: {
             quotes: true,
+            materialLists: true,
           },
         },
       },
@@ -202,6 +203,13 @@ export async function DELETE(
     if (client._count.quotes > 0) {
       return NextResponse.json(
         { error: 'Nao e possivel excluir cliente com orcamentos associados' },
+        { status: 400 }
+      )
+    }
+
+    if (client._count.materialLists > 0) {
+      return NextResponse.json(
+        { error: 'Nao e possivel excluir cliente com listas de materiais associadas' },
         { status: 400 }
       )
     }

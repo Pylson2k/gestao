@@ -28,6 +28,28 @@ export interface MaterialItem {
   unitPrice: number
 }
 
+/** Item de uma lista de materiais independente de orçamento */
+export interface MaterialListItem {
+  id: string
+  name: string
+  quantity: number
+  unitPrice: number
+}
+
+/** Documento de lista de materiais para o cliente (sem vínculo com orçamento) */
+export interface MaterialList {
+  id: string
+  number: string
+  userId: string
+  client: Client
+  title?: string | null
+  observations?: string | null
+  includePrices: boolean
+  items: MaterialListItem[]
+  createdAt: Date
+  updatedAt: Date
+}
+
 export interface Quote {
   id: string
   number: string

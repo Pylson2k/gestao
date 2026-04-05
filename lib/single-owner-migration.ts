@@ -19,6 +19,7 @@ export async function consolidateDataToSingleOwner(prisma: PrismaClient): Promis
 
   for (const { id } of others) {
     await prisma.quote.updateMany({ where: { userId: id }, data: { userId: owner.id } })
+    await prisma.materialList.updateMany({ where: { userId: id }, data: { userId: owner.id } })
     await prisma.expense.updateMany({ where: { userId: id }, data: { userId: owner.id } })
     await prisma.auditLog.updateMany({ where: { userId: id }, data: { userId: owner.id } })
     await prisma.employee.updateMany({ where: { userId: id }, data: { userId: owner.id } })
