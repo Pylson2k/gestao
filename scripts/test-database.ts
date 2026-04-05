@@ -25,12 +25,15 @@ async function testConnection() {
 
     // Verificar se é uma connection string de exemplo
     const dbUrl = process.env.DATABASE_URL
-    if (dbUrl.includes('johndoe') || dbUrl.includes('randompassword') || dbUrl.includes('localhost:5432/mydb')) {
-      console.error('❌ Erro: DATABASE_URL parece ser um exemplo!')
-      console.log('\n📝 Você precisa atualizar o arquivo .env com sua connection string real do Neon:')
-      console.log('   1. Acesse https://neon.tech')
-      console.log('   2. Copie a connection string do seu projeto')
-      console.log('   3. Cole no arquivo .env substituindo o valor atual\n')
+    if (
+      dbUrl.includes('johndoe') ||
+      dbUrl.includes('randompassword') ||
+      dbUrl.includes('localhost:5432/mydb') ||
+      dbUrl.includes('usuario:senha@')
+    ) {
+      console.error('❌ Erro: DATABASE_URL ainda é exemplo (não é uma URL real).')
+      console.log('\n📝 Cole no .env a URI que o painel do banco mostra (Neon: Connection details → URI).')
+      console.log('   Não deixe "usuario:senha" — use o usuário e a senha que o provedor gerou.\n')
       process.exit(1)
     }
 
@@ -106,8 +109,9 @@ async function testConnection() {
       console.log('   - Verifique se a DATABASE_URL está correta')
       console.log('   - Verifique se o servidor de banco está rodando')
       console.log('   - Verifique se as credenciais estão corretas\n')
-    } else if (error.message.includes('P1000')) {
-      console.log('💡 Dica: Verifique se o banco de dados existe\n')
+    } else if (error.message.includes('P1000') || error.code === 'P1000') {
+      console.log('💡 Autenticação falhou: usuário ou senha na DATABASE_URL estão incorretos.')
+      console.log('   No Neon, gere de novo a connection string e cole inteira no .env.\n')
     } else if (error.message.includes('P1002')) {
       console.log('💡 Dica: Verifique se o servidor está acessível e a porta está correta\n')
     }

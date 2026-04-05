@@ -3,6 +3,7 @@
  * Execute: npx tsx scripts/setup-database.ts
  */
 
+import 'dotenv/config'
 import { PrismaClient } from '@prisma/client'
 import { hash } from 'bcryptjs'
 import { consolidateDataToSingleOwner } from '../lib/single-owner-migration'
