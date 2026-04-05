@@ -6,7 +6,8 @@ export async function POST(request: Request) {
     const { searchParams } = new URL(request.url)
     const secretKey = searchParams.get('key')
     
-    if (secretKey !== 'sinai2026reset') {
+    const expected = process.env.ADMIN_OPERATIONS_SECRET
+    if (!expected || secretKey !== expected) {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 401 })
     }
 

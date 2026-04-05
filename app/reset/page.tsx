@@ -3,19 +3,33 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { AlertTriangle, RefreshCw, Trash2, Shield } from 'lucide-react'
 
 export default function ResetPage() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [message, setMessage] = useState('')
   const [resetType, setResetType] = useState<'passwords' | 'database' | null>(null)
+  const [adminSecret, setAdminSecret] = useState('')
+
+  const adminKeyQuery = () => {
+    const key = adminSecret.trim()
+    return key ? `?key=${encodeURIComponent(key)}` : ''
+  }
 
   const handleResetPasswords = async () => {
+    if (!adminSecret.trim()) {
+      setResetType('passwords')
+      setStatus('error')
+      setMessage('Informe a chave administrativa (mesmo valor de ADMIN_OPERATIONS_SECRET no servidor).')
+      return
+    }
     setResetType('passwords')
     setStatus('loading')
     setMessage('')
     try {
-      const response = await fetch('/api/admin/reset-passwords?key=sinai2026reset', {
+      const response = await fetch(`/api/admin/reset-passwords${adminKeyQuery()}`, {
         method: 'POST',
       })
       const data = await response.json()
@@ -34,6 +48,12 @@ export default function ResetPage() {
   }
 
   const handleResetDatabase = async () => {
+    if (!adminSecret.trim()) {
+      setResetType('database')
+      setStatus('error')
+      setMessage('Informe a chave administrativa (mesmo valor de ADMIN_OPERATIONS_SECRET no servidor).')
+      return
+    }
     if (!confirm('⚠️ ATENÇÃO: Esta ação irá DELETAR TODOS os dados do banco (orçamentos, despesas, clientes, funcionários, serviços, fechamentos e logs de auditoria), mantendo APENAS os usuários.\n\nEsta ação NÃO PODE ser desfeita!\n\nDeseja continuar?')) {
       return
     }
@@ -46,7 +66,7 @@ export default function ResetPage() {
     setStatus('loading')
     setMessage('')
     try {
-      const response = await fetch('/api/admin/reset-database?key=sinai2026reset', {
+      const response = await fetch(`/api/admin/reset-database${adminKeyQuery()}`, {
         method: 'POST',
       })
       const data = await response.json()
@@ -86,6 +106,26 @@ export default function ResetPage() {
           </div>
           <p className="text-muted-foreground">Ferramentas administrativas do sistema</p>
         </div>
+
+        <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-base">Chave administrativa</CardTitle>
+            <CardDescription>
+              Deve ser igual à variável <code className="text-xs bg-muted px-1 rounded">ADMIN_OPERATIONS_SECRET</code> no servidor (não fica salva nesta página).
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Label htmlFor="admin-secret">Segredo</Label>
+            <Input
+              id="admin-secret"
+              type="password"
+              autoComplete="off"
+              value={adminSecret}
+              onChange={(e) => setAdminSecret(e.target.value)}
+              placeholder="Cole o segredo configurado no .env / Vercel"
+            />
+          </CardContent>
+        </Card>
 
         {/* Reset Senhas */}
         <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-lg">

@@ -1,5 +1,14 @@
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Evita que o Next use outra pasta (ex.: usuário/OneDrive) como raiz por causa de lockfiles fora do projeto
+  turbopack: {
+    root: __dirname,
+  },
   typescript: {
     ignoreBuildErrors: false,
   },
