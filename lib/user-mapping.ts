@@ -11,7 +11,7 @@ export const USER_MAPPING = {
 /**
  * Retorna o id no banco do único usuário autorizado (para filtros de dados).
  */
-export async function getPartnersDbUserIds(): Promise<string[]> {
+export async function getOwnerDbUserIds(): Promise<string[]> {
   if (!process.env.DATABASE_URL) {
     return [OWNER_SESSION_USER_ID]
   }

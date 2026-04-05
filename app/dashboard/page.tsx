@@ -91,17 +91,11 @@ export default function DashboardPage() {
     })
 
     const ownerVales = expensesInPeriod
-      .filter(
-        (expense) =>
-          expense.category === 'vale_gustavo' || expense.category === 'vale_giovanni'
-      )
+      .filter((expense) => expense.category === 'vale_gustavo')
       .reduce((sum, expense) => sum + expense.amount, 0)
 
     const otherExpenses = expensesInPeriod
-      .filter(
-        (expense) =>
-          expense.category !== 'vale_gustavo' && expense.category !== 'vale_giovanni'
-      )
+      .filter((expense) => expense.category !== 'vale_gustavo')
       .reduce((sum, expense) => sum + expense.amount, 0)
 
     return {

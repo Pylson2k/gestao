@@ -177,7 +177,7 @@ model CashClosing {
 model Expense {
   id          String   @id @default(cuid())
   userId      String
-  category    String   // material, combustivel, vale_funcionario, pagamento_funcionario, vale_gustavo (vale_giovanni legado)
+  category    String   // material, combustivel, vale_funcionario, pagamento_funcionario, vale_gustavo, ...
   description String
   amount      Float
   date        DateTime

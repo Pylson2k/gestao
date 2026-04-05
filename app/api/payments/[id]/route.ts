@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDbUserId, getPartnersDbUserIds } from '@/lib/user-mapping'
+import { getDbUserId, getOwnerDbUserIds } from '@/lib/user-mapping'
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log'
 
 // GET - Get single payment
@@ -27,13 +27,13 @@ export async function GET(
 
     const { prisma } = await import('@/lib/prisma')
     
-    // Buscar IDs de ambos os sócios para compartilhar dados
-    const partnersIds = await getPartnersDbUserIds()
+    // IDs do proprietario no banco
+    const ownerIds = await getOwnerDbUserIds()
 
     const payment = await prisma.payment.findFirst({
       where: {
         id,
-        userId: { in: partnersIds },
+        userId: { in: ownerIds },
       },
       include: {
         quote: {
@@ -89,14 +89,14 @@ export async function PUT(
 
     const { prisma } = await import('@/lib/prisma')
     
-    // Buscar IDs de ambos os sócios para compartilhar dados
-    const partnersIds = await getPartnersDbUserIds()
+    // IDs do proprietario no banco
+    const ownerIds = await getOwnerDbUserIds()
 
-    // Buscar pagamento existente (qualquer um dos sócios pode editar)
+    // Buscar pagamento existente
     const existingPayment = await prisma.payment.findFirst({
       where: {
         id,
-        userId: { in: partnersIds },
+        userId: { in: ownerIds },
       },
       include: {
         quote: {
@@ -228,14 +228,14 @@ export async function DELETE(
     const { prisma } = await import('@/lib/prisma')
     const dbUserId = await getDbUserId(userId)
 
-    // Buscar IDs de ambos os sócios para compartilhar dados
-    const partnersIds = await getPartnersDbUserIds()
+    // IDs do proprietario no banco
+    const ownerIds = await getOwnerDbUserIds()
 
-    // Buscar pagamento antes de deletar (qualquer um dos sócios pode deletar)
+    // Buscar pagamento antes de deletar
     const payment = await prisma.payment.findFirst({
       where: {
         id,
-        userId: { in: partnersIds },
+        userId: { in: ownerIds },
       },
       include: {
         quote: true,

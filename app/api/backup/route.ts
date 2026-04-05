@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getPartnersDbUserIds } from '@/lib/user-mapping'
+import { getOwnerDbUserIds } from '@/lib/user-mapping'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,8 +26,8 @@ export async function GET(request: NextRequest) {
     }
 
     const { prisma } = await import('@/lib/prisma')
-    const partnersIds = await getPartnersDbUserIds()
-    if (partnersIds.length === 0) {
+    const ownerIds = await getOwnerDbUserIds()
+    if (ownerIds.length === 0) {
       return NextResponse.json(
         { error: 'Nenhum usuário encontrado no banco' },
         { status: 500 }
@@ -39,12 +39,12 @@ export async function GET(request: NextRequest) {
       prisma.client.findMany({
         where: {
           quotes: {
-            some: { userId: { in: partnersIds } },
+            some: { userId: { in: ownerIds } },
           },
         },
       }),
       prisma.quote.findMany({
-        where: { userId: { in: partnersIds } },
+        where: { userId: { in: ownerIds } },
         include: {
           client: true,
           services: true,
@@ -52,22 +52,22 @@ export async function GET(request: NextRequest) {
         },
       }),
       prisma.payment.findMany({
-        where: { userId: { in: partnersIds } },
+        where: { userId: { in: ownerIds } },
       }),
       prisma.expense.findMany({
-        where: { userId: { in: partnersIds } },
+        where: { userId: { in: ownerIds } },
       }),
       prisma.employee.findMany({
-        where: { userId: { in: partnersIds } },
+        where: { userId: { in: ownerIds } },
       }),
       prisma.service.findMany({
-        where: { userId: { in: partnersIds } },
+        where: { userId: { in: ownerIds } },
       }),
       prisma.companySettings.findMany({
-        where: { userId: { in: partnersIds } },
+        where: { userId: { in: ownerIds } },
       }),
       prisma.cashClosing.findMany({
-        where: { userId: { in: partnersIds } },
+        where: { userId: { in: ownerIds } },
       }),
     ])
 

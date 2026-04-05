@@ -1,10 +1,10 @@
 /**
  * API de Restauração - Restaura dados a partir de um backup JSON
- * CUIDADO: Substitui os dados atuais dos sócios pelos do backup.
+ * CUIDADO: Substitui os dados atuais pelos do backup.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getPartnersDbUserIds } from '@/lib/user-mapping'
+import { getOwnerDbUserIds } from '@/lib/user-mapping'
 
 export const dynamic = 'force-dynamic'
 
@@ -61,8 +61,8 @@ export async function POST(request: NextRequest) {
     }
 
     const { prisma } = await import('@/lib/prisma')
-    const partnersIds = await getPartnersDbUserIds()
-    if (partnersIds.length === 0) {
+    const ownerIds = await getOwnerDbUserIds()
+    if (ownerIds.length === 0) {
       return NextResponse.json(
         { error: 'Nenhum usuário encontrado no banco' },
         { status: 500 }
@@ -71,16 +71,16 @@ export async function POST(request: NextRequest) {
 
     // 1. Remover dados atuais (ordem: dependentes primeiro)
     await prisma.payment.deleteMany({
-      where: { userId: { in: partnersIds } },
+      where: { userId: { in: ownerIds } },
     })
     await prisma.serviceItem.deleteMany({
-      where: { quote: { userId: { in: partnersIds } } },
+      where: { quote: { userId: { in: ownerIds } } },
     })
     await prisma.materialItem.deleteMany({
-      where: { quote: { userId: { in: partnersIds } } },
+      where: { quote: { userId: { in: ownerIds } } },
     })
     await prisma.quote.deleteMany({
-      where: { userId: { in: partnersIds } },
+      where: { userId: { in: ownerIds } },
     })
     const clientIdsFromBackup = clients.map((c: any) => c.id)
     if (clientIdsFromBackup.length > 0) {
@@ -89,19 +89,19 @@ export async function POST(request: NextRequest) {
       })
     }
     await prisma.expense.deleteMany({
-      where: { userId: { in: partnersIds } },
+      where: { userId: { in: ownerIds } },
     })
     await prisma.cashClosing.deleteMany({
-      where: { userId: { in: partnersIds } },
+      where: { userId: { in: ownerIds } },
     })
     await prisma.employee.deleteMany({
-      where: { userId: { in: partnersIds } },
+      where: { userId: { in: ownerIds } },
     })
     await prisma.service.deleteMany({
-      where: { userId: { in: partnersIds } },
+      where: { userId: { in: ownerIds } },
     })
     await prisma.companySettings.deleteMany({
-      where: { userId: { in: partnersIds } },
+      where: { userId: { in: ownerIds } },
     })
 
     // 2. Inserir clientes
@@ -273,8 +273,7 @@ export async function POST(request: NextRequest) {
           endDate: toDate(c.endDate),
           totalProfit: Number(c.totalProfit),
           companyCash: Number(c.companyCash ?? 0),
-          gustavoProfit:
-            Number(c.gustavoProfit ?? 0) + Number(c.giovanniProfit ?? 0),
+          gustavoProfit: Number(c.gustavoProfit ?? 0),
           totalRevenue: Number(c.totalRevenue),
           totalExpenses: Number(c.totalExpenses),
           observations: c.observations ?? null,

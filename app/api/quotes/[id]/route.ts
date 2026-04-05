@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getMemoryQuoteById, updateMemoryQuote, deleteMemoryQuote } from '@/lib/emergency-store'
-import { getDbUserId, getPartnersDbUserIds } from '@/lib/user-mapping'
+import { getDbUserId, getOwnerDbUserIds } from '@/lib/user-mapping'
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log'
 
 // GET - Get single quote
@@ -33,13 +33,13 @@ export async function GET(
 
     const { prisma } = await import('@/lib/prisma')
 
-    // Buscar IDs de ambos os sócios para compartilhar dados
-    const partnersIds = await getPartnersDbUserIds()
+    // IDs do proprietario no banco
+    const ownerIds = await getOwnerDbUserIds()
 
     const quote = await prisma.quote.findFirst({
       where: {
         id,
-        userId: { in: partnersIds }, // Compartilhar dados entre sócios
+        userId: { in: ownerIds },
       },
       include: {
         client: true,
@@ -110,12 +110,12 @@ export async function PUT(
 
     const { prisma } = await import('@/lib/prisma')
 
-    // Buscar IDs de ambos os sócios para compartilhar dados
-    const partnersIds = await getPartnersDbUserIds()
+    // IDs do proprietario no banco
+    const ownerIds = await getOwnerDbUserIds()
     
-    // Verify ownership (qualquer um dos sócios pode editar)
+    // Verificar se o registro pertence ao usuario
     const existingQuote = await prisma.quote.findFirst({
-      where: { id, userId: { in: partnersIds } },
+      where: { id, userId: { in: ownerIds } },
     })
 
     // Se o orçamento não foi encontrado, retornar erro
@@ -376,12 +376,12 @@ export async function DELETE(
 
     const { prisma } = await import('@/lib/prisma')
 
-    // Buscar IDs de ambos os sócios para compartilhar dados
-    const partnersIds = await getPartnersDbUserIds()
+    // IDs do proprietario no banco
+    const ownerIds = await getOwnerDbUserIds()
 
-    // Verify ownership (qualquer um dos sócios pode deletar)
+    // Verificar se o registro pertence ao usuario
     const quote = await prisma.quote.findFirst({
-      where: { id, userId: { in: partnersIds } },
+      where: { id, userId: { in: ownerIds } },
     })
 
     if (!quote) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDbUserId, getPartnersDbUserIds } from '@/lib/user-mapping'
+import { getDbUserId, getOwnerDbUserIds } from '@/lib/user-mapping'
 
 // GET - Get company logo (public endpoint, no auth required for favicon/PWA)
 export async function GET(request: NextRequest) {
@@ -16,22 +16,22 @@ export async function GET(request: NextRequest) {
 
     let settings = null
 
-    // Buscar logo de qualquer um dos sócios (compartilhado)
-    const partnersIds = await getPartnersDbUserIds()
+    // Buscar logo da empresa
+    const ownerIds = await getOwnerDbUserIds()
     
     settings = await prisma.companySettings.findFirst({
       where: { 
-        userId: { in: partnersIds },
+        userId: { in: ownerIds },
         logo: { not: null }
       },
       select: { logo: true, name: true },
       orderBy: { updatedAt: 'desc' },
     })
     
-    // Se não encontrou com logo, buscar qualquer configuração dos sócios
+    // Sem logo, buscar qualquer configuracao
     if (!settings) {
       settings = await prisma.companySettings.findFirst({
-        where: { userId: { in: partnersIds } },
+        where: { userId: { in: ownerIds } },
         select: { logo: true, name: true },
         orderBy: { updatedAt: 'desc' },
       })

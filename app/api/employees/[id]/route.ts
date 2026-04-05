@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDbUserId, getPartnersDbUserIds } from '@/lib/user-mapping'
+import { getDbUserId, getOwnerDbUserIds } from '@/lib/user-mapping'
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log'
 
 // GET - Get single employee
@@ -27,13 +27,13 @@ export async function GET(
 
     const { prisma } = await import('@/lib/prisma')
     
-    // Buscar IDs de ambos os sócios para compartilhar dados
-    const partnersIds = await getPartnersDbUserIds()
+    // IDs do proprietario no banco
+    const ownerIds = await getOwnerDbUserIds()
 
     const employee = await prisma.employee.findFirst({
       where: {
         id,
-        userId: { in: partnersIds },
+        userId: { in: ownerIds },
       },
       include: {
         expenses: {
@@ -88,12 +88,12 @@ export async function PUT(
 
     const { prisma } = await import('@/lib/prisma')
     
-    // Buscar IDs de ambos os sócios para compartilhar dados
-    const partnersIds = await getPartnersDbUserIds()
+    // IDs do proprietario no banco
+    const ownerIds = await getOwnerDbUserIds()
 
-    // Verify ownership (qualquer um dos sócios pode editar)
+    // Verificar se o registro pertence ao usuario
     const existingEmployee = await prisma.employee.findFirst({
-      where: { id, userId: { in: partnersIds } },
+      where: { id, userId: { in: ownerIds } },
     })
 
     if (!existingEmployee) {
@@ -189,12 +189,12 @@ export async function DELETE(
 
     const { prisma } = await import('@/lib/prisma')
     
-    // Buscar IDs de ambos os sócios para compartilhar dados
-    const partnersIds = await getPartnersDbUserIds()
+    // IDs do proprietario no banco
+    const ownerIds = await getOwnerDbUserIds()
 
-    // Verify ownership (qualquer um dos sócios pode deletar)
+    // Verificar se o registro pertence ao usuario
     const employee = await prisma.employee.findFirst({
-      where: { id, userId: { in: partnersIds } },
+      where: { id, userId: { in: ownerIds } },
       include: {
         expenses: {
           select: { id: true },

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCompanySettings, updateCompanySettings } from '@/lib/emergency-store'
-import { getDbUserId, getPartnersDbUserIds } from '@/lib/user-mapping'
+import { getDbUserId, getOwnerDbUserIds } from '@/lib/user-mapping'
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log'
 
 // GET - Get company settings
@@ -22,19 +22,19 @@ export async function GET(request: NextRequest) {
 
     const { prisma } = await import('@/lib/prisma')
 
-    // Buscar IDs de ambos os sócios para compartilhar configurações
-    const partnersIds = await getPartnersDbUserIds()
+    // IDs do proprietario no banco
+    const ownerIds = await getOwnerDbUserIds()
     
-    // Buscar configurações de qualquer um dos sócios (compartilhadas)
+    // Buscar configuracoes da empresa
     let settings = await prisma.companySettings.findFirst({
-      where: { userId: { in: partnersIds } },
+      where: { userId: { in: ownerIds } },
     })
 
-    // Create default if doesn't exist (usar o primeiro ID dos sócios)
-    if (!settings && partnersIds.length > 0) {
+    // Criar padrao se nao existir
+    if (!settings && ownerIds.length > 0) {
       settings = await prisma.companySettings.create({
         data: {
-          userId: partnersIds[0], // Usar o primeiro sócio como dono
+          userId: ownerIds[0],
           name: 'ServiPro',
           phone: '',
           email: '',
@@ -74,16 +74,16 @@ export async function PUT(request: NextRequest) {
 
     const { prisma } = await import('@/lib/prisma')
 
-    // Buscar IDs de ambos os sócios para compartilhar configurações
-    const partnersIds = await getPartnersDbUserIds()
+    // IDs do proprietario no banco
+    const ownerIds = await getOwnerDbUserIds()
     
-    // Buscar configurações existentes de qualquer um dos sócios
+    // Buscar configuracoes existentes
     const oldSettings = await prisma.companySettings.findFirst({
-      where: { userId: { in: partnersIds } },
+      where: { userId: { in: ownerIds } },
     })
 
-    // Usar o primeiro ID dos sócios ou criar novo
-    const targetUserId = oldSettings?.userId || partnersIds[0]
+    // Usar id existente ou primeiro do proprietario
+    const targetUserId = oldSettings?.userId || ownerIds[0]
 
     const settings = await prisma.companySettings.upsert({
       where: { userId: targetUserId },

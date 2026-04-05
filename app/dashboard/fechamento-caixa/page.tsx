@@ -121,17 +121,11 @@ export default function FechamentoCaixaPage() {
     })
 
     const ownerVales = expensesInPeriod
-      .filter(
-        (expense) =>
-          expense.category === 'vale_gustavo' || expense.category === 'vale_giovanni'
-      )
+      .filter((expense) => expense.category === 'vale_gustavo')
       .reduce((sum, expense) => sum + expense.amount, 0)
 
     const otherExpenses = expensesInPeriod
-      .filter(
-        (expense) =>
-          expense.category !== 'vale_gustavo' && expense.category !== 'vale_giovanni'
-      )
+      .filter((expense) => expense.category !== 'vale_gustavo')
       .reduce((sum, expense) => sum + expense.amount, 0)
 
     const totalExpenses = otherExpenses + ownerVales

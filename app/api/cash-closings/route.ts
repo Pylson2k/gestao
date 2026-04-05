@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDbUserId, getPartnersDbUserIds } from '@/lib/user-mapping'
+import { getDbUserId, getOwnerDbUserIds } from '@/lib/user-mapping'
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log'
 
 // GET - List all cash closings for a user
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 
     const { prisma } = await import('@/lib/prisma')
     
-    const ownerIds = await getPartnersDbUserIds()
+    const ownerIds = await getOwnerDbUserIds()
 
     const closings = await prisma.cashClosing.findMany({
       where: { userId: { in: ownerIds } },

@@ -103,7 +103,6 @@ export interface Service {
 export interface Expense {
   id: string
   userId: string
-  /** Inclui categorias legadas (ex.: vale_giovanni) vindas do banco */
   category: string
   description: string
   amount: number

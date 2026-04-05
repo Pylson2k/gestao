@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getCompanySettings } from '@/lib/emergency-store'
-import { getPartnersDbUserIds } from '@/lib/user-mapping'
+import { getOwnerDbUserIds } from '@/lib/user-mapping'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,10 +24,10 @@ export async function GET(request: NextRequest) {
     }
 
     const { prisma } = await import('@/lib/prisma')
-    const partnersIds = await getPartnersDbUserIds()
+    const ownerIds = await getOwnerDbUserIds()
 
     let settings = await prisma.companySettings.findFirst({
-      where: { userId: { in: partnersIds } },
+      where: { userId: { in: ownerIds } },
       select: {
         name: true,
         logo: true,
@@ -41,10 +41,10 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    if (!settings && partnersIds.length > 0) {
+    if (!settings && ownerIds.length > 0) {
       const created = await prisma.companySettings.create({
         data: {
-          userId: partnersIds[0],
+          userId: ownerIds[0],
           name: 'ServiPro',
           phone: '',
           email: '',

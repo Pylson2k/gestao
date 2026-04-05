@@ -63,17 +63,11 @@ export default function RelatoriosFinanceirosPage() {
     })
 
     const ownerVales = expensesInPeriod
-      .filter(
-        (expense) =>
-          expense.category === 'vale_gustavo' || expense.category === 'vale_giovanni'
-      )
+      .filter((expense) => expense.category === 'vale_gustavo')
       .reduce((sum, expense) => sum + expense.amount, 0)
 
     const otherExpenses = expensesInPeriod
-      .filter(
-        (expense) =>
-          expense.category !== 'vale_gustavo' && expense.category !== 'vale_giovanni'
-      )
+      .filter((expense) => expense.category !== 'vale_gustavo')
       .reduce((sum, expense) => sum + expense.amount, 0)
 
     const totalExpenses = otherExpenses + ownerVales
@@ -85,7 +79,7 @@ export default function RelatoriosFinanceirosPage() {
     }
   }, [expenses, startDate, endDate])
 
-  // Lucro líquido (receita - outras despesas, sem vales dos sócios)
+  // Lucro líquido (receita - outras despesas, sem vales do proprietário)
   const netProfit = revenue - expensesData.other
 
   // Despesas por categoria
@@ -98,7 +92,6 @@ export default function RelatoriosFinanceirosPage() {
       vale_funcionario: 'Vale para Funcionários',
       pagamento_funcionario: 'Pagamento de Funcionários',
       vale_gustavo: 'Vale (proprietário)',
-      vale_giovanni: 'Vale (legado)',
     }
 
     const filtered = expenses.filter((expense) => {
@@ -149,7 +142,7 @@ export default function RelatoriosFinanceirosPage() {
       { 'Tipo': 'Receita (serviços finalizados e pagos)', 'Período': '', '': formatCurrency(revenue) },
       { 'Tipo': 'Despesas totais', 'Período': '', '': formatCurrency(expensesData.total) },
       { 'Tipo': 'Despesas (outras)', 'Período': '', '': formatCurrency(expensesData.other) },
-      { 'Tipo': 'Vales (proprietário e legado)', 'Período': '', '': formatCurrency(expensesData.ownerVales) },
+      { 'Tipo': 'Vales do proprietário', 'Período': '', '': formatCurrency(expensesData.ownerVales) },
       { 'Tipo': 'Lucro Líquido', 'Período': '', '': formatCurrency(netProfit) },
     ]
     const categoryRows = expensesByCategory.map(({ label, total }) => ({

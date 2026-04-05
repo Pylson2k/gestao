@@ -49,12 +49,10 @@ const categoryColors: Record<ExpenseCategory, string> = {
 }
 
 function getCategoryLabel(category: string): string {
-  if (category === 'vale_giovanni') return 'Vale (legado)'
   return categoryLabels[category as ExpenseCategory] ?? category
 }
 
 function getCategoryColorClass(category: string): string {
-  if (category === 'vale_giovanni') return 'bg-yellow-500/10 text-yellow-500'
   return categoryColors[category as ExpenseCategory] ?? 'bg-muted text-muted-foreground'
 }
 
@@ -108,10 +106,8 @@ export default function DespesasPage() {
   const handleOpenDialog = (expense?: Expense) => {
     if (expense) {
       setEditingExpense(expense)
-      const cat =
-        expense.category === 'vale_giovanni' ? 'vale_gustavo' : expense.category
       setFormData({
-        category: cat as ExpenseCategory,
+        category: expense.category as ExpenseCategory,
         description: expense.description,
         amount: expense.amount.toString(),
         date: new Date(expense.date).toISOString().split('T')[0],
