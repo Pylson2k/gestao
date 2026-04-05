@@ -182,13 +182,13 @@ export default function DashboardPage() {
     })
   }, [quotes])
 
-  // Inadimplência total (orçamentos com saldo devedor)
+  // Inadimplência: só orçamentos na lista manual + saldo devedor
   const overdueDebtSummary = useMemo(() => {
     let totalDebt = 0
     let countQuotes = 0
-    const now = new Date()
     quotes.forEach((q) => {
       if (q.status !== 'approved' && q.status !== 'in_progress' && q.status !== 'completed') return
+      if (!q.inDelinquencyList) return
       const paid = getTotalPaidByQuoteId(q.id)
       const debt = q.total - paid
       if (debt > 0) {
@@ -270,13 +270,13 @@ export default function DashboardPage() {
       })
     }
 
-    // Pagamentos em atraso (inadimplência)
+    // Cobrança (lista de inadimplentes)
     if (overdueDebtSummary.countQuotes > 0) {
       actions.push({
         id: 'collect',
         type: 'collect',
         label: 'Cobrar clientes',
-        sublabel: `${overdueDebtSummary.countQuotes} orçamento(s) com saldo devedor (${overdueDebtSummary.totalDebt.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
+        sublabel: `${overdueDebtSummary.countQuotes} orçamento(s) na lista de inadimplentes (${overdueDebtSummary.totalDebt.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
         href: '/dashboard/inadimplentes',
         count: overdueDebtSummary.countQuotes,
       })
@@ -431,7 +431,7 @@ export default function DashboardPage() {
                     Inadimplência: {overdueDebtSummary.totalDebt.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                   </p>
                   <p className="text-sm text-muted-foreground font-medium">
-                    {overdueDebtSummary.countQuotes} orçamento(s) com saldo devedor · Clique para cobrar
+                    {overdueDebtSummary.countQuotes} orçamento(s) na sua lista de cobrança · Clique para gerenciar
                   </p>
                 </div>
                 <ArrowRight className="w-5 h-5 text-amber-600 shrink-0" />

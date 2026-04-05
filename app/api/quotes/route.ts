@@ -169,6 +169,7 @@ export async function POST(request: NextRequest) {
         total: Number(total) || 0,
         observations: (observations ?? '').trim() || '',
         status,
+        inDelinquencyList: false,
         createdAt: new Date().toISOString(),
       }
 

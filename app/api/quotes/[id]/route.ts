@@ -131,6 +131,9 @@ export async function PUT(
     // Update quote
     const updateData: any = {}
     if (body.status !== undefined) updateData.status = body.status
+    if (body.inDelinquencyList !== undefined) {
+      updateData.inDelinquencyList = Boolean(body.inDelinquencyList)
+    }
     if (body.subtotal !== undefined) updateData.subtotal = body.subtotal
     if (body.discount !== undefined) updateData.discount = body.discount
     if (body.total !== undefined) updateData.total = body.total
@@ -253,6 +256,7 @@ export async function PUT(
         client: true,
         services: true,
         materials: true,
+        payments: true,
       },
     })
 
@@ -260,6 +264,22 @@ export async function PUT(
     const metadata = getRequestMetadata(request)
     const changes: string[] = []
     
+    if (
+      body.inDelinquencyList !== undefined &&
+      existingQuote.inDelinquencyList !== quote.inDelinquencyList
+    ) {
+      await createAuditLog({
+        userId,
+        action: 'toggle_quote_delinquency_list',
+        entityType: 'quote',
+        entityId: id,
+        description: `Lista de inadimplentes (${oldQuote?.number || id}): ${quote.inDelinquencyList ? 'incluído' : 'removido'}`,
+        oldValue: { inDelinquencyList: existingQuote.inDelinquencyList },
+        newValue: { inDelinquencyList: quote.inDelinquencyList },
+        ...metadata,
+      })
+    }
+
     if (body.status !== undefined && oldQuote && oldQuote.status !== body.status) {
       changes.push(`Status: ${oldQuote.status} → ${body.status}`)
       await createAuditLog({

@@ -12,6 +12,7 @@ export type AuditAction =
   | 'change_quote_status'
   | 'change_quote_discount'
   | 'change_quote_total'
+  | 'toggle_quote_delinquency_list'
   | 'view_quote'
   | 'download_quote_pdf'
   | 'send_quote_whatsapp'

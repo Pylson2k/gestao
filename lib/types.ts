@@ -43,6 +43,8 @@ export interface Quote {
   serviceStartedAt?: Date
   serviceCompletedAt?: Date
   userId: string
+  /** Incluído na lista de inadimplentes/cobrança (definido no detalhe do orçamento) */
+  inDelinquencyList?: boolean
   payments?: Payment[]
 }
 

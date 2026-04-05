@@ -192,6 +192,9 @@ export async function PUT(
       ...metadata,
     })
 
+    const { clearDelinquencyIfFullyPaid } = await import('@/lib/quote-delinquency')
+    await clearDelinquencyIfFullyPaid(prisma, payment.quoteId)
+
     return NextResponse.json(payment)
   } catch (error: any) {
     console.error('Update payment error:', error)
@@ -249,10 +252,15 @@ export async function DELETE(
       )
     }
 
+    const quoteIdForSync = payment.quoteId
+
     // Deletar pagamento
     await prisma.payment.delete({
       where: { id },
     })
+
+    const { clearDelinquencyIfFullyPaid } = await import('@/lib/quote-delinquency')
+    await clearDelinquencyIfFullyPaid(prisma, quoteIdForSync)
 
     // Log de auditoria
     const metadata = getRequestMetadata(request)

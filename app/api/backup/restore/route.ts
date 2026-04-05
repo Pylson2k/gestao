@@ -131,6 +131,7 @@ export async function POST(request: NextRequest) {
           total: Number(q.total),
           observations: q.observations ?? null,
           status: q.status ?? 'draft',
+          inDelinquencyList: Boolean(q.inDelinquencyList),
           serviceStartedAt: q.serviceStartedAt ? toDate(q.serviceStartedAt) : null,
           serviceCompletedAt: q.serviceCompletedAt ? toDate(q.serviceCompletedAt) : null,
         },

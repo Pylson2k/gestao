@@ -181,6 +181,9 @@ export async function POST(request: NextRequest) {
       ...metadata,
     })
 
+    const { clearDelinquencyIfFullyPaid } = await import('@/lib/quote-delinquency')
+    await clearDelinquencyIfFullyPaid(prisma, quoteId)
+
     return NextResponse.json(payment, { status: 201 })
   } catch (error: any) {
     console.error('Create payment error:', error)

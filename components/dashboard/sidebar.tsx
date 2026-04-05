@@ -44,7 +44,7 @@ function PendingCountBadge() {
       if (q.status === 'approved') n++
       if (q.status === 'approved' || q.status === 'in_progress' || q.status === 'completed') {
         const paid = getTotalPaidByQuoteId(q.id)
-        if (q.total - paid > 0) n++
+        if (q.inDelinquencyList && q.total - paid > 0) n++
       }
     })
     return n

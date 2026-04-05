@@ -3,8 +3,23 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react'
 
 const STALE_MS = 10 * 60 * 1000 // 10 min — refetch no focus só se passou mais que isso
-import type { Quote, Client, ServiceItem, MaterialItem } from '@/lib/types'
+import type { Quote, Client, ServiceItem, MaterialItem, Payment } from '@/lib/types'
 import { useAuth } from './auth-context'
+
+function mapPaymentsFromApi(payments: any[] | undefined): Payment[] | undefined {
+  if (!payments) return undefined
+  return payments.map((p: any) => ({
+    id: p.id,
+    quoteId: p.quoteId,
+    userId: p.userId,
+    amount: p.amount,
+    paymentDate: new Date(p.paymentDate),
+    paymentMethod: p.paymentMethod,
+    observations: p.observations,
+    createdAt: new Date(p.createdAt),
+    updatedAt: new Date(p.updatedAt),
+  }))
+}
 
 interface QuotesContextType {
   quotes: Quote[]
@@ -75,6 +90,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
           serviceStartedAt: q.serviceStartedAt ? new Date(q.serviceStartedAt) : undefined,
           serviceCompletedAt: q.serviceCompletedAt ? new Date(q.serviceCompletedAt) : undefined,
           userId: q.userId,
+          inDelinquencyList: !!q.inDelinquencyList,
           payments: q.payments ? q.payments.map((p: any) => ({
             id: p.id,
             quoteId: p.quoteId,
@@ -183,6 +199,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
         userId: data.userId,
         serviceStartedAt: data.serviceStartedAt ? new Date(data.serviceStartedAt) : undefined,
         serviceCompletedAt: data.serviceCompletedAt ? new Date(data.serviceCompletedAt) : undefined,
+        inDelinquencyList: !!data.inDelinquencyList,
       }
 
       setQuotes((prev) => [newQuote, ...prev])
@@ -293,6 +310,8 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
       const data = await response.json()
       
       // Transform to Quote format
+      const mappedPayments = mapPaymentsFromApi(data.payments)
+
       const updatedQuote: Quote = {
         id: data.id,
         number: data.number,
@@ -324,10 +343,15 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
         userId: data.userId,
         serviceStartedAt: data.serviceStartedAt ? new Date(data.serviceStartedAt) : undefined,
         serviceCompletedAt: data.serviceCompletedAt ? new Date(data.serviceCompletedAt) : undefined,
+        inDelinquencyList: !!data.inDelinquencyList,
       }
 
       setQuotes((prev) =>
-        prev.map((quote) => (quote.id === id ? updatedQuote : quote))
+        prev.map((quote) => {
+          if (quote.id !== id) return quote
+          const next: Quote = { ...updatedQuote, payments: mappedPayments ?? quote.payments }
+          return next
+        })
       )
     } catch (error) {
       console.error('Update quote error:', error)

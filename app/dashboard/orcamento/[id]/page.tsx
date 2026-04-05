@@ -20,6 +20,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Switch } from '@/components/ui/switch'
 import {
   generateQuotePDF,
   downloadPDF,
@@ -47,6 +48,7 @@ import {
   Plus,
   DollarSign,
   CreditCard,
+  AlertTriangle,
 } from 'lucide-react'
 
 const statusConfig = {
@@ -77,6 +79,7 @@ export default function QuoteDetailPage({
   const [discountValue, setDiscountValue] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const [showWhatsAppInstructions, setShowWhatsAppInstructions] = useState(false)
+  const [delinquencySaving, setDelinquencySaving] = useState(false)
 
   const quote = getQuoteById(id)
 
@@ -517,7 +520,12 @@ Aguardo sua confirmação!`
               const totalPaid = getTotalPaidByQuoteId(quote.id)
               const remaining = quote.total - totalPaid
               const paymentPercentage = quote.total > 0 ? (totalPaid / quote.total) * 100 : 0
-              
+              const canManageDelinquency =
+                (quote.status === 'approved' ||
+                  quote.status === 'in_progress' ||
+                  quote.status === 'completed') &&
+                quote.total > 0
+
               return (
                 <>
                   <div className="border-t border-border/50 pt-4 mt-2 space-y-2">
@@ -554,6 +562,46 @@ Aguardo sua confirmação!`
                       </div>
                     )}
                   </div>
+                  {canManageDelinquency && (
+                    <div className="rounded-lg border border-amber-500/25 bg-amber-500/5 p-4 mt-4 space-y-2">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="space-y-1 flex-1 min-w-0">
+                          <Label
+                            htmlFor="delinquency-list-switch"
+                            className="text-sm font-medium flex items-center gap-2 cursor-pointer"
+                          >
+                            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" aria-hidden />
+                            Lista de inadimplentes
+                          </Label>
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            Só entra na tela Inadimplentes quando há saldo pendente e esta opção está ativa.
+                            Você decide quando colocar em cobrança.
+                          </p>
+                        </div>
+                        <Switch
+                          id="delinquency-list-switch"
+                          checked={!!quote.inDelinquencyList}
+                          disabled={
+                            delinquencySaving || (remaining <= 0 && !quote.inDelinquencyList)
+                          }
+                          onCheckedChange={async (on) => {
+                            if (remaining <= 0 && on) return
+                            setDelinquencySaving(true)
+                            try {
+                              await updateQuote(quote.id, { inDelinquencyList: on })
+                            } finally {
+                              setDelinquencySaving(false)
+                            }
+                          }}
+                        />
+                      </div>
+                      {remaining <= 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          Orçamento quitado — não é possível incluir na lista até haver saldo pendente.
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </>
               )
             })()}

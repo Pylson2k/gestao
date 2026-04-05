@@ -5,6 +5,7 @@ import { createContext, useContext, useState, useCallback, useEffect, useRef, ty
 const STALE_MS = 10 * 60 * 1000
 import type { Payment } from '@/lib/types'
 import { useAuth } from './auth-context'
+import { useQuotes } from './quotes-context'
 
 interface PaymentsContextType {
   payments: Payment[]
@@ -22,6 +23,7 @@ const PaymentsContext = createContext<PaymentsContextType | undefined>(undefined
 
 export function PaymentsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
+  const { refreshQuotes } = useQuotes()
   const [payments, setPayments] = useState<Payment[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isFetching, setIsFetching] = useState(false)
@@ -159,16 +161,18 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
           serviceStartedAt: newPayment.quote.serviceStartedAt ? new Date(newPayment.quote.serviceStartedAt) : undefined,
           serviceCompletedAt: newPayment.quote.serviceCompletedAt ? new Date(newPayment.quote.serviceCompletedAt) : undefined,
           userId: newPayment.quote.userId,
+          inDelinquencyList: !!newPayment.quote.inDelinquencyList,
         } : undefined,
       }
 
       setPayments(prev => [transformedPayment, ...prev])
+      void refreshQuotes()
       return transformedPayment
     } catch (error: any) {
       console.error('Add payment error:', error)
       throw error
     }
-  }, [user?.id])
+  }, [user?.id, refreshQuotes])
 
   const updatePayment = useCallback(async (id: string, paymentData: Partial<Payment>): Promise<void> => {
     if (!user?.id) {
@@ -226,15 +230,17 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
           serviceStartedAt: updatedPayment.quote.serviceStartedAt ? new Date(updatedPayment.quote.serviceStartedAt) : undefined,
           serviceCompletedAt: updatedPayment.quote.serviceCompletedAt ? new Date(updatedPayment.quote.serviceCompletedAt) : undefined,
           userId: updatedPayment.quote.userId,
+          inDelinquencyList: !!updatedPayment.quote.inDelinquencyList,
         } : undefined,
       }
 
       setPayments(prev => prev.map(p => p.id === id ? transformedPayment : p))
+      void refreshQuotes()
     } catch (error: any) {
       console.error('Update payment error:', error)
       throw error
     }
-  }, [user?.id])
+  }, [user?.id, refreshQuotes])
 
   const deletePayment = useCallback(async (id: string): Promise<void> => {
     if (!user?.id) {
@@ -255,11 +261,12 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
       }
 
       setPayments(prev => prev.filter(p => p.id !== id))
+      void refreshQuotes()
     } catch (error: any) {
       console.error('Delete payment error:', error)
       throw error
     }
-  }, [user?.id])
+  }, [user?.id, refreshQuotes])
 
   const getPaymentById = useCallback((id: string): Payment | undefined => {
     return payments.find(p => p.id === id)

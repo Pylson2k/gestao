@@ -66,7 +66,7 @@ export default function InadimplentesPage() {
         const totalPaid = getTotalPaidByQuoteId(quote.id)
         const debt = quote.total - totalPaid
 
-        if (debt > 0) {
+        if (debt > 0 && quote.inDelinquencyList) {
           quotesWithDebt.push({
             quote,
             debt,
@@ -201,8 +201,9 @@ export default function InadimplentesPage() {
             <AlertTriangle className="w-8 h-8 text-orange-500" />
             Clientes Inadimplentes
           </h1>
-          <p className="text-muted-foreground mt-1">
-            Controle de clientes com saldo pendente
+          <p className="text-muted-foreground mt-1 max-w-2xl">
+            Apenas orçamentos que você marcou na lista de inadimplentes (no detalhe do orçamento), com saldo
+            pendente. Saldo devedor sozinho não entra aqui automaticamente.
           </p>
         </div>
       </div>
@@ -338,9 +339,9 @@ export default function InadimplentesPage() {
           {filteredAndSorted.length === 0 ? (
             <div className="text-center py-12">
               <AlertTriangle className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground max-w-md mx-auto">
                 {clientsWithDebt.length === 0
-                  ? 'Nenhum cliente inadimplente encontrado'
+                  ? 'Nenhum orçamento na lista de cobrança. Abra um orçamento aprovado/em serviço/finalizado com saldo pendente e ative “Lista de inadimplentes” no resumo financeiro.'
                   : 'Nenhum cliente encontrado com os filtros aplicados'}
               </p>
             </div>
