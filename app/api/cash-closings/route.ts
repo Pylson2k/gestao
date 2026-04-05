@@ -22,11 +22,10 @@ export async function GET(request: NextRequest) {
 
     const { prisma } = await import('@/lib/prisma')
     
-    // Buscar IDs de ambos os sócios para compartilhar dados
-    const partnersIds = await getPartnersDbUserIds()
+    const ownerIds = await getPartnersDbUserIds()
 
     const closings = await prisma.cashClosing.findMany({
-      where: { userId: { in: partnersIds } }, // Compartilhar dados entre sócios
+      where: { userId: { in: ownerIds } },
       orderBy: {
         endDate: 'desc',
       },
@@ -63,7 +62,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { periodType, startDate, endDate, totalProfit, companyCash, gustavoProfit, giovanniProfit, totalRevenue, totalExpenses, observations } = body
+    const { periodType, startDate, endDate, totalProfit, companyCash, gustavoProfit, totalRevenue, totalExpenses, observations } = body
 
     // Validações
     if (!periodType || !startDate || !endDate) {
@@ -92,7 +91,6 @@ export async function POST(request: NextRequest) {
         totalProfit: parseFloat(totalProfit),
         companyCash: companyCash !== undefined ? parseFloat(companyCash) : 0,
         gustavoProfit: parseFloat(gustavoProfit),
-        giovanniProfit: parseFloat(giovanniProfit),
         totalRevenue: parseFloat(totalRevenue),
         totalExpenses: parseFloat(totalExpenses),
         observations: observations?.trim() || null,
@@ -106,7 +104,7 @@ export async function POST(request: NextRequest) {
       action: 'create_cash_closing',
       entityType: 'cash_closing',
       entityId: closing.id,
-      description: `💰 FECHAMENTO DE CAIXA ${periodType.toUpperCase()} - Período: ${new Date(startDate).toLocaleDateString('pt-BR')} a ${new Date(endDate).toLocaleDateString('pt-BR')} - Lucro Total: R$ ${closing.totalProfit.toFixed(2)} - Caixa Empresa: R$ ${closing.companyCash.toFixed(2)} - Gustavo: R$ ${closing.gustavoProfit.toFixed(2)} - Giovanni: R$ ${closing.giovanniProfit.toFixed(2)}`,
+      description: `💰 FECHAMENTO DE CAIXA ${periodType.toUpperCase()} - Período: ${new Date(startDate).toLocaleDateString('pt-BR')} a ${new Date(endDate).toLocaleDateString('pt-BR')} - Lucro Total: R$ ${closing.totalProfit.toFixed(2)} - Caixa Empresa: R$ ${closing.companyCash.toFixed(2)} - Proprietario: R$ ${closing.gustavoProfit.toFixed(2)}`,
       newValue: {
         periodType: closing.periodType,
         startDate: closing.startDate,
@@ -114,7 +112,6 @@ export async function POST(request: NextRequest) {
         totalProfit: closing.totalProfit,
         companyCash: closing.companyCash,
         gustavoProfit: closing.gustavoProfit,
-        giovanniProfit: closing.giovanniProfit,
         totalRevenue: closing.totalRevenue,
         totalExpenses: closing.totalExpenses,
       },

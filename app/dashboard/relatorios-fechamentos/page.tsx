@@ -22,16 +22,14 @@ export default function RelatoriosFechamentosPage() {
     const totalRevenue = closings.reduce((sum, c) => sum + c.totalRevenue, 0)
     const totalExpenses = closings.reduce((sum, c) => sum + c.totalExpenses, 0)
     const totalCompanyCash = closings.reduce((sum, c) => sum + (c.companyCash || 0), 0)
-    const totalGustavo = closings.reduce((sum, c) => sum + c.gustavoProfit, 0)
-    const totalGiovanni = closings.reduce((sum, c) => sum + c.giovanniProfit, 0)
+    const totalProprietario = closings.reduce((sum, c) => sum + c.gustavoProfit, 0)
 
     return {
       totalProfit,
       totalRevenue,
       totalExpenses,
       totalCompanyCash,
-      totalGustavo,
-      totalGiovanni,
+      totalProprietario,
       count: closings.length,
     }
   }, [closings])
@@ -58,7 +56,7 @@ export default function RelatoriosFechamentosPage() {
       </div>
 
       {/* Estatísticas Gerais */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border-green-500/20 bg-green-500/5">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -89,23 +87,9 @@ export default function RelatoriosFechamentosPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Total Gustavo</p>
+                <p className="text-sm text-muted-foreground">Total lucro proprietário</p>
                 <p className="text-2xl font-bold text-blue-500">
-                  {stats.totalGustavo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                </p>
-              </div>
-              <DollarSign className="w-8 h-8 text-blue-500" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-blue-500/20 bg-blue-500/5">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Giovanni</p>
-                <p className="text-2xl font-bold text-blue-500">
-                  {stats.totalGiovanni.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  {stats.totalProprietario.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </p>
               </div>
               <DollarSign className="w-8 h-8 text-blue-500" />
@@ -159,7 +143,7 @@ export default function RelatoriosFechamentosPage() {
                             {new Date(closing.startDate).toLocaleDateString('pt-BR')} a {new Date(closing.endDate).toLocaleDateString('pt-BR')}
                           </span>
                         </div>
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                           <div>
                             <p className="text-muted-foreground">Receita</p>
                             <p className="font-semibold text-green-500">
@@ -188,7 +172,7 @@ export default function RelatoriosFechamentosPage() {
                             </p>
                           </div>
                           <div>
-                            <p className="text-muted-foreground">Por Sócio</p>
+                            <p className="text-muted-foreground">Lucro proprietário</p>
                             <p className="font-semibold text-blue-500">
                               {closing.gustavoProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                             </p>

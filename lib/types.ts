@@ -71,8 +71,7 @@ export type ExpenseCategory =
   | 'almoco_funcionario'
   | 'vale_funcionario' 
   | 'pagamento_funcionario' 
-  | 'vale_gustavo' 
-  | 'vale_giovanni'
+  | 'vale_gustavo'
 
 export interface Employee {
   id: string
@@ -104,7 +103,8 @@ export interface Service {
 export interface Expense {
   id: string
   userId: string
-  category: ExpenseCategory
+  /** Inclui categorias legadas (ex.: vale_giovanni) vindas do banco */
+  category: string
   description: string
   amount: number
   date: string | Date
@@ -124,8 +124,7 @@ export interface CashClosing {
   endDate: string | Date
   totalProfit: number
   companyCash: number // Valor destinado ao caixa da empresa
-  gustavoProfit: number
-  giovanniProfit: number
+  gustavoProfit: number // Lucro do proprietário após caixa e vales
   totalRevenue: number
   totalExpenses: number
   observations?: string | null

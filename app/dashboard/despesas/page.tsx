@@ -35,8 +35,7 @@ const categoryLabels: Record<ExpenseCategory, string> = {
   almoco_funcionario: 'Almoço para Funcionário',
   vale_funcionario: 'Vale para Funcionários',
   pagamento_funcionario: 'Pagamento de Funcionários',
-  vale_gustavo: 'Vale Gustavo',
-  vale_giovanni: 'Vale Giovanni',
+  vale_gustavo: 'Vale (proprietário)',
 }
 
 const categoryColors: Record<ExpenseCategory, string> = {
@@ -47,7 +46,16 @@ const categoryColors: Record<ExpenseCategory, string> = {
   vale_funcionario: 'bg-purple-500/10 text-purple-500',
   pagamento_funcionario: 'bg-red-500/10 text-red-500',
   vale_gustavo: 'bg-green-500/10 text-green-500',
-  vale_giovanni: 'bg-yellow-500/10 text-yellow-500',
+}
+
+function getCategoryLabel(category: string): string {
+  if (category === 'vale_giovanni') return 'Vale (legado)'
+  return categoryLabels[category as ExpenseCategory] ?? category
+}
+
+function getCategoryColorClass(category: string): string {
+  if (category === 'vale_giovanni') return 'bg-yellow-500/10 text-yellow-500'
+  return categoryColors[category as ExpenseCategory] ?? 'bg-muted text-muted-foreground'
 }
 
 export default function DespesasPage() {
@@ -100,8 +108,10 @@ export default function DespesasPage() {
   const handleOpenDialog = (expense?: Expense) => {
     if (expense) {
       setEditingExpense(expense)
+      const cat =
+        expense.category === 'vale_giovanni' ? 'vale_gustavo' : expense.category
       setFormData({
-        category: expense.category,
+        category: cat as ExpenseCategory,
         description: expense.description,
         amount: expense.amount.toString(),
         date: new Date(expense.date).toISOString().split('T')[0],
@@ -432,8 +442,8 @@ export default function DespesasPage() {
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
                   <div className="flex-1 min-w-0 w-full sm:w-auto">
                     <div className="flex flex-wrap items-center gap-2 mb-2 sm:mb-3">
-                      <Badge className={cn('text-xs font-semibold px-2.5 py-1 shrink-0', categoryColors[expense.category])}>
-                        {categoryLabels[expense.category]}
+                      <Badge className={cn('text-xs font-semibold px-2.5 py-1 shrink-0', getCategoryColorClass(expense.category))}>
+                        {getCategoryLabel(expense.category)}
                       </Badge>
                       <span className="text-sm text-muted-foreground font-medium flex items-center gap-1">
                         <Calendar className="w-4 h-4 sm:w-3 sm:h-3" />

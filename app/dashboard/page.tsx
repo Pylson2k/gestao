@@ -83,32 +83,31 @@ export default function DashboardPage() {
       .reduce((sum, quote) => sum + quote.total, 0)
   }, [quotes, startDate, payments])
 
-  // Calcular despesas desde o último fechamento (excluindo vales dos sócios)
+  // Despesas desde o último fechamento (vales do proprietário tratados à parte)
   const expensesSinceLastClosing = useMemo(() => {
     const expensesInPeriod = expenses.filter((expense) => {
       const expenseDate = new Date(expense.date)
       return expenseDate >= startDate
     })
 
-    // Separar vales dos sócios
-    const gustavoVales = expensesInPeriod
-      .filter((expense) => expense.category === 'vale_gustavo')
+    const ownerVales = expensesInPeriod
+      .filter(
+        (expense) =>
+          expense.category === 'vale_gustavo' || expense.category === 'vale_giovanni'
+      )
       .reduce((sum, expense) => sum + expense.amount, 0)
 
-    const giovanniVales = expensesInPeriod
-      .filter((expense) => expense.category === 'vale_giovanni')
-      .reduce((sum, expense) => sum + expense.amount, 0)
-
-    // Outras despesas (sem vales)
     const otherExpenses = expensesInPeriod
-      .filter((expense) => expense.category !== 'vale_gustavo' && expense.category !== 'vale_giovanni')
+      .filter(
+        (expense) =>
+          expense.category !== 'vale_gustavo' && expense.category !== 'vale_giovanni'
+      )
       .reduce((sum, expense) => sum + expense.amount, 0)
 
     return {
-      total: otherExpenses + gustavoVales + giovanniVales,
+      total: otherExpenses + ownerVales,
       other: otherExpenses,
-      gustavoVales,
-      giovanniVales,
+      ownerVales,
     }
   }, [expenses, startDate])
 
@@ -124,23 +123,15 @@ export default function DashboardPage() {
     // Calcular caixa da empresa em tempo real
     const companyCash = profit * (companyCashPercentageValue / 100)
 
-    // Lucro restante após desconto do caixa da empresa
+    // Lucro restante após desconto do caixa da empresa (100% do proprietário)
     const remainingProfit = profit - companyCash
-
-    // Dividir entre os sócios (50% cada)
-    const baseGustavoProfit = remainingProfit / 2
-    const baseGiovanniProfit = remainingProfit / 2
-
-    // Descontar vales
-    const gustavoProfit = baseGustavoProfit - expensesSinceLastClosing.gustavoVales
-    const giovanniProfit = baseGiovanniProfit - expensesSinceLastClosing.giovanniVales
+    const gustavoProfit = remainingProfit - expensesSinceLastClosing.ownerVales
 
     return {
       profit,
       companyCash,
       companyCashPercentageValue,
       gustavoProfit,
-      giovanniProfit,
     }
   }, [revenueSinceLastClosing, expensesSinceLastClosing, settings.companyCashPercentage])
 
@@ -148,7 +139,6 @@ export default function DashboardPage() {
   const companyCash = profitCalculations.companyCash
   const companyCashPercentageValue = profitCalculations.companyCashPercentageValue
   const gustavoProfit = profitCalculations.gustavoProfit
-  const giovanniProfit = profitCalculations.giovanniProfit
 
   // Caixa da empresa acumulado (de todos os fechamentos)
   const totalCompanyCash = useMemo(() => {
@@ -566,7 +556,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Lucro Líquido Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
         {/* Lucro Líquido Total */}
         <Card className={cn(
           "border-2 transition-all duration-300 hover:shadow-xl hover:-translate-y-1",
@@ -600,35 +590,34 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-
-        {/* Lucro Líquido Giovanni */}
+        {/* Lucro do proprietário (período) */}
         <Card className={cn(
           "border-2 transition-all duration-300 hover:shadow-xl hover:-translate-y-1",
-          giovanniProfit >= 0 
-            ? "border-indigo-200/50 bg-gradient-to-br from-indigo-50/80 via-white to-indigo-50/40" 
+          gustavoProfit >= 0 
+            ? "border-blue-200/50 bg-gradient-to-br from-blue-50/80 via-white to-blue-50/40" 
             : "border-red-200/50 bg-gradient-to-br from-red-50/80 via-white to-red-50/40"
         )}>
           <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0">
-                <p className="text-sm sm:text-base font-medium text-muted-foreground mb-2">Lucro Líquido - Giovanni</p>
+                <p className="text-sm sm:text-base font-medium text-muted-foreground mb-2">Seu lucro (após caixa e vales)</p>
                 <p className={cn(
                   "text-2xl sm:text-3xl font-bold tracking-tight",
-                  giovanniProfit >= 0 ? "text-indigo-600" : "text-red-600"
+                  gustavoProfit >= 0 ? "text-blue-600" : "text-red-600"
                 )}>
-                  {giovanniProfit.toLocaleString('pt-BR', {
+                  {gustavoProfit.toLocaleString('pt-BR', {
                     style: 'currency',
                     currency: 'BRL',
                   })}
                 </p>
                 <p className="text-xs sm:text-sm text-muted-foreground mt-2 font-medium">
-                  Após caixa empresa e vales
+                  Desde o último fechamento de caixa
                 </p>
               </div>
               <div className={cn(
                 "p-3 sm:p-4 rounded-2xl shadow-lg shrink-0 ml-3",
-                giovanniProfit >= 0 
-                  ? "bg-gradient-to-br from-indigo-500 to-indigo-600" 
+                gustavoProfit >= 0 
+                  ? "bg-gradient-to-br from-blue-500 to-blue-600" 
                   : "bg-gradient-to-br from-red-500 to-red-600"
               )}>
                 <DollarSign className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
@@ -638,10 +627,9 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Caixa da Empresa e Lucro Gustavo */}
+      {/* Caixa da Empresa acumulado */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-        {/* Caixa da Empresa Acumulado */}
-        <Card className="border-2 border-purple-200/50 bg-gradient-to-br from-purple-50/80 via-white to-purple-50/40 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+        <Card className="border-2 border-purple-200/50 bg-gradient-to-br from-purple-50/80 via-white to-purple-50/40 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 md:col-span-2">
           <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0">
@@ -663,42 +651,6 @@ export default function DashboardPage() {
               </div>
               <div className="p-3 sm:p-4 rounded-2xl shadow-lg shrink-0 ml-3 bg-gradient-to-br from-purple-500 to-purple-600">
                 <Wallet className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Lucro Líquido Gustavo (atualizado) */}
-        <Card className={cn(
-          "border-2 transition-all duration-300 hover:shadow-xl hover:-translate-y-1",
-          gustavoProfit >= 0 
-            ? "border-blue-200/50 bg-gradient-to-br from-blue-50/80 via-white to-blue-50/40" 
-            : "border-red-200/50 bg-gradient-to-br from-red-50/80 via-white to-red-50/40"
-        )}>
-          <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm sm:text-base font-medium text-muted-foreground mb-2">Lucro Líquido - Gustavo</p>
-                <p className={cn(
-                  "text-2xl sm:text-3xl font-bold tracking-tight",
-                  gustavoProfit >= 0 ? "text-blue-600" : "text-red-600"
-                )}>
-                  {gustavoProfit.toLocaleString('pt-BR', {
-                    style: 'currency',
-                    currency: 'BRL',
-                  })}
-                </p>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-2 font-medium">
-                  Após caixa empresa e vales
-                </p>
-              </div>
-              <div className={cn(
-                "p-3 sm:p-4 rounded-2xl shadow-lg shrink-0 ml-3",
-                gustavoProfit >= 0 
-                  ? "bg-gradient-to-br from-blue-500 to-blue-600" 
-                  : "bg-gradient-to-br from-red-500 to-red-600"
-              )}>
-                <DollarSign className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
               </div>
             </div>
           </CardContent>

@@ -46,7 +46,6 @@ npm run db:test
 
 Agora você pode:
 - Fazer login com: `gustavo` / `gustavo123`
-- Ou: `giovanni` / `giovanni123`
 - Iniciar o servidor: `npm run dev`
 
 ---

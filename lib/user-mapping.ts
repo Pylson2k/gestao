@@ -1,77 +1,64 @@
 /**
- * Mapeia IDs de usuários da autenticação para IDs do banco de dados
+ * Mapeia o id de sessão do cliente para o usuário no banco (único proprietário).
  */
 
-// Mapeamento: userId da autenticação -> username -> busca no banco
+import { OWNER_SESSION_USER_ID, OWNER_USERNAME } from './owner-user'
+
 export const USER_MAPPING = {
-  '1': 'gustavo',
-  '2': 'giovanni',
+  [OWNER_SESSION_USER_ID]: OWNER_USERNAME,
 } as const
 
 /**
- * Retorna os IDs de banco de dados de todos os sócios (para compartilhar dados)
+ * Retorna o id no banco do único usuário autorizado (para filtros de dados).
  */
 export async function getPartnersDbUserIds(): Promise<string[]> {
   if (!process.env.DATABASE_URL) {
-    return ['1', '2'] // Fallback para modo de emergência
+    return [OWNER_SESSION_USER_ID]
   }
 
   try {
     const { prisma } = await import('@/lib/prisma')
-    
-    // Buscar IDs de ambos os sócios
-    const users = await prisma.user.findMany({
-      where: {
-        username: {
-          in: ['gustavo', 'giovanni'],
-        },
-      },
+    const user = await prisma.user.findUnique({
+      where: { username: OWNER_USERNAME },
       select: { id: true },
     })
-
-    return users.map(u => u.id)
-  } catch (error: any) {
-    console.error('Error getting partners IDs:', error)
+    return user ? [user.id] : []
+  } catch (error: unknown) {
+    console.error('Error getting owner user id:', error)
     return []
   }
 }
 
 /**
- * Busca o ID do banco de dados para um userId da autenticação
+ * Converte o id da sessão (sempre "1") para o id real no PostgreSQL.
  */
 export async function getDbUserId(authUserId: string): Promise<string> {
   if (!process.env.DATABASE_URL) {
-    // Sem banco, retorna o próprio ID
     return authUserId
+  }
+
+  if (authUserId !== OWNER_SESSION_USER_ID) {
+    throw new Error('UNAUTHORIZED_USER')
   }
 
   try {
     const { prisma } = await import('@/lib/prisma')
-    const username = USER_MAPPING[authUserId as keyof typeof USER_MAPPING]
-    
-    if (!username) {
-      console.warn(`No mapping found for userId: ${authUserId}`)
-      return authUserId
-    }
-
     const user = await prisma.user.findUnique({
-      where: { username },
+      where: { username: OWNER_USERNAME },
       select: { id: true },
     })
 
     if (!user) {
-      console.error(`User not found in database for username: ${username}`)
-      throw new Error(`Usuario ${username} nao encontrado no banco de dados`)
+      throw new Error(`Usuario ${OWNER_USERNAME} nao encontrado no banco de dados`)
     }
 
     return user.id
-  } catch (error: any) {
-    console.error('Error mapping user ID:', error)
-    // Se for erro de conexão, relançar
-    if (error.message?.includes('nao encontrado')) {
-      throw error
+  } catch (error: unknown) {
+    const err = error as Error
+    if (err.message?.includes('nao encontrado')) {
+      throw err
     }
-    // Para outros erros, retornar o authUserId como fallback
+    console.error('Error mapping user ID:', error)
     return authUserId
   }
 }

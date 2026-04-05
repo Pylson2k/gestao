@@ -94,7 +94,7 @@ export default function LoginPage() {
                 <Input
                   id="username"
                   type="text"
-                  placeholder="Seu usuario"
+                  placeholder="gustavo"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="bg-background"

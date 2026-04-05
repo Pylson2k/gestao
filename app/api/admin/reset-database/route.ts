@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+import { hash } from 'bcryptjs'
+import { consolidateDataToSingleOwner } from '@/lib/single-owner-migration'
 
 export async function POST(request: Request) {
   try {
@@ -64,13 +66,28 @@ export async function POST(request: Request) {
     // 9. CompanySettings (pode ser limpo também, será recriado quando necessário)
     await prisma.companySettings.deleteMany({})
     
-    // Usuários são mantidos (não deletamos)
-    
-    await prisma.$disconnect()
-    
+    const hashedPassword = await hash('gustavo123', 10)
+    await prisma.user.upsert({
+      where: { username: 'gustavo' },
+      update: {
+        password: hashedPassword,
+        mustChangePassword: true,
+      },
+      create: {
+        username: 'gustavo',
+        name: 'Gustavo',
+        email: 'gustavo@servipro.com',
+        password: hashedPassword,
+        mustChangePassword: true,
+      },
+    })
+    await consolidateDataToSingleOwner(prisma)
+
+    const userCount = await prisma.user.count()
+
     return NextResponse.json({
       success: true,
-      message: 'Banco de dados limpo com sucesso! Apenas os usuários foram mantidos.',
+      message: 'Banco de dados limpo. Restou apenas o usuario gustavo.',
       deleted: {
         auditLogs: countsBefore.auditLogs,
         cashClosings: countsBefore.cashClosings,
@@ -82,7 +99,7 @@ export async function POST(request: Request) {
         companySettings: countsBefore.companySettings,
       },
       kept: {
-        users: countsBefore.users,
+        users: userCount,
       },
     })
   } catch (error: any) {

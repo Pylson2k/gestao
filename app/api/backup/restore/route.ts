@@ -273,8 +273,8 @@ export async function POST(request: NextRequest) {
           endDate: toDate(c.endDate),
           totalProfit: Number(c.totalProfit),
           companyCash: Number(c.companyCash ?? 0),
-          gustavoProfit: Number(c.gustavoProfit),
-          giovanniProfit: Number(c.giovanniProfit),
+          gustavoProfit:
+            Number(c.gustavoProfit ?? 0) + Number(c.giovanniProfit ?? 0),
           totalRevenue: Number(c.totalRevenue),
           totalExpenses: Number(c.totalExpenses),
           observations: c.observations ?? null,

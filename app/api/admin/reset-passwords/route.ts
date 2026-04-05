@@ -1,84 +1,60 @@
 import { NextResponse } from 'next/server'
+import { hash } from 'bcryptjs'
+import { prisma } from '@/lib/prisma'
+import { consolidateDataToSingleOwner } from '@/lib/single-owner-migration'
 
 export async function POST(request: Request) {
   try {
-    // Verificar chave secreta para segurança
     const { searchParams } = new URL(request.url)
     const secretKey = searchParams.get('key')
-    
+
     const expected = process.env.ADMIN_OPERATIONS_SECRET
     if (!expected || secretKey !== expected) {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 401 })
     }
 
-    // Verificar se DATABASE_URL existe
     if (!process.env.DATABASE_URL) {
-      return NextResponse.json({ 
-        error: 'DATABASE_URL não configurada no Vercel. Vá em Settings > Environment Variables e adicione DATABASE_URL com a URL do seu banco PostgreSQL.',
-        hasDbUrl: false 
-      }, { status: 500 })
+      return NextResponse.json(
+        {
+          error:
+            'DATABASE_URL não configurada. Configure a variável com a URL do PostgreSQL.',
+          hasDbUrl: false,
+        },
+        { status: 500 }
+      )
     }
 
-    // Dynamic imports para Prisma 7.3.0
-    const { PrismaClient } = await import('@prisma/client')
-    const { hash } = await import('bcryptjs')
-    
-    const prisma = new PrismaClient()
-    
-    // Senhas padrão
-    const hashedPassword1 = await hash('gustavo123', 10)
-    const hashedPassword2 = await hash('giovanni123', 10)
-    
-    // Reset gustavo
+    const hashedPassword = await hash('gustavo123', 10)
+
     await prisma.user.upsert({
       where: { username: 'gustavo' },
       update: {
-        password: hashedPassword1,
+        password: hashedPassword,
         mustChangePassword: true,
       },
       create: {
         username: 'gustavo',
         name: 'Gustavo',
         email: 'gustavo@servipro.com',
-        password: hashedPassword1,
+        password: hashedPassword,
         mustChangePassword: true,
       },
     })
-    
-    // Reset giovanni
-    await prisma.user.upsert({
-      where: { username: 'giovanni' },
-      update: {
-        password: hashedPassword2,
-        mustChangePassword: true,
-      },
-      create: {
-        username: 'giovanni',
-        name: 'Giovanni',
-        email: 'giovanni@servipro.com',
-        password: hashedPassword2,
-        mustChangePassword: true,
-      },
-    })
-    
-    await prisma.$disconnect()
-    
+
+    await consolidateDataToSingleOwner(prisma)
+
     return NextResponse.json({
       success: true,
-      message: 'Senhas resetadas com sucesso!',
-      users: [
-        { username: 'gustavo', password: 'gustavo123' },
-        { username: 'giovanni', password: 'giovanni123' },
-      ],
+      message: 'Senha resetada e contas extras removidas.',
+      users: [{ username: 'gustavo', password: 'gustavo123' }],
     })
   } catch (error: any) {
     console.error('Reset error:', error)
     return NextResponse.json(
-      { 
-        error: 'Erro ao resetar senhas', 
+      {
+        error: 'Erro ao resetar senhas',
         details: error?.message || String(error),
         code: error?.code,
-        hint: 'Verifique se DATABASE_URL está configurada corretamente no Vercel'
       },
       { status: 500 }
     )

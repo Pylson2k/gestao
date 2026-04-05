@@ -5,6 +5,7 @@
 
 import { PrismaClient } from '@prisma/client'
 import { hash } from 'bcryptjs'
+import { consolidateDataToSingleOwner } from '../lib/single-owner-migration'
 
 const prisma = new PrismaClient()
 
@@ -12,52 +13,33 @@ async function main() {
   console.log('🚀 Iniciando setup do banco de dados...\n')
 
   try {
-    // Verificar conexão
     await prisma.$connect()
     console.log('✅ Conectado ao banco de dados!\n')
 
-    // Criar usuários iniciais
-    console.log('📝 Criando usuários iniciais...')
-    
-    const hashedPassword1 = await hash('gustavo123', 10)
-    const hashedPassword2 = await hash('giovanni123', 10)
+    console.log('📝 Configurando usuario unico (gustavo)...')
 
-    const user1 = await prisma.user.upsert({
+    const hashedPassword = await hash('gustavo123', 10)
+
+    await prisma.user.upsert({
       where: { username: 'gustavo' },
       update: {
-        password: hashedPassword1,
+        password: hashedPassword,
         mustChangePassword: true,
       },
       create: {
         username: 'gustavo',
         name: 'Gustavo',
         email: 'gustavo@servipro.com',
-        password: hashedPassword1,
+        password: hashedPassword,
         mustChangePassword: true,
       },
     })
 
-    const user2 = await prisma.user.upsert({
-      where: { username: 'giovanni' },
-      update: {
-        password: hashedPassword2,
-        mustChangePassword: true,
-      },
-      create: {
-        username: 'giovanni',
-        name: 'Giovanni',
-        email: 'giovanni@servipro.com',
-        password: hashedPassword2,
-        mustChangePassword: true,
-      },
-    })
+    await consolidateDataToSingleOwner(prisma)
 
-    console.log('✅ Usuários criados:')
-    console.log(`   - ${user1.username} (${user1.email})`)
-    console.log(`   - ${user2.username} (${user2.email})`)
+    console.log('✅ Usuario: gustavo (gustavo@servipro.com)')
     console.log('\n📋 Credenciais:')
-    console.log('   Usuário: gustavo | Senha: gustavo123')
-    console.log('   Usuário: giovanni | Senha: giovanni123\n')
+    console.log('   Usuario: gustavo | Senha: gustavo123\n')
 
     console.log('🎉 Setup concluído com sucesso!')
   } catch (error) {
@@ -68,8 +50,7 @@ async function main() {
   }
 }
 
-main()
-  .catch((e) => {
-    console.error(e)
-    process.exit(1)
-  })
+main().catch((e) => {
+  console.error(e)
+  process.exit(1)
+})

@@ -510,7 +510,7 @@ export default function SettingsPage() {
                 />
                 <p className="text-xs text-muted-foreground">
                   Porcentagem do lucro líquido destinada ao caixa da empresa (0% a 50%). 
-                  O restante será dividido igualmente entre os sócios.
+                  O restante é o lucro do proprietário, após descontar vales registrados como despesa.
                 </p>
               </div>
             </CardContent>

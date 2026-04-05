@@ -1,12 +1,14 @@
 'use client'
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
+import { OWNER_SESSION_USER_ID } from '@/lib/owner-user'
 
 interface User {
   id: string
   username: string
   name: string
   email: string
+  mustChangePassword?: boolean
 }
 
 interface AuthContextType {
@@ -21,35 +23,28 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// Usuários hardcoded
-const USERS = [
-  {
-    id: '1',
-    username: 'gustavo',
-    password: 'gustavo123',
-    name: 'Gustavo',
-    email: 'gustavo@servipro.com',
-  },
-  {
-    id: '2',
-    username: 'giovanni',
-    password: 'giovanni123',
-    name: 'Giovanni',
-    email: 'giovanni@servipro.com',
-  },
-]
+function authHeaders(): HeadersInit {
+  return {
+    'Content-Type': 'application/json',
+    'x-user-id': OWNER_SESSION_USER_ID,
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  // Verificar sessão ao carregar
   useEffect(() => {
     const checkSession = () => {
       const storedUser = sessionStorage.getItem('servipro_user')
       if (storedUser) {
         try {
-          setUser(JSON.parse(storedUser))
+          const parsed = JSON.parse(storedUser) as User
+          if (parsed.id === OWNER_SESSION_USER_ID) {
+            setUser(parsed)
+          } else {
+            sessionStorage.removeItem('servipro_user')
+          }
         } catch {
           sessionStorage.removeItem('servipro_user')
         }
@@ -61,96 +56,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true)
-    
-    // Simular delay de rede
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    // Verificar se existe usuário com esse username
-    const foundUser = USERS.find(
-      u => u.username.toLowerCase() === username.toLowerCase()
-    )
-
-    if (!foundUser) {
-      setIsLoading(false)
-      // Log de tentativa de login falhada
-      try {
-        await fetch('/api/audit/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: 'unknown',
-            username,
-            success: false,
-            error: 'Usuario nao encontrado',
-          }),
-        })
-      } catch {}
-      return { success: false, error: 'Usuario ou senha invalidos' }
-    }
-
-    // Verificar senha (pode ser a original ou uma alterada)
-    const storedPasswords = JSON.parse(localStorage.getItem('servipro_passwords') || '{}')
-    const userPassword = storedPasswords[foundUser.id] || foundUser.password
-
-    if (userPassword !== password) {
-      setIsLoading(false)
-      // Log de tentativa de login falhada
-      try {
-        await fetch('/api/audit/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: foundUser.id,
-            username,
-            success: false,
-            error: 'Senha incorreta',
-          }),
-        })
-      } catch {}
-      return { success: false, error: 'Usuario ou senha invalidos' }
-    }
-
-    // Verificar se há email atualizado no sessionStorage
-    const storedUser = sessionStorage.getItem('servipro_user')
-    let storedEmail = foundUser.email
-    if (storedUser) {
-      try {
-        const parsed = JSON.parse(storedUser)
-        if (parsed.id === foundUser.id && parsed.email) {
-          storedEmail = parsed.email
-        }
-      } catch {}
-    }
-
-    const userData: User = {
-      id: foundUser.id,
-      username: foundUser.username,
-      name: foundUser.name,
-      email: storedEmail,
-    }
-
-    setUser(userData)
-    sessionStorage.setItem('servipro_user', JSON.stringify(userData))
-    setIsLoading(false)
-    
-    // Log de login bem-sucedido
     try {
-      await fetch('/api/audit/login', {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: foundUser.id,
-          username,
-          success: true,
-        }),
+        body: JSON.stringify({ username, password }),
       })
-    } catch {}
-    
-    return { success: true }
+      const data = await res.json()
+
+      if (!res.ok || !data.success) {
+        try {
+          await fetch('/api/audit/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: 'unknown',
+              username,
+              success: false,
+              error: data.error || 'Falha na API',
+            }),
+          })
+        } catch {}
+        setIsLoading(false)
+        return { success: false, error: data.error || 'Usuario ou senha invalidos' }
+      }
+
+      const userData: User = {
+        id: data.user.id,
+        username: data.user.username,
+        name: data.user.name,
+        email: data.user.email,
+        mustChangePassword: data.user.mustChangePassword,
+      }
+
+      setUser(userData)
+      sessionStorage.setItem('servipro_user', JSON.stringify(userData))
+
+      try {
+        await fetch('/api/audit/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: userData.id,
+            username,
+            success: true,
+          }),
+        })
+      } catch {}
+
+      setIsLoading(false)
+      return { success: true }
+    } catch {
+      setIsLoading(false)
+      return { success: false, error: 'Erro de conexao. Tente novamente.' }
+    }
   }, [])
 
   const logout = useCallback(() => {
-    // Log de logout antes de limpar
     if (user) {
       fetch('/api/audit/logout', {
         method: 'POST',
@@ -161,95 +123,96 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }),
       }).catch(() => {})
     }
-    
     setUser(null)
     sessionStorage.removeItem('servipro_user')
   }, [user])
 
-  const changePassword = useCallback(async (currentPassword: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
-    if (!user) {
-      return { success: false, error: 'Usuario nao autenticado' }
-    }
+  const changePassword = useCallback(
+    async (currentPassword: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
+      if (!user) {
+        return { success: false, error: 'Usuario nao autenticado' }
+      }
 
-    // Simular delay de rede
-    await new Promise(resolve => setTimeout(resolve, 500))
+      try {
+        const res = await fetch('/api/auth/change-password', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ currentPassword, newPassword }),
+        })
+        const data = await res.json()
+        if (!res.ok) {
+          return { success: false, error: data.error || 'Erro ao alterar senha' }
+        }
 
-    // Verificar senha atual (pode ser a original ou uma alterada)
-    const storedPasswords = JSON.parse(localStorage.getItem('servipro_passwords') || '{}')
-    const currentStoredPassword = storedPasswords[user.id] || USERS.find(u => u.id === user.id)?.password
-    
-    if (currentStoredPassword !== currentPassword) {
-      return { success: false, error: 'Senha atual incorreta' }
-    }
+        const updated = { ...user, mustChangePassword: false }
+        setUser(updated)
+        sessionStorage.setItem('servipro_user', JSON.stringify(updated))
 
-    // Salvar nova senha no localStorage
-    const updatedPasswords = {
-      ...storedPasswords,
-      [user.id]: newPassword,
-    }
-    localStorage.setItem('servipro_passwords', JSON.stringify(updatedPasswords))
-    
-    // Log de auditoria
-    try {
-      await fetch('/api/audit/profile', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-user-id': user.id,
-        },
-        body: JSON.stringify({
-          action: 'change_password',
-          username: user.username,
-        }),
-      })
-    } catch {}
-    
-    return { success: true }
-  }, [user])
+        try {
+          await fetch('/api/audit/profile', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({
+              action: 'change_password',
+              username: user.username,
+            }),
+          })
+        } catch {}
 
-  const updateEmail = useCallback(async (newEmail: string): Promise<{ success: boolean; error?: string }> => {
-    if (!user) {
-      return { success: false, error: 'Usuario nao autenticado' }
-    }
+        return { success: true }
+      } catch {
+        return { success: false, error: 'Erro de conexao' }
+      }
+    },
+    [user]
+  )
 
-    // Validação básica de email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(newEmail)) {
-      return { success: false, error: 'Email invalido' }
-    }
+  const updateEmail = useCallback(
+    async (newEmail: string): Promise<{ success: boolean; error?: string }> => {
+      if (!user) {
+        return { success: false, error: 'Usuario nao autenticado' }
+      }
 
-    // Simular delay de rede
-    await new Promise(resolve => setTimeout(resolve, 500))
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(newEmail)) {
+        return { success: false, error: 'Email invalido' }
+      }
 
-    // Atualizar email do usuário
-    const oldEmail = user.email
-    const updatedUser: User = {
-      ...user,
-      email: newEmail,
-    }
+      try {
+        const res = await fetch('/api/auth/profile', {
+          method: 'PATCH',
+          headers: authHeaders(),
+          body: JSON.stringify({ email: newEmail }),
+        })
+        const data = await res.json()
+        if (!res.ok) {
+          return { success: false, error: data.error || 'Erro ao atualizar email' }
+        }
 
-    setUser(updatedUser)
-    sessionStorage.setItem('servipro_user', JSON.stringify(updatedUser))
-    
-    // Log de auditoria
-    try {
-      await fetch('/api/audit/profile', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-user-id': user.id,
-        },
-        body: JSON.stringify({
-          action: 'change_email',
-          username: user.username,
-          oldValue: oldEmail,
-          newValue: newEmail,
-        }),
-      })
-    } catch {}
-    
-    return { success: true }
-  }, [user])
+        const updated = { ...user, email: data.email }
+        setUser(updated)
+        sessionStorage.setItem('servipro_user', JSON.stringify(updated))
+
+        try {
+          await fetch('/api/audit/profile', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({
+              action: 'change_email',
+              username: user.username,
+              oldValue: user.email,
+              newValue: data.email,
+            }),
+          })
+        } catch {}
+
+        return { success: true }
+      } catch {
+        return { success: false, error: 'Erro de conexao' }
+      }
+    },
+    [user]
+  )
 
   return (
     <AuthContext.Provider

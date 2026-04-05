@@ -148,9 +148,8 @@ Este comando vai:
 npm run db:seed
 ```
 
-Isso criará dois usuários de teste:
+Isso criará o usuário de teste:
 - **Usuário:** `gustavo` | **Senha:** `gustavo123`
-- **Usuário:** `giovanni` | **Senha:** `giovanni123`
 
 ### 4.5. Testar Conexão
 

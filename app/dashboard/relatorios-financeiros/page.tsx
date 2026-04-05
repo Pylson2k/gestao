@@ -53,7 +53,6 @@ export default function RelatoriosFinanceirosPage() {
       .reduce((sum, quote) => sum + quote.total, 0)
   }, [quotes, startDate, endDate, getTotalPaidByQuoteId])
 
-  // Filtrar despesas no período (separar vales dos sócios)
   const expensesData = useMemo(() => {
     const expensesInPeriod = expenses.filter((expense) => {
       const expenseDate = new Date(expense.date)
@@ -63,28 +62,26 @@ export default function RelatoriosFinanceirosPage() {
       )
     })
 
-    // Separar vales dos sócios das outras despesas
-    const gustavoVales = expensesInPeriod
-      .filter((expense) => expense.category === 'vale_gustavo')
+    const ownerVales = expensesInPeriod
+      .filter(
+        (expense) =>
+          expense.category === 'vale_gustavo' || expense.category === 'vale_giovanni'
+      )
       .reduce((sum, expense) => sum + expense.amount, 0)
 
-    const giovanniVales = expensesInPeriod
-      .filter((expense) => expense.category === 'vale_giovanni')
-      .reduce((sum, expense) => sum + expense.amount, 0)
-
-    // Outras despesas (excluindo vales dos sócios)
     const otherExpenses = expensesInPeriod
-      .filter((expense) => expense.category !== 'vale_gustavo' && expense.category !== 'vale_giovanni')
+      .filter(
+        (expense) =>
+          expense.category !== 'vale_gustavo' && expense.category !== 'vale_giovanni'
+      )
       .reduce((sum, expense) => sum + expense.amount, 0)
 
-    // Total de despesas (para exibição)
-    const totalExpenses = otherExpenses + gustavoVales + giovanniVales
+    const totalExpenses = otherExpenses + ownerVales
 
     return {
       total: totalExpenses,
       other: otherExpenses,
-      gustavoVales,
-      giovanniVales,
+      ownerVales,
     }
   }, [expenses, startDate, endDate])
 
@@ -100,8 +97,8 @@ export default function RelatoriosFinanceirosPage() {
       almoco_funcionario: 'Almoço para Funcionário',
       vale_funcionario: 'Vale para Funcionários',
       pagamento_funcionario: 'Pagamento de Funcionários',
-      vale_gustavo: 'Vale Gustavo',
-      vale_giovanni: 'Vale Giovanni',
+      vale_gustavo: 'Vale (proprietário)',
+      vale_giovanni: 'Vale (legado)',
     }
 
     const filtered = expenses.filter((expense) => {
@@ -152,8 +149,7 @@ export default function RelatoriosFinanceirosPage() {
       { 'Tipo': 'Receita (serviços finalizados e pagos)', 'Período': '', '': formatCurrency(revenue) },
       { 'Tipo': 'Despesas totais', 'Período': '', '': formatCurrency(expensesData.total) },
       { 'Tipo': 'Despesas (outras)', 'Período': '', '': formatCurrency(expensesData.other) },
-      { 'Tipo': 'Vales Gustavo', 'Período': '', '': formatCurrency(expensesData.gustavoVales) },
-      { 'Tipo': 'Vales Giovanni', 'Período': '', '': formatCurrency(expensesData.giovanniVales) },
+      { 'Tipo': 'Vales (proprietário e legado)', 'Período': '', '': formatCurrency(expensesData.ownerVales) },
       { 'Tipo': 'Lucro Líquido', 'Período': '', '': formatCurrency(netProfit) },
     ]
     const categoryRows = expensesByCategory.map(({ label, total }) => ({

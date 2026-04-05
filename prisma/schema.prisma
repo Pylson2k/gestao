@@ -162,8 +162,7 @@ model CashClosing {
   endDate         DateTime
   totalProfit     Float    // Lucro líquido total
   companyCash     Float    @default(0) // Valor destinado ao caixa da empresa
-  gustavoProfit   Float    // Lucro para Gustavo (após desconto do caixa da empresa)
-  giovanniProfit  Float    // Lucro para Giovanni (após desconto do caixa da empresa)
+  gustavoProfit   Float    // Lucro do proprietário (após desconto do caixa da empresa e vales)
   totalRevenue    Float    // Receita total do período
   totalExpenses    Float    // Despesas total do período
   observations    String?  @db.Text
@@ -178,7 +177,7 @@ model CashClosing {
 model Expense {
   id          String   @id @default(cuid())
   userId      String
-  category    String   // material, combustivel, vale_funcionario, pagamento_funcionario, vale_gustavo, vale_giovanni
+  category    String   // material, combustivel, vale_funcionario, pagamento_funcionario, vale_gustavo (vale_giovanni legado)
   description String
   amount      Float
   date        DateTime

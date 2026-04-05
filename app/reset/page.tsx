@@ -36,7 +36,7 @@ export default function ResetPage() {
       
       if (data.success) {
         setStatus('success')
-        setMessage('Senhas resetadas! Use: gustavo / gustavo123')
+        setMessage('Senha resetada! Usuário único: gustavo / gustavo123')
       } else {
         setStatus('error')
         setMessage(JSON.stringify(data, null, 2))

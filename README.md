@@ -62,12 +62,11 @@ O sistema estará disponível em `http://localhost:3000`
 
 ## 👤 Usuários Padrão
 
-Após executar o seed, você terá os seguintes usuários:
+Após executar o seed, haverá um único usuário:
 
 - **Usuário:** `gustavo` | **Senha:** `gustavo123`
-- **Usuário:** `giovanni` | **Senha:** `giovanni123`
 
-⚠️ **Importante:** Você será obrigado a alterar a senha no primeiro login.
+⚠️ **Importante:** Você será obrigado a alterar a senha no primeiro login. Apenas `gustavo` pode acessar o sistema.
 
 ## 📁 Estrutura do Projeto
 
