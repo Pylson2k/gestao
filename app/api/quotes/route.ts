@@ -141,12 +141,16 @@ export async function POST(request: NextRequest) {
       const safeServices = Array.isArray(services) ? services.filter((s: any) => s != null) : []
       const safeMaterials = Array.isArray(materials) ? materials.filter((m: any) => m != null) : []
 
+      const memClientId =
+        typeof client?.id === 'string' && client.id.trim()
+          ? client.id.trim()
+          : `client-${Date.now()}`
       const quote = {
         id,
         number,
         userId,
         client: {
-          id: `client-${Date.now()}`,
+          id: memClientId,
           name: (client?.name ?? '').trim() || 'Cliente',
           phone: (client?.phone ?? '').trim() || '',
           address: (client?.address ?? '').trim() || '',
@@ -203,19 +207,52 @@ export async function POST(request: NextRequest) {
     }
     let number = `ORC-${year}-${String(maxNum + 1).padStart(3, '0')}`
 
-    // Sempre cria novo cliente (permite mesmo telefone para clientes diferentes)
     const clientName = (client?.name ?? '').trim() || 'Cliente'
     const clientPhone = (client?.phone ?? '').trim() || ''
     const clientAddress = (client?.address ?? '').trim() || ''
-    const clientRecord = await prisma.client.create({
-      data: {
-        name: clientName,
-        phone: clientPhone,
-        address: clientAddress,
-        email: (client?.email ?? '').trim() || null,
-      },
-      select: { id: true },
-    })
+    const clientEmail = (client?.email ?? '').trim() || null
+    const clientIdHint = typeof client?.id === 'string' ? client.id.trim() : ''
+
+    let clientRecord: { id: string }
+
+    if (clientIdHint) {
+      const existingClient = await prisma.client.findUnique({
+        where: { id: clientIdHint },
+        select: { id: true },
+      })
+      if (existingClient) {
+        clientRecord = await prisma.client.update({
+          where: { id: existingClient.id },
+          data: {
+            name: clientName,
+            phone: clientPhone,
+            address: clientAddress,
+            email: clientEmail,
+          },
+          select: { id: true },
+        })
+      } else {
+        clientRecord = await prisma.client.create({
+          data: {
+            name: clientName,
+            phone: clientPhone,
+            address: clientAddress,
+            email: clientEmail,
+          },
+          select: { id: true },
+        })
+      }
+    } else {
+      clientRecord = await prisma.client.create({
+        data: {
+          name: clientName,
+          phone: clientPhone,
+          address: clientAddress,
+          email: clientEmail,
+        },
+        select: { id: true },
+      })
+    }
 
     const createQuoteWithNumber = async (quoteNumber: string) => {
       const data: any = {

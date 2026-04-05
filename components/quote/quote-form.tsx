@@ -129,7 +129,8 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
 
     try {
       const quoteData = {
-        client: { ...client, id: client.id || Date.now().toString() },
+        // id vazio = novo cliente no servidor; id preenchido = reutiliza cadastro ao criar orçamento
+        client,
         services,
         materials,
         subtotal,
