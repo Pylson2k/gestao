@@ -20,9 +20,6 @@ import {
 } from '@/lib/material-units'
 import { Trash2 } from 'lucide-react'
 
-const QUICK_FRACTIONS = ['1/2', '1/4', '3/4', '1 1/2'] as const
-const QUICK_WHOLE = [1, 2, 5, 10] as const
-
 interface MaterialItemRowProps {
   item: MaterialItem
   onChange: (item: MaterialItem) => void
@@ -67,33 +64,6 @@ export function MaterialItemRow({
     setQuantityText(formatQuantityDisplay(n))
   }
 
-  const applyQuickFraction = (chip: string) => {
-    const parsed = parseQuantityInput(chip)
-    const n = normalizeStoredQuantity(parsed, safeQty)
-    onChange({ ...item, quantity: n })
-    setQuantityText(formatQuantityDisplay(n))
-    qtyInputRef.current?.focus()
-  }
-
-  const applyWholeNumber = (n: number) => {
-    const val = normalizeStoredQuantity(n, 1)
-    onChange({ ...item, quantity: val })
-    setQuantityText(formatQuantityDisplay(val))
-    qtyInputRef.current?.focus()
-  }
-
-  const applyOneUnidade = () => {
-    onChange({ ...item, unit: 'unidade', quantity: 1 })
-    setQuantityText(formatQuantityDisplay(1))
-    qtyInputRef.current?.focus()
-  }
-
-  const applyOneMetro = () => {
-    onChange({ ...item, unit: 'metro', quantity: 1 })
-    setQuantityText(formatQuantityDisplay(1))
-    qtyInputRef.current?.focus()
-  }
-
   const handleNameEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== 'Enter') return
     e.preventDefault()
@@ -126,68 +96,19 @@ export function MaterialItemRow({
   }
 
   const qtyCol = (
-    <div className="space-y-1.5">
-      <Input
-        ref={qtyInputRef}
-        inputMode="decimal"
-        placeholder="Ex.: 1, 0,5 ou 1/2"
-        aria-label="Quantidade"
-        value={quantityText}
-        onChange={(e) => setQuantityText(e.target.value)}
-        onBlur={() => commitQuantity(quantityText, safeQty)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') handleQtyEnter(e)
-        }}
-        className="bg-background min-h-[40px]"
-      />
-      <div className="flex flex-wrap gap-1">
-        <Button
-          type="button"
-          variant="default"
-          size="sm"
-          className="h-7 px-2 text-xs font-medium"
-          onClick={applyOneUnidade}
-        >
-          1 un.
-        </Button>
-        <Button
-          type="button"
-          variant="default"
-          size="sm"
-          className="h-7 px-2 text-xs font-medium"
-          onClick={applyOneMetro}
-        >
-          1 m
-        </Button>
-        {QUICK_WHOLE.map((n) => (
-          <Button
-            key={n}
-            type="button"
-            variant="secondary"
-            size="sm"
-            className="h-7 min-w-[1.75rem] px-2 text-xs font-normal text-muted-foreground"
-            onClick={() => applyWholeNumber(n)}
-          >
-            {n}
-          </Button>
-        ))}
-      </div>
-      <div className="flex flex-wrap gap-1 items-center">
-        <span className="text-[10px] uppercase tracking-wide text-muted-foreground mr-0.5">Frações</span>
-        {QUICK_FRACTIONS.map((chip) => (
-          <Button
-            key={chip}
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-7 px-2 text-xs font-normal text-muted-foreground"
-            onClick={() => applyQuickFraction(chip)}
-          >
-            {chip}
-          </Button>
-        ))}
-      </div>
-    </div>
+    <Input
+      ref={qtyInputRef}
+      inputMode="decimal"
+      placeholder="Quantidade"
+      aria-label="Quantidade"
+      value={quantityText}
+      onChange={(e) => setQuantityText(e.target.value)}
+      onBlur={() => commitQuantity(quantityText, safeQty)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') handleQtyEnter(e)
+      }}
+      className="bg-background min-h-[40px]"
+    />
   )
 
   const unitCol = (
@@ -210,7 +131,7 @@ export function MaterialItemRow({
 
   if (!showPrices) {
     return (
-      <div className="grid grid-cols-12 gap-2 items-start">
+      <div className="grid grid-cols-12 gap-2 items-center">
         <div className="col-span-12 sm:col-span-5">
           <Input
             ref={nameInputRef}
@@ -223,7 +144,7 @@ export function MaterialItemRow({
         </div>
         <div className="col-span-12 sm:col-span-3">{qtyCol}</div>
         <div className="col-span-10 sm:col-span-3">{unitCol}</div>
-        <div className="col-span-2 sm:col-span-1 flex justify-end pt-1 sm:pt-0">
+        <div className="col-span-2 sm:col-span-1 flex justify-end">
           <Button
             type="button"
             variant="ghost"
@@ -240,7 +161,7 @@ export function MaterialItemRow({
   }
 
   return (
-    <div className="grid grid-cols-12 gap-2 items-start">
+    <div className="grid grid-cols-12 gap-2 items-center">
       <div className="col-span-12 sm:col-span-3">
         <Input
           ref={nameInputRef}
@@ -269,12 +190,12 @@ export function MaterialItemRow({
           aria-label="Valor unitário"
         />
       </div>
-      <div className="col-span-5 sm:col-span-1 text-right pt-2 sm:pt-2">
+      <div className="col-span-5 sm:col-span-1 text-right">
         <span className="text-sm font-medium text-foreground">
           {total > 0 ? total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}
         </span>
       </div>
-      <div className="col-span-1 flex justify-end pt-1">
+      <div className="col-span-1 flex justify-end">
         <Button
           type="button"
           variant="ghost"

@@ -120,4 +120,4 @@ export function formatQuantityWithUnitPdf(q: number, unit?: string | null): stri
 
 /** Texto para uma linha de ajuda no formulário. */
 export const QUANTITY_HELP_TEXT =
-  'Enter na descrição leva à quantidade; na quantidade confirma e vai ao valor unitário (orçamento) ou cria linha nova no fim da lista. Atalhos: 1 un., 1 m, números e frações. Decimais com vírgula (0,5) ou fração (1/2).'
+  'Enter na descrição leva à quantidade; na quantidade confirma e segue ao valor (orçamento) ou cria linha nova no fim da lista. Quantidade: use vírgula para decimais (0,5) ou frações (1/2, 1 1/2). Escolha a unidade ao lado.'

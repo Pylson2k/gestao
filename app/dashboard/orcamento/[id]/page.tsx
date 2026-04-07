@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Link } from '@/components/app-link'
 import { useQuotes } from '@/contexts/quotes-context'
@@ -26,6 +26,9 @@ import {
   generateMaterialsListPDF,
   downloadPDF,
   openViewWindow,
+  preloadHtml2Pdf,
+  openWhatsApp,
+  generateWhatsAppMessage,
 } from '@/lib/pdf-generator'
 import { cn } from '@/lib/utils'
 import { formatQuantityWithUnitPdf } from '@/lib/material-units'
@@ -79,8 +82,11 @@ export default function QuoteDetailPage({
   const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage')
   const [discountValue, setDiscountValue] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
-  const [showWhatsAppInstructions, setShowWhatsAppInstructions] = useState(false)
   const [delinquencySaving, setDelinquencySaving] = useState(false)
+
+  useEffect(() => {
+    preloadHtml2Pdf()
+  }, [id])
 
   const quote = getQuoteById(id)
 
@@ -216,110 +222,58 @@ export default function QuoteDetailPage({
     }
   }
 
-  const handleWhatsApp = async () => {
+  const handleWhatsApp = () => {
     try {
-      // Primeiro, gerar e baixar o PDF
+      const digits = quote.client.phone.replace(/\D/g, '')
+      if (!digits || digits.length < 10) {
+        alert(
+          'Cadastre um telefone válido com DDD no cliente para abrir o WhatsApp (ex.: 11999998888).'
+        )
+        return
+      }
+
+      // Abre o WhatsApp já na conversa com o cliente (mesmo clique — não bloqueia no PDF)
+      openWhatsApp(quote.client.phone, generateWhatsAppMessage(quote))
+
+      if (quote.status === 'draft') {
+        void updateQuote(quote.id, { status: 'sent' })
+      }
+
+      // Gera o PDF em segundo plano para o usuário anexar na conversa (não atrasa o WhatsApp)
       const html = generateQuotePDF(quote, companySettings)
       const filename = `orcamento-${quote.number.replace(/\s+/g, '-')}.pdf`
-      
-      // Mostrar mensagem de que está gerando o PDF
-      const downloadingMessage = document.createElement('div')
-      downloadingMessage.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #3b82f6;
-        color: white;
-        padding: 16px 24px;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        z-index: 9999;
-        font-family: system-ui, -apple-system, sans-serif;
-        font-size: 14px;
-      `
-      downloadingMessage.textContent = '📄 Gerando PDF do orçamento...'
-      document.body.appendChild(downloadingMessage)
-      
-      try {
-        // Baixar o PDF
-        await downloadPDF(html, filename)
-        
-        // Atualizar mensagem
-        downloadingMessage.style.background = '#10b981'
-        downloadingMessage.textContent = '✅ PDF baixado com sucesso!'
-        
-        // Aguardar um pouco para o usuário ver a mensagem
-        await new Promise(resolve => setTimeout(resolve, 1500))
-      } catch (error) {
-        console.error('Erro ao gerar PDF:', error)
-        downloadingMessage.style.background = '#ef4444'
-        downloadingMessage.textContent = '❌ Erro ao gerar PDF'
-        setTimeout(() => document.body.removeChild(downloadingMessage), 3000)
-        throw error
-      }
-      
-      // Remover mensagem
-      document.body.removeChild(downloadingMessage)
-      
-      // Mostrar dialog de instruções
-      setShowWhatsAppInstructions(true)
-      
-      if (quote.status === 'draft') {
-        updateQuote(quote.id, { status: 'sent' })
-      }
-      
-      // Log de auditoria
-      try {
-        const userId = sessionStorage.getItem('servipro_user') ? JSON.parse(sessionStorage.getItem('servipro_user')!).id : null
-        if (userId) {
-          await fetch('/api/audit/action', {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              'x-user-id': userId,
-            },
-            body: JSON.stringify({
-              action: 'send_quote_whatsapp',
-              entityType: 'quote',
-              entityId: quote.id,
-              description: `Orçamento ${quote.number} enviado via WhatsApp para ${quote.client.name}`,
-            }),
-          })
+      void downloadPDF(html, filename).catch((err) => {
+        console.error('PDF em segundo plano após WhatsApp:', err)
+      })
+
+      void (async () => {
+        try {
+          const userId = sessionStorage.getItem('servipro_user')
+            ? JSON.parse(sessionStorage.getItem('servipro_user')!).id
+            : null
+          if (userId) {
+            await fetch('/api/audit/action', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-user-id': userId,
+              },
+              body: JSON.stringify({
+                action: 'send_quote_whatsapp',
+                entityType: 'quote',
+                entityId: quote.id,
+                description: `Orçamento ${quote.number} — WhatsApp aberto para ${quote.client.name}`,
+              }),
+            })
+          }
+        } catch {
+          /* ignore */
         }
-      } catch {}
+      })()
     } catch (error) {
       console.error('Erro ao abrir WhatsApp:', error)
-      alert('Erro ao processar envio. Tente novamente.')
+      alert('Não foi possível abrir o WhatsApp. Verifique o telefone do cliente e tente de novo.')
     }
-  }
-
-  const handleOpenWhatsAppWithPDF = () => {
-    // Mensagem simplificada para WhatsApp
-    const message = `Olá ${quote.client.name}!
-
-Segue o orçamento *${quote.number}*.
-
-Aguardo sua confirmação!`
-    
-    const cleanPhone = quote.client.phone.replace(/\D/g, '')
-    const fullPhone = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`
-    const whatsappUrl = `https://wa.me/${fullPhone}?text=${encodeURIComponent(message)}`
-    
-    // Tentar abrir WhatsApp
-    const whatsappWindow = window.open(whatsappUrl, '_blank')
-    
-    // Se não abrir (bloqueio de pop-up), criar link temporário
-    if (!whatsappWindow || whatsappWindow.closed || typeof whatsappWindow.closed === 'undefined') {
-      const link = document.createElement('a')
-      link.href = whatsappUrl
-      link.target = '_blank'
-      link.rel = 'noopener noreferrer'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-    }
-    
-    setShowWhatsAppInstructions(false)
   }
 
   const handleViewQuote = async () => {
@@ -514,6 +468,7 @@ Aguardo sua confirmação!`
           </Button>
           <Button 
             onClick={handleWhatsApp} 
+            title="Abre o WhatsApp com o número do cliente. O PDF do orçamento é baixado em seguida para você anexar."
             className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-xl shadow-lg shadow-green-500/30 min-h-[48px] text-base sm:text-sm px-6 py-3 sm:py-2 touch-manipulation"
           >
             <MessageCircle className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
@@ -964,64 +919,6 @@ Aguardo sua confirmação!`
           </div>
         </CardContent>
       </Card>
-
-      {/* Dialog de instruções WhatsApp */}
-      <Dialog open={showWhatsAppInstructions} onOpenChange={setShowWhatsAppInstructions}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <MessageCircle className="w-5 h-5 text-green-600" />
-              PDF Baixado com Sucesso!
-            </DialogTitle>
-            <DialogDescription>
-              O orçamento foi salvo no seu dispositivo
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <p className="text-sm text-green-800 font-medium mb-2">
-                📄 Arquivo: orcamento-{quote.number.replace(/\s+/g, '-')}.pdf
-              </p>
-              <p className="text-xs text-green-700">
-                O PDF está salvo na pasta de Downloads do seu dispositivo
-              </p>
-            </div>
-            
-            <div className="space-y-3">
-              <p className="text-sm font-medium text-foreground">Próximos passos:</p>
-              <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
-                <li>Clique no botão abaixo para abrir o WhatsApp</li>
-                <li>No WhatsApp, clique no ícone de anexo (📎)</li>
-                <li>Selecione "Documento" ou "Arquivo"</li>
-                <li>Escolha o PDF que foi baixado</li>
-                <li>Envie para o cliente!</li>
-              </ol>
-            </div>
-
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="text-xs text-blue-800">
-                💡 <strong>Dica:</strong> O PDF já está pronto para ser anexado. Basta procurar por "{quote.number}" nos seus arquivos.
-              </p>
-            </div>
-          </div>
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setShowWhatsAppInstructions(false)}
-              className="w-full sm:w-auto"
-            >
-              Fechar
-            </Button>
-            <Button
-              onClick={handleOpenWhatsAppWithPDF}
-              className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
-            >
-              <MessageCircle className="w-4 h-4 mr-2" />
-              Abrir WhatsApp
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Dialog de desconto ao iniciar serviço */}
       <Dialog open={showDiscountDialog} onOpenChange={setShowDiscountDialog}>
