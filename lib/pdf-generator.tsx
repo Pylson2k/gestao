@@ -1280,17 +1280,132 @@ function waitForImages(root: HTMLElement): Promise<void> {
   ).then(() => undefined)
 }
 
-function triggerBlobDownload(blob: Blob, filename: string): void {
-  const url = URL.createObjectURL(blob)
+function normalizePdfBlob(out: unknown): Blob | null {
+  if (out instanceof Blob) {
+    return new Blob([out], { type: 'application/pdf' })
+  }
+  if (out instanceof ArrayBuffer) {
+    return new Blob([out], { type: 'application/pdf' })
+  }
+  if (out instanceof Uint8Array) {
+    const ab = out.buffer.slice(out.byteOffset, out.byteOffset + out.byteLength) as ArrayBuffer
+    return new Blob([ab], { type: 'application/pdf' })
+  }
+  return null
+}
+
+/** Download via &lt;a download&gt; — não usar display:none (Firefox); não revogar URL na mesma tarefa (Chrome cancela o download). */
+function anchorDownloadPdf(blob: Blob, filename: string): void {
+  const pdf = blob.type === 'application/pdf' ? blob : new Blob([blob], { type: 'application/pdf' })
+  const url = URL.createObjectURL(pdf)
   const a = document.createElement('a')
   a.href = url
   a.download = filename
   a.rel = 'noopener'
-  a.style.display = 'none'
+  a.setAttribute('aria-hidden', 'true')
+  a.style.cssText =
+    'position:fixed;left:0;top:0;width:1px;height:1px;opacity:0.01;pointer-events:none;z-index:-1'
   document.body.appendChild(a)
   a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
+  setTimeout(() => {
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }, 90_000)
+}
+
+type SaveFilePickerWindow = Window &
+  typeof globalThis & {
+    showSaveFilePicker?: (options: {
+      suggestedName?: string
+      types?: { description: string; accept: Record<string, string[]> }[]
+    }) => Promise<FileSystemFileHandle>
+  }
+
+/**
+ * Grava o PDF no disco. Ordem: Edge legado → diálogo nativo (Chrome/Edge) → link download.
+ * Após vários await, o Chrome pode ignorar download programático; o diálogo "Salvar como" costuma funcionar.
+ */
+async function savePdfBlobToDisk(blob: Blob, filename: string): Promise<void> {
+  const pdf = blob.type === 'application/pdf' ? blob : new Blob([blob], { type: 'application/pdf' })
+
+  const nav = navigator as Navigator & { msSaveOrOpenBlob?: (b: Blob, name: string) => void }
+  if (typeof nav.msSaveOrOpenBlob === 'function') {
+    try {
+      nav.msSaveOrOpenBlob(pdf, filename)
+      return
+    } catch {
+      /* continua */
+    }
+  }
+
+  const w = typeof window !== 'undefined' ? (window as SaveFilePickerWindow) : null
+  if (w?.showSaveFilePicker) {
+    try {
+      const handle = await w.showSaveFilePicker({
+        suggestedName: filename,
+        types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }],
+      })
+      const writable = await handle.createWritable()
+      await writable.write(pdf)
+      await writable.close()
+      return
+    } catch (e) {
+      const err = e as { name?: string }
+      if (err.name === 'AbortError') return
+      console.warn('showSaveFilePicker:', e)
+    }
+  }
+
+  anchorDownloadPdf(pdf, filename)
+  showPdfDownloadFallbackBar(pdf, filename)
+}
+
+let fallbackBarSeq = 0
+
+/** Barra discreta: segundo clique garante gesto do usuário se o download automático foi bloqueado. */
+function showPdfDownloadFallbackBar(blob: Blob, filename: string): void {
+  const id = ++fallbackBarSeq
+  const pdf = blob.type === 'application/pdf' ? blob : new Blob([blob], { type: 'application/pdf' })
+  const url = URL.createObjectURL(pdf)
+
+  const bar = document.createElement('div')
+  bar.setAttribute('role', 'status')
+  bar.style.cssText =
+    'position:fixed;bottom:0;left:0;right:0;z-index:2147483646;padding:12px 16px;background:#0f172a;color:#f8fafc;font:14px/1.4 system-ui,-apple-system,sans-serif;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px;box-shadow:0 -4px 24px rgba(0,0,0,.25)'
+
+  const msg = document.createElement('span')
+  msg.textContent = 'PDF gerado. Se o arquivo não apareceu na pasta de Downloads, clique em Salvar.'
+
+  const btn = document.createElement('button')
+  btn.type = 'button'
+  btn.textContent = 'Salvar PDF'
+  btn.style.cssText =
+    'padding:10px 20px;border-radius:8px;border:none;background:#fff;color:#0f172a;font-weight:600;cursor:pointer'
+  btn.onclick = () => {
+    anchorDownloadPdf(pdf, filename)
+  }
+
+  const close = document.createElement('button')
+  close.type = 'button'
+  close.textContent = 'Fechar'
+  close.style.cssText =
+    'padding:10px 16px;border-radius:8px;border:1px solid rgba(248,250,252,.35);background:transparent;color:#f8fafc;cursor:pointer'
+  close.onclick = () => {
+    URL.revokeObjectURL(url)
+    bar.remove()
+  }
+
+  bar.appendChild(msg)
+  bar.appendChild(btn)
+  bar.appendChild(close)
+  document.body.appendChild(bar)
+
+  setTimeout(() => {
+    if (id !== fallbackBarSeq) return
+    if (!bar.parentNode) return
+    URL.revokeObjectURL(url)
+    bar.remove()
+  }, 45_000)
 }
 
 function openHtmlForPrintFallback(html: string): void {
@@ -1388,13 +1503,13 @@ export async function downloadPDF(html: string, filename: string = 'orcamento.pd
     let blob: Blob | null = null
     try {
       const out = await html2pdf().set(opt as unknown).from(container).outputPdf('blob')
-      blob = out instanceof Blob ? out : null
+      blob = normalizePdfBlob(out)
     } catch (e) {
       console.warn('html2pdf outputPdf(blob) falhou, tentando .save()', e)
     }
 
-    if (blob instanceof Blob && blob.size > 80) {
-      triggerBlobDownload(blob, safeFilename)
+    if (blob && blob.size > 80) {
+      await savePdfBlobToDisk(blob, safeFilename)
       return
     }
 
