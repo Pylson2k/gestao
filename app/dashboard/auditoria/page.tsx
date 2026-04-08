@@ -90,6 +90,16 @@ const actionLabels: Record<string, string> = {
   // Exportações
   export_csv: 'Exportar CSV',
   export_pdf: 'Exportar PDF',
+  // Obras / trabalhador
+  create_work_assignment: 'Criar atribuição (obra/ponto)',
+  update_work_assignment: 'Atualizar atribuição',
+  delete_work_assignment: 'Excluir atribuição',
+  approve_work_day_log: 'Aprovar registro de ponto',
+  reject_work_day_log: 'Recusar registro de ponto',
+  approve_work_contract_submission: 'Aprovar empreita',
+  reject_work_contract_submission: 'Recusar empreita',
+  create_worker_account: 'Criar conta trabalhador',
+  update_worker_account: 'Atualizar conta trabalhador',
 }
 
 const actionColors: Record<string, string> = {
@@ -144,6 +154,16 @@ const actionColors: Record<string, string> = {
   // Exportações
   export_csv: 'bg-teal-500/10 text-teal-500 border-teal-500/20',
   export_pdf: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20',
+  // Obras / trabalhador
+  create_work_assignment: 'bg-green-500/10 text-green-500 border-green-500/20',
+  update_work_assignment: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
+  delete_work_assignment: 'bg-red-500/10 text-red-500 border-red-500/20',
+  approve_work_day_log: 'bg-green-500/10 text-green-500 border-green-500/20',
+  reject_work_day_log: 'bg-orange-500/10 text-orange-500 border-orange-500/20',
+  approve_work_contract_submission: 'bg-green-500/10 text-green-500 border-green-500/20',
+  reject_work_contract_submission: 'bg-orange-500/10 text-orange-500 border-orange-500/20',
+  create_worker_account: 'bg-green-500/10 text-green-500 border-green-500/20',
+  update_worker_account: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
 }
 
 const actionIcons: Record<string, any> = {
@@ -198,6 +218,16 @@ const actionIcons: Record<string, any> = {
   // Exportações
   export_csv: CheckCircle,
   export_pdf: CheckCircle,
+  // Obras / trabalhador
+  create_work_assignment: Plus,
+  update_work_assignment: Edit,
+  delete_work_assignment: Trash2,
+  approve_work_day_log: CheckCircle,
+  reject_work_day_log: XCircle,
+  approve_work_contract_submission: CheckCircle,
+  reject_work_contract_submission: XCircle,
+  create_worker_account: Plus,
+  update_worker_account: Edit,
 }
 
 export default function AuditoriaPage() {
@@ -409,6 +439,10 @@ export default function AuditoriaPage() {
                   <SelectItem value="company_settings">Configurações</SelectItem>
                   <SelectItem value="user">Usuário</SelectItem>
                   <SelectItem value="export">Exportação</SelectItem>
+                  <SelectItem value="work_assignment">Obra / atribuição</SelectItem>
+                  <SelectItem value="work_day_log">Registro de ponto</SelectItem>
+                  <SelectItem value="worker_contract_submission">Empreita (pedido)</SelectItem>
+                  <SelectItem value="worker_account">Conta trabalhador</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -500,6 +534,11 @@ export default function AuditoriaPage() {
                            log.entityType === 'company_settings' ? 'Configurações' :
                            log.entityType === 'user' ? 'Usuário' :
                            log.entityType === 'export' ? 'Exportação' :
+                           log.entityType === 'work_assignment' ? 'Obra / atribuição' :
+                           log.entityType === 'work_day_log' ? 'Registro de ponto' :
+                           log.entityType === 'worker_contract_submission' ? 'Empreita' :
+                           log.entityType === 'worker_account' ? 'Conta trabalhador' :
+                           log.entityType === 'payment' ? 'Pagamento' :
                            log.entityType}
                         </Badge>
                         {isCritical && (

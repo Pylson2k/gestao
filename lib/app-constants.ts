@@ -15,6 +15,9 @@ export const APP_PWA_SHORT_NAME = 'SINAI'
 /** sessionStorage — trocar a chave desconecta sessões antigas. */
 export const AUTH_SESSION_STORAGE_KEY = 'sinai_engenharia_user'
 
+/** Token do app /trabalhador (Bearer nas APIs /api/worker/*). */
+export const WORKER_SESSION_STORAGE_KEY = 'sinai_worker_token'
+
 /** Chave antiga de sessão (ServiPro) — migrada automaticamente. */
 export const LEGACY_AUTH_SESSION_KEY = 'servipro_user'
 

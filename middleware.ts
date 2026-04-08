@@ -16,6 +16,10 @@ function isPublicApi(pathname: string): boolean {
   return false
 }
 
+function isWorkerApi(pathname: string): boolean {
+  return pathname.startsWith('/api/worker/')
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   if (!pathname.startsWith('/api/')) {
@@ -26,6 +30,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
   if (isPublicApi(pathname)) {
+    return NextResponse.next()
+  }
+
+  // Trabalhador: auth por token dentro de cada rota (não usa x-user-id do gestor).
+  if (isWorkerApi(pathname)) {
     return NextResponse.next()
   }
 

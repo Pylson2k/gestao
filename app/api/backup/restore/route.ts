@@ -42,6 +42,8 @@ export async function POST(request: NextRequest) {
       companySettings = [],
       cashClosings = [],
       materialLists = [],
+      workerAccounts = [],
+      workAssignments = [],
     } = body
 
     if (!Array.isArray(clients) || !Array.isArray(quotes)) {
@@ -238,6 +240,86 @@ export async function POST(request: NextRequest) {
         skipDuplicates: true,
       })
     }
+
+    const safeWorkerAccounts = Array.isArray(workerAccounts) ? workerAccounts : []
+    if (safeWorkerAccounts.length > 0) {
+      await prisma.workerAccount.createMany({
+        data: safeWorkerAccounts.map((w: any) => ({
+          id: w.id,
+          employeeId: w.employeeId,
+          loginUsername: w.loginUsername,
+          passwordHash: w.passwordHash,
+          ownerUserId: w.ownerUserId,
+          createdAt: w.createdAt ? toDate(w.createdAt) : new Date(),
+          updatedAt: w.updatedAt ? toDate(w.updatedAt) : w.createdAt ? toDate(w.createdAt) : new Date(),
+        })),
+        skipDuplicates: true,
+      })
+    }
+
+    const safeWorkAssignments = Array.isArray(workAssignments) ? workAssignments : []
+    for (const a of safeWorkAssignments) {
+      const steps = Array.isArray(a.steps) ? a.steps : []
+      const dayLogs = Array.isArray(a.dayLogs) ? a.dayLogs : []
+      const submissions = Array.isArray(a.submissions) ? a.submissions : []
+      const data: Record<string, unknown> = {
+        id: a.id,
+        ownerUserId: a.ownerUserId,
+        employeeId: a.employeeId,
+        title: a.title,
+        mode: a.mode,
+        status: a.status ?? 'DRAFT',
+        dailyRate: a.dailyRate ?? null,
+        contractTotal: a.contractTotal ?? null,
+        approvedPercent: Number(a.approvedPercent ?? 0),
+        createdAt: a.createdAt ? toDate(a.createdAt) : new Date(),
+        updatedAt: a.updatedAt ? toDate(a.updatedAt) : new Date(),
+      }
+      if (steps.length > 0) {
+        data.steps = {
+          create: steps.map((s: any) => ({
+            id: s.id,
+            sortOrder: Number(s.sortOrder ?? 0),
+            title: s.title,
+            amount: Number(s.amount ?? 0),
+            approvedDone: Boolean(s.approvedDone),
+            createdAt: s.createdAt ? toDate(s.createdAt) : new Date(),
+          })),
+        }
+      }
+      if (dayLogs.length > 0) {
+        data.dayLogs = {
+          create: dayLogs.map((d: any) => ({
+            id: d.id,
+            workDate: toDate(d.workDate),
+            clockInAt: toDate(d.clockInAt),
+            clockOutAt: toDate(d.clockOutAt),
+            workerNote: d.workerNote ?? null,
+            status: d.status ?? 'PENDING',
+            dayUnits: d.dayUnits != null ? Number(d.dayUnits) : null,
+            rejectReason: d.rejectReason ?? null,
+            reviewedAt: d.reviewedAt ? toDate(d.reviewedAt) : null,
+            createdAt: d.createdAt ? toDate(d.createdAt) : new Date(),
+          })),
+        }
+      }
+      if (submissions.length > 0) {
+        data.submissions = {
+          create: submissions.map((sub: any) => ({
+            id: sub.id,
+            kind: sub.kind,
+            proposedPercent: sub.proposedPercent != null ? Number(sub.proposedPercent) : null,
+            stepId: sub.stepId ?? null,
+            workerNote: sub.workerNote ?? null,
+            status: sub.status ?? 'PENDING',
+            rejectReason: sub.rejectReason ?? null,
+            reviewedAt: sub.reviewedAt ? toDate(sub.reviewedAt) : null,
+            createdAt: sub.createdAt ? toDate(sub.createdAt) : new Date(),
+          })),
+        }
+      }
+      await prisma.workAssignment.create({ data: data as any })
+    }
     if (services.length > 0) {
       await prisma.service.createMany({
         data: services.map((s: any) => ({
@@ -330,6 +412,8 @@ export async function POST(request: NextRequest) {
         services: services.length,
         companySettings: companySettings.length,
         cashClosings: cashClosings.length,
+        workerAccounts: safeWorkerAccounts.length,
+        workAssignments: safeWorkAssignments.length,
       },
     })
   } catch (error: any) {

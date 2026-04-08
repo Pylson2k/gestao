@@ -60,8 +60,33 @@ export type AuditAction =
   // Exportações
   | 'export_csv'
   | 'export_pdf'
+  // Obras / ponto / trabalhador
+  | 'create_work_assignment'
+  | 'update_work_assignment'
+  | 'delete_work_assignment'
+  | 'approve_work_day_log'
+  | 'reject_work_day_log'
+  | 'approve_work_contract_submission'
+  | 'reject_work_contract_submission'
+  | 'create_worker_account'
+  | 'update_worker_account'
 
-export type EntityType = 'quote' | 'material_list' | 'expense' | 'client' | 'employee' | 'service' | 'cash_closing' | 'payment' | 'company_settings' | 'user' | 'export'
+export type EntityType =
+  | 'quote'
+  | 'material_list'
+  | 'expense'
+  | 'client'
+  | 'employee'
+  | 'service'
+  | 'cash_closing'
+  | 'payment'
+  | 'company_settings'
+  | 'user'
+  | 'export'
+  | 'work_assignment'
+  | 'work_day_log'
+  | 'worker_contract_submission'
+  | 'worker_account'
 
 interface AuditLogData {
   userId: string

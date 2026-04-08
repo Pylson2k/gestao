@@ -32,7 +32,9 @@ model User {
   services          Service[]
   cashClosings      CashClosing[]
   payments          Payment[]
-  
+  workerAccounts    WorkerAccount[]
+  ownedWorkAssignments WorkAssignment[] @relation("WorkAssignmentOwner")
+
   @@map("users")
 }
 
@@ -173,8 +175,119 @@ model Employee {
   
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expenses    Expense[]
-  
+  workerAccount WorkerAccount?
+  workAssignments WorkAssignment[]
+
   @@map("employees")
+}
+
+/// Conta do trabalhador (login no app /trabalhador).
+model WorkerAccount {
+  id            String   @id @default(cuid())
+  employeeId    String   @unique
+  loginUsername String   @unique
+  passwordHash  String
+  ownerUserId   String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  employee Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  owner    User           @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  sessions WorkerSession[]
+
+  @@index([ownerUserId])
+  @@map("worker_accounts")
+}
+
+model WorkerSession {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  accountId String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  account WorkerAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@map("worker_sessions")
+}
+
+/// Vínculo obra/serviço: diária ou empreita (% ou etapas). Só conta em totais após ACTIVE + aprovações.
+model WorkAssignment {
+  id              String   @id @default(cuid())
+  ownerUserId     String
+  employeeId      String
+  title           String
+  mode            String   // DAILY | CONTRACT_PERCENT | CONTRACT_STEPS
+  status          String   @default("DRAFT") // DRAFT | ACTIVE | CLOSED
+  dailyRate       Float?
+  contractTotal   Float?
+  approvedPercent Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  owner    User       @relation("WorkAssignmentOwner", fields: [ownerUserId], references: [id], onDelete: Cascade)
+  employee Employee   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  steps    ContractStep[]
+  dayLogs  WorkDayLog[]
+  submissions WorkerContractSubmission[]
+
+  @@index([ownerUserId, employeeId])
+  @@index([ownerUserId, status])
+  @@map("work_assignments")
+}
+
+model ContractStep {
+  id           String   @id @default(cuid())
+  assignmentId String
+  sortOrder    Int
+  title        String
+  amount       Float
+  approvedDone Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  assignment   WorkAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  submissions  WorkerContractSubmission[]
+
+  @@unique([assignmentId, sortOrder])
+  @@map("contract_steps")
+}
+
+model WorkDayLog {
+  id           String    @id @default(cuid())
+  assignmentId String
+  workDate     DateTime  @db.Date
+  clockInAt    DateTime
+  clockOutAt   DateTime
+  workerNote   String?   @db.Text
+  status       String    @default("PENDING")
+  dayUnits     Float?
+  rejectReason String?   @db.Text
+  reviewedAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  assignment WorkAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@index([assignmentId, workDate])
+  @@map("work_day_logs")
+}
+
+model WorkerContractSubmission {
+  id              String    @id @default(cuid())
+  assignmentId    String
+  kind            String    // PERCENT | STEP_DONE
+  proposedPercent Float?
+  stepId          String?
+  workerNote      String?   @db.Text
+  status          String    @default("PENDING")
+  rejectReason    String?   @db.Text
+  reviewedAt      DateTime?
+  createdAt       DateTime  @default(now())
+
+  assignment WorkAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  step       ContractStep?  @relation(fields: [stepId], references: [id], onDelete: SetNull)
+
+  @@index([assignmentId, status])
+  @@map("worker_contract_submissions")
 }
 
 model Service {

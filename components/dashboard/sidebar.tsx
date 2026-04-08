@@ -27,6 +27,7 @@ import {
   CreditCard,
   AlertTriangle,
   Package,
+  HardHat,
 } from 'lucide-react'
 import { useState, useEffect, useMemo } from 'react'
 import { APP_DISPLAY_NAME } from '@/lib/app-constants'
@@ -70,6 +71,7 @@ const navigation = [
   { name: 'Clientes', href: '/dashboard/clientes', icon: UserCircle, showBadge: false },
   { name: 'Servicos', href: '/dashboard/servicos', icon: Wrench, showBadge: false },
   { name: 'Funcionarios', href: '/dashboard/funcionarios', icon: Users, showBadge: false },
+  { name: 'Obras e ponto', href: '/dashboard/obras-ponto', icon: HardHat, showBadge: false },
   { name: 'Fechamento de Caixa', href: '/dashboard/fechamento-caixa', icon: Wallet, showBadge: false },
   { name: 'Relatorios de Fechamentos', href: '/dashboard/relatorios-fechamentos', icon: Calendar, showBadge: false },
   { name: 'Despesas', href: '/dashboard/despesas', icon: Receipt, showBadge: false },
