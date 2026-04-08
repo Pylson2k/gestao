@@ -1,4 +1,4 @@
-import type { Quote, CompanySettings, MaterialList } from './types'
+import type { Quote, CompanySettings, MaterialList, Payment } from './types'
 import { formatQuantityWithUnitPdf } from './material-units'
 
 /**
@@ -221,6 +221,109 @@ function pdfEscapeHtml(s: string): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
+}
+
+const PAYMENT_METHOD_LABELS_PT: Record<string, string> = {
+  dinheiro: 'Dinheiro',
+  pix: 'PIX',
+  cartao_credito: 'Cartão de crédito',
+  cartao_debito: 'Cartão de débito',
+  transferencia: 'Transferência bancária',
+  boleto: 'Boleto',
+}
+
+function paymentMethodLabelPt(method: string): string {
+  return PAYMENT_METHOD_LABELS_PT[method] ?? method
+}
+
+function pdfFormatCurrency(value: number): string {
+  return value > 0 ? value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'
+}
+
+/** Blocos HTML de tabelas de serviços e materiais do orçamento (reutilizado em PDF de orçamento e ordem de serviço). */
+function pdfQuoteLineItemsSections(quote: Quote): string {
+  const servicesTotal = quote.services.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
+  const materialsTotal = quote.materials.reduce(
+    (sum, item) => sum + item.quantity * item.unitPrice,
+    0
+  )
+
+  const servicesRows = quote.services
+    .map(
+      (item) =>
+        `<tr>
+          <td class="pdf-td-desc">${pdfEscapeHtml(item.name)}</td>
+          <td class="pdf-td-center">${item.quantity}</td>
+          <td class="pdf-td-right">${pdfFormatCurrency(item.unitPrice)}</td>
+          <td class="pdf-td-right">${pdfFormatCurrency(item.quantity * item.unitPrice)}</td>
+        </tr>`
+    )
+    .join('')
+
+  const materialsRows = quote.materials
+    .map(
+      (item) =>
+        `<tr>
+          <td class="pdf-td-desc">${pdfEscapeHtml(item.name)}</td>
+          <td class="pdf-td-center">${formatQuantityWithUnitPdf(item.quantity, item.unit)}</td>
+          <td class="pdf-td-right">${pdfFormatCurrency(item.unitPrice)}</td>
+          <td class="pdf-td-right">${pdfFormatCurrency(item.quantity * item.unitPrice)}</td>
+        </tr>`
+    )
+    .join('')
+
+  let html = ''
+  if (quote.services.length > 0) {
+    html += `
+      <section class="pdf-section">
+        <h2 class="pdf-section-title">Serviços</h2>
+        <div class="pdf-table-wrap">
+        <table class="pdf-table">
+          <thead>
+            <tr>
+              <th>Descricao</th>
+              <th class="pdf-td-center">Qtd</th>
+              <th class="pdf-td-right">V. unit.</th>
+              <th class="pdf-td-right">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${servicesRows}
+            <tr class="pdf-subtotal">
+              <td colspan="3" class="pdf-td-right">Subtotal serviços</td>
+              <td class="pdf-td-right">${servicesTotal > 0 ? servicesTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+      </section>`
+  }
+  if (quote.materials.length > 0) {
+    html += `
+      <section class="pdf-section">
+        <h2 class="pdf-section-title">Materiais</h2>
+        <div class="pdf-table-wrap">
+        <table class="pdf-table">
+          <thead>
+            <tr>
+              <th>Descricao</th>
+              <th class="pdf-td-center">Qtd / un.</th>
+              <th class="pdf-td-right">V. unit.</th>
+              <th class="pdf-td-right">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${materialsRows}
+            <tr class="pdf-subtotal">
+              <td colspan="3" class="pdf-td-right">Subtotal materiais</td>
+              <td class="pdf-td-right">${materialsTotal > 0 ? materialsTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+      </section>`
+  }
+  return html
 }
 
 /**
@@ -487,42 +590,6 @@ export function generateMaterialsListPDF(quote: Quote, companySettings: CompanyS
 export function generateQuotePDF(quote: Quote, companySettings: CompanySettings) {
   const formattedDate = new Date(quote.createdAt).toLocaleDateString('pt-BR')
 
-  const servicesTotal = quote.services.reduce(
-    (sum, item) => sum + item.quantity * item.unitPrice,
-    0
-  )
-  const materialsTotal = quote.materials.reduce(
-    (sum, item) => sum + item.quantity * item.unitPrice,
-    0
-  )
-
-  const formatCurrency = (value: number) =>
-    value > 0 ? value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'
-
-  const servicesRows = quote.services
-    .map(
-      (item) =>
-        `<tr>
-          <td class="pdf-td-desc">${pdfEscapeHtml(item.name)}</td>
-          <td class="pdf-td-center">${item.quantity}</td>
-          <td class="pdf-td-right">${formatCurrency(item.unitPrice)}</td>
-          <td class="pdf-td-right">${formatCurrency(item.quantity * item.unitPrice)}</td>
-        </tr>`
-    )
-    .join('')
-
-  const materialsRows = quote.materials
-    .map(
-      (item) =>
-        `<tr>
-          <td class="pdf-td-desc">${pdfEscapeHtml(item.name)}</td>
-          <td class="pdf-td-center">${formatQuantityWithUnitPdf(item.quantity, item.unit)}</td>
-          <td class="pdf-td-right">${formatCurrency(item.unitPrice)}</td>
-          <td class="pdf-td-right">${formatCurrency(item.quantity * item.unitPrice)}</td>
-        </tr>`
-    )
-    .join('')
-
   const observationsHtml = quote.observations
     ? pdfEscapeHtml(quote.observations).replace(/\n/g, '<br/>')
     : ''
@@ -564,63 +631,7 @@ export function generateQuotePDF(quote: Quote, companySettings: CompanySettings)
         </div>
       </section>
 
-      ${
-        quote.services.length > 0
-          ? `
-      <section class="pdf-section">
-        <h2 class="pdf-section-title">Serviços</h2>
-        <div class="pdf-table-wrap">
-        <table class="pdf-table">
-          <thead>
-            <tr>
-              <th>Descricao</th>
-              <th class="pdf-td-center">Qtd</th>
-              <th class="pdf-td-right">V. unit.</th>
-              <th class="pdf-td-right">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${servicesRows}
-            <tr class="pdf-subtotal">
-              <td colspan="3" class="pdf-td-right">Subtotal serviços</td>
-              <td class="pdf-td-right">${servicesTotal > 0 ? servicesTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</td>
-            </tr>
-          </tbody>
-        </table>
-        </div>
-      </section>
-      `
-          : ''
-      }
-
-      ${
-        quote.materials.length > 0
-          ? `
-      <section class="pdf-section">
-        <h2 class="pdf-section-title">Materiais</h2>
-        <div class="pdf-table-wrap">
-        <table class="pdf-table">
-          <thead>
-            <tr>
-              <th>Descricao</th>
-              <th class="pdf-td-center">Qtd / un.</th>
-              <th class="pdf-td-right">V. unit.</th>
-              <th class="pdf-td-right">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${materialsRows}
-            <tr class="pdf-subtotal">
-              <td colspan="3" class="pdf-td-right">Subtotal materiais</td>
-              <td class="pdf-td-right">${materialsTotal > 0 ? materialsTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</td>
-            </tr>
-          </tbody>
-        </table>
-        </div>
-      </section>
-      `
-          : ''
-      }
+      ${pdfQuoteLineItemsSections(quote)}
 
       ${
         quote.total > 0
@@ -674,6 +685,206 @@ export function generateQuotePDF(quote: Quote, companySettings: CompanySettings)
   `
 
   return html
+}
+
+/** PDF de ordem de serviço (pós-conclusão): itens, totais e histórico de pagamentos. */
+export function generateServiceOrderPDF(
+  quote: Quote,
+  companySettings: CompanySettings,
+  payments: Payment[]
+): string {
+  const completedDateStr = quote.serviceCompletedAt
+    ? new Date(quote.serviceCompletedAt).toLocaleDateString('pt-BR')
+    : new Date(quote.createdAt).toLocaleDateString('pt-BR')
+  const issuedDateStr = new Date().toLocaleDateString('pt-BR')
+
+  const sortedPayments = [...payments].sort((a, b) => {
+    const da = new Date(a.paymentDate).getTime()
+    const db = new Date(b.paymentDate).getTime()
+    return da - db
+  })
+
+  const totalPaid = sortedPayments.reduce((s, p) => s + p.amount, 0)
+  const outstanding = quote.total > 0 ? quote.total - totalPaid : 0
+
+  const paymentRows = sortedPayments
+    .map(
+      (p) =>
+        `<tr>
+          <td class="pdf-td-center">${new Date(p.paymentDate).toLocaleDateString('pt-BR')}</td>
+          <td class="pdf-td-desc">${pdfEscapeHtml(paymentMethodLabelPt(String(p.paymentMethod)))}</td>
+          <td class="pdf-td-right">${p.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+          <td class="pdf-td-desc">${p.observations ? pdfEscapeHtml(p.observations) : '-'}</td>
+        </tr>`
+    )
+    .join('')
+
+  const paymentsFooter =
+    sortedPayments.length > 0
+      ? `<tr class="pdf-subtotal">
+          <td colspan="3" class="pdf-td-right">Total registrado em pagamentos</td>
+          <td class="pdf-td-right">${totalPaid.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+        </tr>
+        ${
+          quote.total > 0 && outstanding > 0.01
+            ? `<tr class="pdf-subtotal">
+          <td colspan="3" class="pdf-td-right">Saldo em aberto (total do orçamento menos pagamentos)</td>
+          <td class="pdf-td-right">${outstanding.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+        </tr>`
+            : ''
+        }`
+      : ''
+
+  const observationsHtml = quote.observations
+    ? pdfEscapeHtml(quote.observations).replace(/\n/g, '<br/>')
+    : ''
+
+  const html = `
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="utf-8">
+      <title>Ordem de servico ${pdfEscapeHtml(quote.number)}</title>
+      <style>${PDF_BASE_COMPACT_CSS}</style>
+    </head>
+    <body>
+      <header class="pdf-header">
+        <div class="pdf-header-left">
+          ${companySettings.logo ? `<img src="${companySettings.logo}" alt="" />` : ''}
+          <div>
+            <p class="pdf-company-name">${pdfEscapeHtml(companySettings.name || 'ServiPro')}</p>
+            ${companySettings.phone ? `<p class="pdf-company-line">${pdfEscapeHtml(companySettings.phone)}</p>` : ''}
+            ${companySettings.email ? `<p class="pdf-company-line">${pdfEscapeHtml(companySettings.email)}</p>` : ''}
+            ${companySettings.address ? `<p class="pdf-company-line">${pdfEscapeHtml(companySettings.address)}</p>` : ''}
+            ${companySettings.cnpj ? `<p class="pdf-company-line">CNPJ ${pdfEscapeHtml(companySettings.cnpj)}</p>` : ''}
+            ${companySettings.website ? `<p class="pdf-company-line">${pdfEscapeHtml(companySettings.website)}</p>` : ''}
+          </div>
+        </div>
+        <div class="pdf-meta">
+          <p class="pdf-doc-title">Ordem de serviço</p>
+          <p class="pdf-doc-ref">${pdfEscapeHtml(quote.number)}</p>
+          <p class="pdf-doc-ref">Conclusão: ${pdfEscapeHtml(completedDateStr)}</p>
+          <p class="pdf-doc-ref">Emissão: ${pdfEscapeHtml(issuedDateStr)}</p>
+        </div>
+      </header>
+
+      <p class="pdf-notice">Documento emitido após a conclusão do serviço, com valores acordados e registros de pagamento do sistema.</p>
+
+      <section class="pdf-section">
+        <h2 class="pdf-section-title">Cliente</h2>
+        <div class="pdf-client">
+          <p><strong>${pdfEscapeHtml(quote.client.name)}</strong></p>
+          <p>${pdfEscapeHtml(quote.client.phone)}</p>
+          <p>${pdfEscapeHtml(quote.client.address)}</p>
+        </div>
+      </section>
+
+      ${pdfQuoteLineItemsSections(quote)}
+
+      ${
+        quote.total > 0
+          ? `
+      <div class="pdf-summary">
+        <div class="pdf-summary-row">
+          <span>Subtotal</span>
+          <span>${quote.subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+        </div>
+        ${
+          quote.discount > 0
+            ? `
+        <div class="pdf-summary-row">
+          <span>Desconto</span>
+          <span>- ${quote.discount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+        </div>
+        `
+            : ''
+        }
+        <div class="pdf-summary-row total">
+          <span>Total</span>
+          <span>${quote.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+        </div>
+      </div>
+      `
+          : `
+      <div class="pdf-summary-empty">
+        <p><strong>Sem total fechado no orçamento</strong></p>
+        <p>Valores conforme combinado com o cliente.</p>
+      </div>
+      `
+      }
+
+      <section class="pdf-section">
+        <h2 class="pdf-section-title">Pagamentos registrados</h2>
+        <div class="pdf-table-wrap">
+        <table class="pdf-table">
+          <thead>
+            <tr>
+              <th class="pdf-td-center">Data</th>
+              <th>Meio</th>
+              <th class="pdf-td-right">Valor</th>
+              <th>Observações</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${
+              sortedPayments.length > 0
+                ? `${paymentRows}${paymentsFooter}`
+                : `<tr><td colspan="4" class="pdf-empty">Nenhum pagamento cadastrado — registre na tela de pagamentos deste orçamento.</td></tr>`
+            }
+          </tbody>
+        </table>
+        </div>
+      </section>
+
+      ${
+        quote.observations
+          ? `
+      <section class="pdf-section">
+        <h2 class="pdf-section-title">Observações</h2>
+        <div class="pdf-obs">${observationsHtml}</div>
+      </section>
+      `
+          : ''
+      }
+
+      <footer class="pdf-footer">
+        <p>Serviço concluído · ${pdfEscapeHtml(quote.number)} · ${pdfEscapeHtml(completedDateStr)} · ${pdfEscapeHtml(companySettings.name || 'ServiPro')}</p>
+        ${companySettings.additionalInfo ? `<p>${pdfEscapeHtml(companySettings.additionalInfo)}</p>` : ''}
+      </footer>
+    </body>
+    </html>
+  `
+
+  return html
+}
+
+export function generateServiceOrderWhatsAppMessage(quote: Quote, totalPaid: number): string {
+  const totalStr =
+    quote.total > 0
+      ? quote.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+      : 'conforme combinado'
+  const paidStr = totalPaid.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+
+  let balanceLine = ''
+  if (quote.total > 0) {
+    const saldo = quote.total - totalPaid
+    if (saldo > 0.01) {
+      balanceLine = `\nSaldo em aberto: ${saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`
+    }
+  }
+
+  const message = `Ola ${quote.client.name}!
+
+Servico concluido — ordem de servico *${quote.number}*.
+
+Total: *${totalStr}*
+Pagamentos registrados: *${paidStr}*${balanceLine}
+
+Em anexo o PDF com itens, valores e formas de pagamento.
+
+Obrigado pela confianca!`
+
+  return encodeURIComponent(message)
 }
 
 export function openPrintWindow(html: string) {

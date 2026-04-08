@@ -23,12 +23,14 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Switch } from '@/components/ui/switch'
 import {
   generateQuotePDF,
+  generateServiceOrderPDF,
   generateMaterialsListPDF,
   downloadPDF,
   openViewWindow,
   preloadHtml2Pdf,
   openWhatsApp,
   generateWhatsAppMessage,
+  generateServiceOrderWhatsAppMessage,
 } from '@/lib/pdf-generator'
 import { cn } from '@/lib/utils'
 import { formatQuantityWithUnitPdf } from '@/lib/material-units'
@@ -53,6 +55,7 @@ import {
   CreditCard,
   AlertTriangle,
   Package,
+  Receipt,
 } from 'lucide-react'
 
 const statusConfig = {
@@ -102,6 +105,8 @@ export default function QuoteDetailPage({
       </div>
     )
   }
+
+  const quotePayments = getPaymentsByQuoteId(quote.id)
 
   const status = statusConfig[quote.status as keyof typeof statusConfig] || statusConfig.draft
   const StatusIcon = status.icon
@@ -301,6 +306,110 @@ export default function QuoteDetailPage({
     } catch {}
   }
 
+  const handleDownloadServiceOrderPDF = async () => {
+    try {
+      const html = generateServiceOrderPDF(quote, companySettings, quotePayments)
+      const filename = `ordem-servico-${quote.number.replace(/\s+/g, '-')}.pdf`
+
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      )
+
+      if (isMobile) {
+        const viewWindow = window.open('', '_blank')
+        if (viewWindow) {
+          viewWindow.document.write(html)
+          viewWindow.document.close()
+          setTimeout(() => {
+            if (viewWindow && !viewWindow.closed) {
+              viewWindow.focus()
+              try {
+                downloadPDF(html, filename).catch(() => {})
+              } catch {}
+            }
+          }, 500)
+        } else {
+          alert('Por favor, permita pop-ups para baixar o PDF')
+        }
+      } else {
+        await downloadPDF(html, filename)
+      }
+
+      try {
+        const userId = sessionStorage.getItem('servipro_user')
+          ? JSON.parse(sessionStorage.getItem('servipro_user')!).id
+          : null
+        if (userId) {
+          await fetch('/api/audit/action', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-user-id': userId,
+            },
+            body: JSON.stringify({
+              action: 'download_service_order_pdf',
+              entityType: 'quote',
+              entityId: quote.id,
+              description: `PDF ordem de serviço ${quote.number} baixado`,
+            }),
+          })
+        }
+      } catch {}
+    } catch (error) {
+      console.error('Erro ao baixar ordem de serviço:', error)
+      alert('Erro ao baixar PDF da ordem de serviço. Tente visualizar e usar impressão do navegador.')
+    }
+  }
+
+  const handleWhatsAppServiceOrder = () => {
+    try {
+      const digits = quote.client.phone.replace(/\D/g, '')
+      if (!digits || digits.length < 10) {
+        alert(
+          'Cadastre um telefone válido com DDD no cliente para abrir o WhatsApp (ex.: 11999998888).'
+        )
+        return
+      }
+
+      const totalPaid = getTotalPaidByQuoteId(quote.id)
+      openWhatsApp(quote.client.phone, generateServiceOrderWhatsAppMessage(quote, totalPaid))
+
+      const html = generateServiceOrderPDF(quote, companySettings, quotePayments)
+      const filename = `ordem-servico-${quote.number.replace(/\s+/g, '-')}.pdf`
+      void downloadPDF(html, filename).catch((err) => {
+        console.error('PDF ordem de serviço em segundo plano:', err)
+      })
+
+      void (async () => {
+        try {
+          const userId = sessionStorage.getItem('servipro_user')
+            ? JSON.parse(sessionStorage.getItem('servipro_user')!).id
+            : null
+          if (userId) {
+            await fetch('/api/audit/action', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-user-id': userId,
+              },
+              body: JSON.stringify({
+                action: 'send_service_order_whatsapp',
+                entityType: 'quote',
+                entityId: quote.id,
+                description: `Ordem de serviço ${quote.number} — WhatsApp para ${quote.client.name}`,
+              }),
+            })
+          }
+        } catch {
+          /* ignore */
+        }
+      })()
+    } catch (error) {
+      console.error('Erro ao abrir WhatsApp (OS):', error)
+      alert('Não foi possível abrir o WhatsApp. Verifique o telefone do cliente e tente de novo.')
+    }
+  }
+
   const handleDelete = () => {
     if (confirm('Tem certeza que deseja excluir este orcamento?')) {
       deleteQuote(quote.id)
@@ -466,6 +575,27 @@ export default function QuoteDetailPage({
             <Package className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
             Lista de materiais
           </Button>
+          {quote.status === 'completed' && (
+            <>
+              <Button
+                variant="outline"
+                onClick={handleDownloadServiceOrderPDF}
+                title="PDF com itens, totais e pagamentos registrados para o cliente"
+                className="rounded-xl border-2 border-green-600/40 hover:bg-green-500/10 min-h-[48px] text-base sm:text-sm px-6 py-3 sm:py-2 touch-manipulation"
+              >
+                <Receipt className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
+                Ordem de serviço
+              </Button>
+              <Button
+                onClick={handleWhatsAppServiceOrder}
+                title="Abre o WhatsApp; o PDF da ordem de serviço é baixado em seguida para anexar."
+                className="bg-gradient-to-r from-green-700 to-emerald-700 hover:from-green-800 hover:to-emerald-800 rounded-xl shadow-lg shadow-green-600/25 min-h-[48px] text-base sm:text-sm px-6 py-3 sm:py-2 touch-manipulation"
+              >
+                <MessageCircle className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
+                OS no WhatsApp
+              </Button>
+            </>
+          )}
           <Button 
             onClick={handleWhatsApp} 
             title="Abre o WhatsApp com o número do cliente. O PDF do orçamento é baixado em seguida para você anexar."
