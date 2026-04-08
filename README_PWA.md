@@ -1,11 +1,11 @@
-# 📱 Guia de Instalação do PWA ServiPro
+# 📱 Guia de Instalação do PWA — SINAI ENGENHARIA
 
 ## Como Instalar no Celular
 
 ### Android (Chrome)
 
 1. Abra o Chrome no seu celular Android
-2. Acesse o site do ServiPro
+2. Acesse o site do SINAI ENGENHARIA
 3. Você verá um banner na parte inferior da tela oferecendo para instalar o app
 4. Toque em **"Instalar"** ou **"Adicionar à tela inicial"**
 5. Ou acesse o menu do Chrome (três pontos) → **"Adicionar à tela inicial"**
@@ -13,7 +13,7 @@
 ### iOS (Safari)
 
 1. Abra o Safari no seu iPhone/iPad
-2. Acesse o site do ServiPro
+2. Acesse o site do SINAI ENGENHARIA
 3. Toque no botão de compartilhar (quadrado com seta para cima)
 4. Role para baixo e toque em **"Adicionar à Tela de Início"**
 5. Personalize o nome se desejar e toque em **"Adicionar"**

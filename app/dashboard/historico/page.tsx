@@ -93,11 +93,11 @@ export default function HistoryPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-4 border-b border-border/50">
         <div className="flex items-center gap-3 sm:gap-4">
-          <Link href="/dashboard">
-            <Button variant="ghost" size="icon" className="rounded-xl hover:bg-accent/50 min-w-[48px] min-h-[48px] touch-manipulation">
+          <Button variant="ghost" size="icon" className="rounded-xl hover:bg-accent/50 min-w-[48px] min-h-[48px] touch-manipulation" asChild>
+            <Link href="/dashboard" aria-label="Voltar ao dashboard">
               <ArrowLeft className="w-6 h-6 sm:w-5 sm:h-5" />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-1">Histórico de Orçamentos</h1>
             <p className="text-muted-foreground text-sm sm:text-base font-medium">{filteredQuotes.length} orçamento(s) encontrado(s)</p>
@@ -113,12 +113,15 @@ export default function HistoryPage() {
             <Download className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
             Exportar CSV
           </Button>
-          <Link href="/dashboard/novo-orcamento" className="w-full sm:w-auto">
-            <Button className="gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 min-h-[48px] text-base sm:text-sm touch-manipulation w-full sm:w-auto">
+          <Button
+            className="gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 min-h-[48px] text-base sm:text-sm touch-manipulation w-full sm:w-auto"
+            asChild
+          >
+            <Link href="/dashboard/novo-orcamento">
               <Plus className="w-5 h-5 sm:w-4 sm:h-4" />
               Novo Orçamento
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </div>
 
@@ -223,9 +226,9 @@ export default function HistoryPage() {
                     Limpar filtros
                   </Button>
                 ) : (
-                  <Link href="/dashboard/novo-orcamento">
-                    <Button>Criar Orcamento</Button>
-                  </Link>
+                  <Button asChild>
+                    <Link href="/dashboard/novo-orcamento">Criar Orcamento</Link>
+                  </Button>
                 )}
               </div>
             </CardContent>

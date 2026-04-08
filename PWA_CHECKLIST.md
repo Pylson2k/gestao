@@ -1,4 +1,4 @@
-# ✅ Checklist PWA - ServiPro
+# ✅ Checklist PWA — SINAI ENGENHARIA
 
 ## Verificação Final
 

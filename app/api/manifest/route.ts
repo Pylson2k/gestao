@@ -1,3 +1,4 @@
+import { APP_DISPLAY_NAME, APP_PWA_SHORT_NAME, APP_TITLE_SUFFIX } from '@/lib/app-constants'
 import { NextRequest, NextResponse } from 'next/server'
 
 // GET - Dynamic manifest with company logo
@@ -17,14 +18,19 @@ export async function GET(request: NextRequest) {
       orderBy: { updatedAt: 'desc' },
     })
 
-    const companyName = settings?.name || 'ServiPro'
-    const shortName = companyName.length > 12 ? companyName.substring(0, 12) : companyName
+    const companyName = settings?.name || APP_DISPLAY_NAME
+    const shortName =
+      companyName.length > 12
+        ? companyName === APP_DISPLAY_NAME
+          ? APP_PWA_SHORT_NAME
+          : companyName.substring(0, 12)
+        : companyName
     const logoUrl = settings?.logo ? `/api/company/logo` : '/icon-192x192.png'
 
     const manifest = {
-      name: `${companyName} - Gestão de Orçamentos`,
+      name: `${companyName} - ${APP_TITLE_SUFFIX}`,
       short_name: shortName,
-      description: `Sistema profissional de gestão de orçamentos, despesas e faturamento - ${companyName}`,
+      description: `Sistema profissional de ${APP_TITLE_SUFFIX.toLowerCase()}, despesas e faturamento — ${companyName}`,
       start_url: '/dashboard',
       display: 'standalone',
       background_color: '#ffffff',

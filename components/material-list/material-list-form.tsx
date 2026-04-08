@@ -125,11 +125,14 @@ export function MaterialListForm({ initialData }: MaterialListFormProps) {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border/50">
         <div className="flex items-center gap-3">
-          <Link href={isEdit ? `/dashboard/listas-materiais/${initialData!.id}` : '/dashboard/listas-materiais'}>
-            <Button type="button" variant="ghost" size="icon" className="rounded-xl min-w-[48px] min-h-[48px]">
+          <Button variant="ghost" size="icon" className="rounded-xl min-w-[48px] min-h-[48px]" asChild>
+            <Link
+              href={isEdit ? `/dashboard/listas-materiais/${initialData!.id}` : '/dashboard/listas-materiais'}
+              aria-label="Voltar"
+            >
               <ArrowLeft className="w-5 h-5" />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
               {isEdit ? `Editar ${initialData?.number}` : 'Nova lista de materiais'}

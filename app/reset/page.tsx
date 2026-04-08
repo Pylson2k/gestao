@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { APP_DISPLAY_NAME } from '@/lib/app-constants'
 import { AlertTriangle, RefreshCw, Trash2, Shield } from 'lucide-react'
 
 export default function ResetPage() {
@@ -103,7 +104,9 @@ export default function ResetPage() {
             <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg">
               <Shield className="w-7 h-7 text-primary-foreground" />
             </div>
-            <span className="text-3xl font-bold text-foreground">ServiPro Admin</span>
+            <span className="text-3xl font-bold text-foreground">
+              {APP_DISPLAY_NAME} — Admin
+            </span>
           </div>
           <p className="text-muted-foreground">Ferramentas administrativas do sistema</p>
         </div>

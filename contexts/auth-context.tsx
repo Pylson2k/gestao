@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
+import { AUTH_SESSION_STORAGE_KEY, LEGACY_AUTH_SESSION_KEY } from '@/lib/app-constants'
 import { OWNER_SESSION_USER_ID } from '@/lib/owner-user'
 
 interface User {
@@ -36,17 +37,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const checkSession = () => {
-      const storedUser = sessionStorage.getItem('servipro_user')
+      let storedUser = sessionStorage.getItem(AUTH_SESSION_STORAGE_KEY)
+      if (!storedUser) {
+        const legacy = sessionStorage.getItem(LEGACY_AUTH_SESSION_KEY)
+        if (legacy) {
+          sessionStorage.setItem(AUTH_SESSION_STORAGE_KEY, legacy)
+          sessionStorage.removeItem(LEGACY_AUTH_SESSION_KEY)
+          storedUser = legacy
+        }
+      }
       if (storedUser) {
         try {
           const parsed = JSON.parse(storedUser) as User
           if (parsed.id === OWNER_SESSION_USER_ID) {
             setUser(parsed)
           } else {
-            sessionStorage.removeItem('servipro_user')
+            sessionStorage.removeItem(AUTH_SESSION_STORAGE_KEY)
           }
         } catch {
-          sessionStorage.removeItem('servipro_user')
+          sessionStorage.removeItem(AUTH_SESSION_STORAGE_KEY)
         }
       }
       setIsLoading(false)
@@ -90,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       setUser(userData)
-      sessionStorage.setItem('servipro_user', JSON.stringify(userData))
+      sessionStorage.setItem(AUTH_SESSION_STORAGE_KEY, JSON.stringify(userData))
 
       try {
         await fetch('/api/audit/login', {
@@ -124,7 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }).catch(() => {})
     }
     setUser(null)
-    sessionStorage.removeItem('servipro_user')
+    sessionStorage.removeItem(AUTH_SESSION_STORAGE_KEY)
   }, [user])
 
   const changePassword = useCallback(
@@ -146,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const updated = { ...user, mustChangePassword: false }
         setUser(updated)
-        sessionStorage.setItem('servipro_user', JSON.stringify(updated))
+        sessionStorage.setItem(AUTH_SESSION_STORAGE_KEY, JSON.stringify(updated))
 
         try {
           await fetch('/api/audit/profile', {
@@ -191,7 +200,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const updated = { ...user, email: data.email }
         setUser(updated)
-        sessionStorage.setItem('servipro_user', JSON.stringify(updated))
+        sessionStorage.setItem(AUTH_SESSION_STORAGE_KEY, JSON.stringify(updated))
 
         try {
           await fetch('/api/audit/profile', {

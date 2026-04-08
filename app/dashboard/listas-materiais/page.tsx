@@ -28,11 +28,11 @@ export default function ListasMateriaisPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border/50">
         <div className="flex items-center gap-3">
-          <Link href="/dashboard">
-            <Button variant="ghost" size="icon" className="rounded-xl min-w-[48px] min-h-[48px]">
+          <Button variant="ghost" size="icon" className="rounded-xl min-w-[48px] min-h-[48px]" asChild>
+            <Link href="/dashboard" aria-label="Voltar ao dashboard">
               <ArrowLeft className="w-5 h-5" />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Listas de materiais</h1>
             <p className="text-muted-foreground text-sm sm:text-base mt-1">
@@ -40,12 +40,15 @@ export default function ListasMateriaisPage() {
             </p>
           </div>
         </div>
-        <Link href="/dashboard/listas-materiais/nova">
-          <Button className="rounded-xl min-h-[48px] w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/25">
+        <Button
+          className="rounded-xl min-h-[48px] w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/25"
+          asChild
+        >
+          <Link href="/dashboard/listas-materiais/nova">
             <Plus className="w-5 h-5 mr-2" />
             Nova lista
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
 
       <Card className="border-border/50">
@@ -78,9 +81,9 @@ export default function ListasMateriaisPage() {
                 : 'Nenhum resultado para a busca.'}
             </p>
             {materialLists.length === 0 && (
-              <Link href="/dashboard/listas-materiais/nova">
-                <Button>Criar primeira lista</Button>
-              </Link>
+              <Button asChild>
+                <Link href="/dashboard/listas-materiais/nova">Criar primeira lista</Link>
+              </Button>
             )}
           </CardContent>
         </Card>

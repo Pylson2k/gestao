@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { APP_DISPLAY_NAME } from '@/lib/app-constants'
 import { Download, X } from 'lucide-react'
 
 interface BeforeInstallPromptEvent extends Event {
@@ -14,7 +15,7 @@ export function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [showPrompt, setShowPrompt] = useState(false)
   const [isInstalled, setIsInstalled] = useState(false)
-  const [companyName, setCompanyName] = useState('ServiPro')
+  const [companyName, setCompanyName] = useState(APP_DISPLAY_NAME)
 
   useEffect(() => {
     // Buscar nome da empresa

@@ -23,9 +23,9 @@ export default function EditQuotePage({
         <FileText className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
         <h2 className="text-xl font-semibold text-foreground mb-2">Orcamento nao encontrado</h2>
         <p className="text-muted-foreground mb-4">O orcamento solicitado nao existe.</p>
-        <Link href="/dashboard">
-          <Button>Voltar ao Dashboard</Button>
-        </Link>
+        <Button asChild>
+          <Link href="/dashboard">Voltar ao Dashboard</Link>
+        </Button>
       </div>
     )
   }

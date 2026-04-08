@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Link } from '@/components/app-link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -37,6 +38,7 @@ const statusConfig = {
 }
 
 export function QuoteCard({ quote }: QuoteCardProps) {
+  const router = useRouter()
   const { updateQuote } = useQuotes()
   const { getTotalPaidByQuoteId } = usePayments()
   const [showDiscountDialog, setShowDiscountDialog] = useState(false)
@@ -162,10 +164,16 @@ export function QuoteCard({ quote }: QuoteCardProps) {
     }
   }
 
+  const goToQuoteDetail = () => {
+    router.push(`/dashboard/orcamento/${quote.id}`)
+  }
+
   return (
-    <Card className="border-border/50 bg-white/60 backdrop-blur-sm hover:shadow-lg hover:border-primary/20 transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.98] touch-manipulation">
+    <Card
+      className="border-border/50 bg-white/60 backdrop-blur-sm hover:shadow-lg hover:border-primary/20 transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.98] touch-manipulation cursor-pointer"
+      onClick={goToQuoteDetail}
+    >
       <CardContent className="p-4 sm:p-5">
-        <Link href={`/dashboard/orcamento/${quote.id}`} className="block">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
             <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
               <div className="flex items-center justify-center w-12 h-12 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 shadow-sm shrink-0">
@@ -192,20 +200,20 @@ export function QuoteCard({ quote }: QuoteCardProps) {
               
               {/* Ação rápida: Registrar pagamento (aprovado, em serviço ou finalizado) */}
               {(quote.status === 'approved' || quote.status === 'in_progress' || quote.status === 'completed') && quote.total > 0 && (
-                <Link
-                  href={`/dashboard/pagamentos?quoteId=${quote.id}&openDialog=1`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="shrink-0"
+                <Button
+                  variant="outline"
+                  size="sm"
+                  asChild
+                  className="shrink-0 text-green-600 border-green-600 hover:bg-green-50 min-h-[40px] sm:min-h-[36px] text-sm touch-manipulation"
                 >
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-green-600 border-green-600 hover:bg-green-50 min-h-[40px] sm:min-h-[36px] text-sm touch-manipulation"
+                  <Link
+                    href={`/dashboard/pagamentos?quoteId=${quote.id}&openDialog=1`}
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <CreditCard className="w-4 h-4 sm:w-3 sm:h-3 mr-1" />
                     <span className="hidden sm:inline">Pagamento</span>
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               )}
               {/* Botões de ação para orçamentos aprovados */}
               {quote.status === 'approved' && (
@@ -239,7 +247,29 @@ export function QuoteCard({ quote }: QuoteCardProps) {
                 </div>
               )}
 
-          {/* Dialog de desconto ao iniciar serviço */}
+              {/* Botão para finalizar quando em serviço */}
+              {quote.status === 'in_progress' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    handleCompleteService()
+                  }}
+                  className="text-green-600 border-green-600 hover:bg-green-50 min-h-[40px] sm:min-h-[36px] text-sm touch-manipulation"
+                >
+                  <CheckCircle2 className="w-4 h-4 sm:w-3 sm:h-3 mr-1" />
+                  <span className="hidden sm:inline">Finalizar</span>
+                </Button>
+              )}
+
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground min-w-[48px] min-h-[48px] sm:min-w-[40px] sm:min-h-[40px] touch-manipulation shrink-0">
+                <ChevronRight className="w-6 h-6 sm:w-5 sm:h-5" />
+              </Button>
+            </div>
+          </div>
+
           <Dialog open={showDiscountDialog} onOpenChange={setShowDiscountDialog}>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
@@ -330,40 +360,22 @@ export function QuoteCard({ quote }: QuoteCardProps) {
                 >
                   Cancelar
                 </Button>
-            <Button
-              onClick={handleConfirmStartService}
-              disabled={isProcessing || (hasDiscount && (!discountValue || isNaN(parseFloat(discountValue)) || parseFloat(discountValue) <= 0))}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              {isProcessing ? 'Processando...' : 'Confirmar e Iniciar'}
-            </Button>
+                <Button
+                  onClick={handleConfirmStartService}
+                  disabled={
+                    isProcessing ||
+                    (hasDiscount &&
+                      (!discountValue ||
+                        isNaN(parseFloat(discountValue)) ||
+                        parseFloat(discountValue) <= 0))
+                  }
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {isProcessing ? 'Processando...' : 'Confirmar e Iniciar'}
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
-
-              {/* Botão para finalizar quando em serviço */}
-              {quote.status === 'in_progress' && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    handleCompleteService()
-                  }}
-                  className="text-green-600 border-green-600 hover:bg-green-50 min-h-[40px] sm:min-h-[36px] text-sm touch-manipulation"
-                >
-                  <CheckCircle2 className="w-4 h-4 sm:w-3 sm:h-3 mr-1" />
-                  <span className="hidden sm:inline">Finalizar</span>
-                </Button>
-              )}
-
-              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground min-w-[48px] min-h-[48px] sm:min-w-[40px] sm:min-h-[40px] touch-manipulation shrink-0">
-                <ChevronRight className="w-6 h-6 sm:w-5 sm:h-5" />
-              </Button>
-            </div>
-          </div>
-        </Link>
       </CardContent>
     </Card>
   )

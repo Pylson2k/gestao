@@ -12,8 +12,8 @@
 
 **Opção B: PostgreSQL Local**
 - Instale PostgreSQL no seu computador
-- Crie um banco chamado `servipro`
-- Use: `postgresql://postgres:senha@localhost:5432/servipro`
+- Crie um banco chamado `sinai_engenharia`
+- Use: `postgresql://postgres:senha@localhost:5432/sinai_engenharia`
 
 ### 2. Configure o arquivo .env
 

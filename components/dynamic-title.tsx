@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { APP_DISPLAY_NAME, APP_TITLE_SUFFIX } from '@/lib/app-constants'
 
 export function DynamicTitle() {
   useEffect(() => {
@@ -9,8 +10,8 @@ export function DynamicTitle() {
         const response = await fetch('/api/company/logo')
         const data = await response.json()
         
-        if (data.name && data.name !== 'ServiPro') {
-          document.title = `${data.name} - Gestão de Orçamentos`
+        if (data.name && data.name !== APP_DISPLAY_NAME) {
+          document.title = `${data.name} - ${APP_TITLE_SUFFIX}`
           
           // Atualizar meta tags do PWA
           const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]')

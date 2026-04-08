@@ -32,7 +32,7 @@ async function createUsers() {
       create: {
         username: 'gustavo',
         name: 'Gustavo',
-        email: 'gustavo@servipro.com',
+        email: 'gustavo@sinaiengenharia.com',
         password: hashedPassword,
         mustChangePassword: true,
       },
@@ -40,7 +40,7 @@ async function createUsers() {
 
     await consolidateDataToSingleOwner(prisma)
 
-    console.log('✅ Usuario: gustavo (gustavo@servipro.com)')
+    console.log('✅ Usuario: gustavo (gustavo@sinaiengenharia.com)')
     console.log('\n' + '═'.repeat(50))
     console.log('📋 CREDENCIAIS:')
     console.log('═'.repeat(50))

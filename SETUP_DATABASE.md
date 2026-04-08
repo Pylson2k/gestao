@@ -1,6 +1,6 @@
 # 🗄️ Guia Completo: Configurar Banco de Dados PostgreSQL
 
-Este guia vai te ajudar a configurar um banco de dados PostgreSQL real e funcional para o sistema ServiPro.
+Este guia vai te ajudar a configurar um banco de dados PostgreSQL real e funcional para o sistema SINAI ENGENHARIA.
 
 ## 📋 Pré-requisitos
 
@@ -98,7 +98,7 @@ sudo systemctl start postgresql
    ```
 3. Crie o banco de dados:
    ```sql
-   CREATE DATABASE servipro;
+   CREATE DATABASE sinai_engenharia;
    ```
 4. Saia do psql:
    ```sql
@@ -110,7 +110,7 @@ sudo systemctl start postgresql
 1. Crie um arquivo `.env` na raiz do projeto
 2. Adicione (ajuste conforme sua configuração):
    ```env
-   DATABASE_URL="postgresql://postgres:SUA_SENHA@localhost:5432/servipro"
+   DATABASE_URL="postgresql://postgres:SUA_SENHA@localhost:5432/sinai_engenharia"
    ```
 3. Substitua `SUA_SENHA` pela senha do PostgreSQL
 4. Salve o arquivo
@@ -197,7 +197,7 @@ Este script vai:
 
 **PostgreSQL Local:**
 ```bash
-psql -U postgres -d servipro
+psql -U postgres -d sinai_engenharia
 ```
 
 Depois execute:

@@ -30,7 +30,7 @@ async function main() {
       create: {
         username: 'gustavo',
         name: 'Gustavo',
-        email: 'gustavo@servipro.com',
+        email: 'gustavo@sinaiengenharia.com',
         password: hashedPassword,
         mustChangePassword: true,
       },
@@ -38,7 +38,7 @@ async function main() {
 
     await consolidateDataToSingleOwner(prisma)
 
-    console.log('✅ Usuario: gustavo (gustavo@servipro.com)')
+    console.log('✅ Usuario: gustavo (gustavo@sinaiengenharia.com)')
     console.log('\n📋 Credenciais:')
     console.log('   Usuario: gustavo | Senha: gustavo123\n')
 

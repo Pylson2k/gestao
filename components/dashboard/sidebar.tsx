@@ -29,6 +29,7 @@ import {
   Package,
 } from 'lucide-react'
 import { useState, useEffect, useMemo } from 'react'
+import { APP_DISPLAY_NAME } from '@/lib/app-constants'
 import { useCompany } from '@/contexts/company-context'
 import { useQuotes } from '@/contexts/quotes-context'
 import { usePayments } from '@/contexts/payments-context'
@@ -131,7 +132,7 @@ export function Sidebar() {
             </div>
           )}
           <span className="text-xl font-bold text-white tracking-tight">
-            {companySettings.name || 'ServiPro'}
+            {companySettings.name || APP_DISPLAY_NAME}
           </span>
         </div>
 

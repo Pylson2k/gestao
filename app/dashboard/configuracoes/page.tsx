@@ -18,6 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { APP_DISPLAY_NAME, APP_TITLE_SUFFIX } from '@/lib/app-constants'
 import { Settings, Upload, X, CheckCircle2, Loader2, Database, Download, AlertTriangle } from 'lucide-react'
 
 export default function SettingsPage() {
@@ -112,8 +113,8 @@ export default function SettingsPage() {
     }
 
     // Atualizar título e meta tags do PWA
-    if (formData.name && formData.name !== 'ServiPro') {
-      document.title = `${formData.name} - Gestão de Orçamentos`
+    if (formData.name && formData.name !== APP_DISPLAY_NAME) {
+      document.title = `${formData.name} - ${APP_TITLE_SUFFIX}`
       
       const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]')
       if (appleTitle) {

@@ -1,3 +1,4 @@
+import { APP_DISPLAY_NAME } from '@/lib/app-constants'
 import type { Quote, CompanySettings, MaterialList, Payment } from './types'
 import { formatQuantityWithUnitPdf } from './material-units'
 
@@ -425,7 +426,7 @@ export function generateStandaloneMaterialListPDF(
         <div class="pdf-header-left">
           ${companySettings.logo ? `<img src="${companySettings.logo}" alt="" />` : ''}
           <div>
-            <p class="pdf-company-name">${pdfEscapeHtml(companySettings.name || 'ServiPro')}</p>
+            <p class="pdf-company-name">${pdfEscapeHtml(companySettings.name || APP_DISPLAY_NAME)}</p>
             ${companySettings.phone ? `<p class="pdf-company-line">${pdfEscapeHtml(companySettings.phone)}</p>` : ''}
             ${companySettings.email ? `<p class="pdf-company-line">${pdfEscapeHtml(companySettings.email)}</p>` : ''}
             ${companySettings.address ? `<p class="pdf-company-line">${pdfEscapeHtml(companySettings.address)}</p>` : ''}
@@ -471,7 +472,7 @@ export function generateStandaloneMaterialListPDF(
       }
 
       <footer class="pdf-footer">
-        <p>Gerado em ${generatedAt} · ${pdfEscapeHtml(companySettings.name || 'ServiPro')}</p>
+        <p>Gerado em ${generatedAt} · ${pdfEscapeHtml(companySettings.name || APP_DISPLAY_NAME)}</p>
         ${companySettings.additionalInfo ? `<p>${pdfEscapeHtml(companySettings.additionalInfo)}</p>` : ''}
       </footer>
     </body>
@@ -522,7 +523,7 @@ export function generateMaterialsListPDF(quote: Quote, companySettings: CompanyS
         <div class="pdf-header-left">
           ${companySettings.logo ? `<img src="${companySettings.logo}" alt="" />` : ''}
           <div>
-            <p class="pdf-company-name">${pdfEscapeHtml(companySettings.name || 'ServiPro')}</p>
+            <p class="pdf-company-name">${pdfEscapeHtml(companySettings.name || APP_DISPLAY_NAME)}</p>
             ${companySettings.phone ? `<p class="pdf-company-line">${pdfEscapeHtml(companySettings.phone)}</p>` : ''}
             ${companySettings.email ? `<p class="pdf-company-line">${pdfEscapeHtml(companySettings.email)}</p>` : ''}
             ${companySettings.address ? `<p class="pdf-company-line">${pdfEscapeHtml(companySettings.address)}</p>` : ''}
@@ -577,7 +578,7 @@ export function generateMaterialsListPDF(quote: Quote, companySettings: CompanyS
       </section>
 
       <footer class="pdf-footer">
-        <p>${generatedAt} · Orç. ${pdfEscapeHtml(quote.number)} · ${pdfEscapeHtml(companySettings.name || 'ServiPro')}</p>
+        <p>${generatedAt} · Orç. ${pdfEscapeHtml(quote.number)} · ${pdfEscapeHtml(companySettings.name || APP_DISPLAY_NAME)}</p>
         ${companySettings.additionalInfo ? `<p>${pdfEscapeHtml(companySettings.additionalInfo)}</p>` : ''}
       </footer>
     </body>
@@ -607,7 +608,7 @@ export function generateQuotePDF(quote: Quote, companySettings: CompanySettings)
         <div class="pdf-header-left">
           ${companySettings.logo ? `<img src="${companySettings.logo}" alt="" />` : ''}
           <div>
-            <p class="pdf-company-name">${pdfEscapeHtml(companySettings.name || 'ServiPro')}</p>
+            <p class="pdf-company-name">${pdfEscapeHtml(companySettings.name || APP_DISPLAY_NAME)}</p>
             ${companySettings.phone ? `<p class="pdf-company-line">${pdfEscapeHtml(companySettings.phone)}</p>` : ''}
             ${companySettings.email ? `<p class="pdf-company-line">${pdfEscapeHtml(companySettings.email)}</p>` : ''}
             ${companySettings.address ? `<p class="pdf-company-line">${pdfEscapeHtml(companySettings.address)}</p>` : ''}
@@ -677,7 +678,7 @@ export function generateQuotePDF(quote: Quote, companySettings: CompanySettings)
       }
 
       <footer class="pdf-footer">
-        <p>Válido 15 dias · ${formattedDate} · ${pdfEscapeHtml(companySettings.name || 'ServiPro')}</p>
+        <p>Válido 15 dias · ${formattedDate} · ${pdfEscapeHtml(companySettings.name || APP_DISPLAY_NAME)}</p>
         ${companySettings.additionalInfo ? `<p>${pdfEscapeHtml(companySettings.additionalInfo)}</p>` : ''}
       </footer>
     </body>
@@ -752,7 +753,7 @@ export function generateServiceOrderPDF(
         <div class="pdf-header-left">
           ${companySettings.logo ? `<img src="${companySettings.logo}" alt="" />` : ''}
           <div>
-            <p class="pdf-company-name">${pdfEscapeHtml(companySettings.name || 'ServiPro')}</p>
+            <p class="pdf-company-name">${pdfEscapeHtml(companySettings.name || APP_DISPLAY_NAME)}</p>
             ${companySettings.phone ? `<p class="pdf-company-line">${pdfEscapeHtml(companySettings.phone)}</p>` : ''}
             ${companySettings.email ? `<p class="pdf-company-line">${pdfEscapeHtml(companySettings.email)}</p>` : ''}
             ${companySettings.address ? `<p class="pdf-company-line">${pdfEscapeHtml(companySettings.address)}</p>` : ''}
@@ -848,7 +849,7 @@ export function generateServiceOrderPDF(
       }
 
       <footer class="pdf-footer">
-        <p>Serviço concluído · ${pdfEscapeHtml(quote.number)} · ${pdfEscapeHtml(completedDateStr)} · ${pdfEscapeHtml(companySettings.name || 'ServiPro')}</p>
+        <p>Serviço concluído · ${pdfEscapeHtml(quote.number)} · ${pdfEscapeHtml(completedDateStr)} · ${pdfEscapeHtml(companySettings.name || APP_DISPLAY_NAME)}</p>
         ${companySettings.additionalInfo ? `<p>${pdfEscapeHtml(companySettings.additionalInfo)}</p>` : ''}
       </footer>
     </body>

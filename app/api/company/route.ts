@@ -1,3 +1,4 @@
+import { APP_DISPLAY_NAME } from '@/lib/app-constants'
 import { NextRequest, NextResponse } from 'next/server'
 import { getCompanySettings, updateCompanySettings } from '@/lib/emergency-store'
 import { getDbUserId, getOwnerDbUserIds } from '@/lib/user-mapping'
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
       settings = await prisma.companySettings.create({
         data: {
           userId: ownerIds[0],
-          name: 'ServiPro',
+          name: APP_DISPLAY_NAME,
           phone: '',
           email: '',
           address: '',
@@ -100,7 +101,7 @@ export async function PUT(request: NextRequest) {
       },
       create: {
         userId: targetUserId,
-        name: body.name || 'ServiPro',
+        name: body.name || APP_DISPLAY_NAME,
         logo: body.logo,
         phone: body.phone || '',
         email: body.email || '',

@@ -2,6 +2,8 @@
  * Utilitários para exportação de dados
  */
 
+import { readSessionUserId } from '@/lib/app-constants'
+
 // Helper para log de exportação
 async function logExport(userId: string | null, type: string, count: number) {
   if (!userId) return
@@ -66,10 +68,7 @@ export function exportToCSV(data: any[], filename: string, type?: string) {
   
   // Log de exportação
   if (type) {
-    const userId = sessionStorage.getItem('servipro_user') 
-      ? JSON.parse(sessionStorage.getItem('servipro_user')!).id 
-      : null
-    logExport(userId, type, data.length)
+    void logExport(readSessionUserId(), type, data.length)
   }
 }
 

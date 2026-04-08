@@ -3,6 +3,7 @@
  * Reduz tráfego: o dashboard usa isso em vez de /api/company + /api/company/logo separados.
  */
 
+import { APP_DISPLAY_NAME } from '@/lib/app-constants'
 import { NextRequest, NextResponse } from 'next/server'
 import { getCompanySettings } from '@/lib/emergency-store'
 import { getOwnerDbUserIds } from '@/lib/user-mapping'
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest) {
       const created = await prisma.companySettings.create({
         data: {
           userId: ownerIds[0],
-          name: 'ServiPro',
+          name: APP_DISPLAY_NAME,
           phone: '',
           email: '',
           address: '',

@@ -100,9 +100,9 @@ export default function ListaMateriaisDetailPage({
       <div className="text-center py-12">
         <Package className="w-12 h-12 mx-auto text-muted-foreground/40 mb-4" />
         <h2 className="text-xl font-semibold mb-2">Lista não encontrada</h2>
-        <Link href="/dashboard/listas-materiais">
-          <Button>Voltar</Button>
-        </Link>
+        <Button asChild>
+          <Link href="/dashboard/listas-materiais">Voltar</Link>
+        </Button>
       </div>
     )
   }
@@ -171,11 +171,11 @@ export default function ListaMateriaisDetailPage({
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 pb-4 border-b border-border/50">
         <div className="flex items-start gap-3">
-          <Link href="/dashboard/listas-materiais">
-            <Button variant="ghost" size="icon" className="rounded-xl min-w-[48px] min-h-[48px] shrink-0">
+          <Button variant="ghost" size="icon" className="rounded-xl min-w-[48px] min-h-[48px] shrink-0" asChild>
+            <Link href="/dashboard/listas-materiais" aria-label="Voltar às listas">
               <ArrowLeft className="w-5 h-5" />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-1">
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{list.number}</h1>
@@ -196,12 +196,12 @@ export default function ListaMateriaisDetailPage({
             <Download className="w-4 h-4 mr-2" />
             Baixar PDF
           </Button>
-          <Link href={`/dashboard/listas-materiais/${list.id}/edit`}>
-            <Button variant="outline" className="rounded-xl min-h-[44px]">
+          <Button variant="outline" className="rounded-xl min-h-[44px]" asChild>
+            <Link href={`/dashboard/listas-materiais/${list.id}/edit`}>
               <Pencil className="w-4 h-4 mr-2" />
               Editar
-            </Button>
-          </Link>
+            </Link>
+          </Button>
           <Button variant="outline" className="rounded-xl min-h-[44px] text-destructive hover:text-destructive" onClick={handleDelete}>
             <Trash2 className="w-4 h-4 mr-2" />
             Excluir

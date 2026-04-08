@@ -2,7 +2,7 @@
 export async function GET() {
   const swCode = `
 // Service Worker para PWA
-const CACHE_NAME = 'servipro-v1'
+const CACHE_NAME = 'sinai-engenharia-v1'
 const urlsToCache = [
   '/',
   '/dashboard',

@@ -42,12 +42,12 @@ export default function FuncionarioDetailPage() {
   if (!employee) {
     return (
       <div className="space-y-6">
-        <Link href="/dashboard/funcionarios">
-          <Button variant="ghost">
+        <Button variant="ghost" asChild>
+          <Link href="/dashboard/funcionarios">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Voltar
-          </Button>
-        </Link>
+          </Link>
+        </Button>
         <Card>
           <CardContent className="py-12">
             <div className="text-center">
@@ -63,11 +63,11 @@ export default function FuncionarioDetailPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link href="/dashboard/funcionarios">
-          <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" asChild>
+          <Link href="/dashboard/funcionarios" aria-label="Voltar à lista">
             <ArrowLeft className="w-5 h-5" />
-          </Button>
-        </Link>
+          </Link>
+        </Button>
         <div>
           <h1 className="text-2xl font-bold text-foreground">{employee.name}</h1>
           {employee.position && (

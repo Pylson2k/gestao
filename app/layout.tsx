@@ -5,19 +5,21 @@ import { Analytics } from '@vercel/analytics/next'
 import { AuthProvider } from '@/contexts/auth-context'
 import { DynamicFavicon } from '@/components/dynamic-favicon'
 import { DynamicTitle } from '@/components/dynamic-title'
+import { PWARegister } from '@/components/pwa-register'
+import { APP_DISPLAY_NAME, APP_TITLE_SUFFIX } from '@/lib/app-constants'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'ServiPro - Gestão de Orçamentos',
-  description: 'Sistema profissional de gestão de orçamentos, despesas e faturamento',
+  title: `${APP_DISPLAY_NAME} - ${APP_TITLE_SUFFIX}`,
+  description: `Sistema profissional de gestão de orçamentos, despesas e faturamento — ${APP_DISPLAY_NAME}`,
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'ServiPro',
+    title: APP_DISPLAY_NAME,
   },
   formatDetection: {
     telephone: false,
@@ -68,7 +70,7 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="ServiPro" />
+        <meta name="apple-mobile-web-app-title" content={APP_DISPLAY_NAME} />
         <link rel="apple-touch-icon" href="/api/company/pwa-icon/180" />
       </head>
       <body className={`font-sans antialiased`}>
@@ -82,28 +84,5 @@ export default function RootLayout({
       </body>
     </html>
   )
-}
-
-// Componente para registrar o Service Worker
-function PWARegister() {
-  if (typeof window !== 'undefined') {
-    if ('serviceWorker' in navigator) {
-      // Registra imediatamente
-      navigator.serviceWorker
-        .register('/sw.js', { scope: '/' })
-        .then((registration) => {
-          console.log('✅ Service Worker registrado:', registration.scope)
-          
-          // Verifica atualizações periodicamente
-          setInterval(() => {
-            registration.update()
-          }, 60000) // A cada minuto
-        })
-        .catch((error) => {
-          console.log('❌ Erro ao registrar Service Worker:', error)
-        })
-    }
-  }
-  return null
 }
 

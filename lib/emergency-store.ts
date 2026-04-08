@@ -1,6 +1,8 @@
 // Armazenamento em memória para modo de emergência (sem banco de dados)
 // Os dados são perdidos quando o servidor reinicia
 
+import { APP_DISPLAY_NAME } from '@/lib/app-constants'
+
 export const emergencyStore = {
   quotes: [] as any[],
   company: null as any,
@@ -39,7 +41,7 @@ export function getMemoryQuoteById(id: string) {
 export function getCompanySettings() {
   return emergencyStore.company || {
     id: '1',
-    name: 'Minha Empresa',
+    name: APP_DISPLAY_NAME,
     phone: '(11) 99999-9999',
     email: 'contato@minhaempresa.com',
     address: 'Endereço da Empresa',

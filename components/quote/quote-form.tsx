@@ -182,11 +182,11 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4 pb-4 border-b border-border/50">
-        <Link href="/dashboard">
-          <Button type="button" variant="ghost" size="icon" className="rounded-xl hover:bg-accent/50">
+        <Button variant="ghost" size="icon" className="rounded-xl hover:bg-accent/50" asChild>
+          <Link href="/dashboard" aria-label="Voltar ao dashboard">
             <ArrowLeft className="w-5 h-5" />
-          </Button>
-        </Link>
+          </Link>
+        </Button>
         <div>
           <h1 className="text-3xl font-bold text-foreground tracking-tight mb-1">
             {initialData ? 'Editar Orçamento' : 'Novo Orçamento'}
@@ -319,11 +319,9 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
               Adicionar Manual
             </Button>
             {catalogServices.length === 0 && (
-              <Link href="/dashboard/servicos">
-                <Button type="button" variant="outline" size="sm">
-                  Cadastrar Serviços
-                </Button>
-              </Link>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/dashboard/servicos">Cadastrar Serviços</Link>
+              </Button>
             )}
           </div>
         </CardHeader>
@@ -462,11 +460,15 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
 
       {/* Actions */}
       <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
-        <Link href="/dashboard">
-          <Button type="button" variant="outline" disabled={isSubmitting} className="rounded-xl border-2 hover:bg-accent/50">
+        {isSubmitting ? (
+          <Button type="button" variant="outline" disabled className="rounded-xl border-2 hover:bg-accent/50">
             Cancelar
           </Button>
-        </Link>
+        ) : (
+          <Button variant="outline" className="rounded-xl border-2 hover:bg-accent/50" asChild>
+            <Link href="/dashboard">Cancelar</Link>
+          </Button>
+        )}
         <Button 
           type="submit" 
           disabled={isSubmitting} 

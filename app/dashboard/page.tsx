@@ -457,11 +457,13 @@ export default function DashboardPage() {
                   Orçamentos enviados há mais de 3 dias sem resposta
                 </p>
               </div>
-              <Link href="/dashboard/historico?status=sent" className="w-full sm:w-auto">
-                <Button variant="outline" className="rounded-xl border-2 hover:bg-orange-50 w-full sm:w-auto min-h-[48px] text-base sm:text-sm touch-manipulation">
-                  Ver Pendentes
-                </Button>
-              </Link>
+              <Button
+                variant="outline"
+                className="rounded-xl border-2 hover:bg-orange-50 w-full sm:w-auto min-h-[48px] text-base sm:text-sm touch-manipulation"
+                asChild
+              >
+                <Link href="/dashboard/historico?status=sent">Ver Pendentes</Link>
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -656,11 +658,13 @@ export default function DashboardPage() {
         <CardContent className="p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
             <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Orçamentos Recentes</h2>
-            <Link href="/dashboard/historico" className="w-full sm:w-auto">
-              <Button variant="ghost" className="text-muted-foreground hover:text-foreground hover:bg-accent/50 w-full sm:w-auto min-h-[48px] text-base sm:text-sm touch-manipulation">
-                Ver todos
-              </Button>
-            </Link>
+            <Button
+              variant="ghost"
+              className="text-muted-foreground hover:text-foreground hover:bg-accent/50 w-full sm:w-auto min-h-[48px] text-base sm:text-sm touch-manipulation"
+              asChild
+            >
+              <Link href="/dashboard/historico">Ver todos</Link>
+            </Button>
           </div>
           <div className="space-y-3">
             {recentQuotes.length > 0 ? (
@@ -671,11 +675,9 @@ export default function DashboardPage() {
                   <FileText className="w-8 h-8 text-muted-foreground/50" />
                 </div>
                 <p className="text-muted-foreground mb-4 font-medium">Nenhum orçamento criado ainda</p>
-                <Link href="/dashboard/novo-orcamento">
-                  <Button variant="outline" className="rounded-xl">
-                    Criar primeiro orçamento
-                  </Button>
-                </Link>
+                <Button variant="outline" className="rounded-xl" asChild>
+                  <Link href="/dashboard/novo-orcamento">Criar primeiro orçamento</Link>
+                </Button>
               </div>
             )}
           </div>

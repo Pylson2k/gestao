@@ -1,6 +1,6 @@
-# ServiPro - Sistema de Gestão de Orçamentos
+# SINAI ENGENHARIA — Gestão de Orçamentos
 
-Sistema completo para criação e gestão de orçamentos profissionais com integração ao WhatsApp e geração de PDFs personalizados.
+Sistema completo para criação e gestão de orçamentos profissionais (SINAI ENGENHARIA), com integração ao WhatsApp e geração de PDFs personalizados.
 
 ## 🚀 Funcionalidades
 
@@ -36,10 +36,10 @@ npm install
 
 Crie um arquivo `.env` na raiz do projeto:
 ```env
-DATABASE_URL="postgresql://usuario:senha@localhost:5432/servipro?schema=public"
+DATABASE_URL="postgresql://usuario:senha@localhost:5432/sinai_engenharia?schema=public"
 ```
 
-Substitua `usuario`, `senha` e `servipro` pelos seus dados do PostgreSQL.
+Substitua `usuario`, `senha` e o nome do banco pelos seus dados do PostgreSQL.
 
 4. **Configure o Prisma**
 ```bash

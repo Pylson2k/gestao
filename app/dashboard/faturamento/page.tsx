@@ -156,9 +156,9 @@ export default function FaturamentoPage() {
               <p className="text-muted-foreground mb-4">
                 Servicos finalizados aparecerao aqui automaticamente para faturamento.
               </p>
-              <Link href="/dashboard">
-                <Button variant="outline">Voltar ao Dashboard</Button>
-              </Link>
+              <Button variant="outline" asChild>
+                <Link href="/dashboard">Voltar ao Dashboard</Link>
+              </Button>
             </div>
           </CardContent>
         </Card>

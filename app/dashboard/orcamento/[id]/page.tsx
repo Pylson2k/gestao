@@ -32,6 +32,7 @@ import {
   generateWhatsAppMessage,
   generateServiceOrderWhatsAppMessage,
 } from '@/lib/pdf-generator'
+import { readSessionUserId } from '@/lib/app-constants'
 import { cn } from '@/lib/utils'
 import { formatQuantityWithUnitPdf } from '@/lib/material-units'
 import {
@@ -99,9 +100,9 @@ export default function QuoteDetailPage({
         <FileText className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
         <h2 className="text-xl font-semibold text-foreground mb-2">Orcamento nao encontrado</h2>
         <p className="text-muted-foreground mb-4">O orcamento solicitado nao existe.</p>
-        <Link href="/dashboard">
-          <Button>Voltar ao Dashboard</Button>
-        </Link>
+        <Button asChild>
+          <Link href="/dashboard">Voltar ao Dashboard</Link>
+        </Button>
       </div>
     )
   }
@@ -148,7 +149,7 @@ export default function QuoteDetailPage({
       
       // Log de auditoria
       try {
-        const userId = sessionStorage.getItem('servipro_user') ? JSON.parse(sessionStorage.getItem('servipro_user')!).id : null
+        const userId = readSessionUserId()
         if (userId) {
           await fetch('/api/audit/action', {
             method: 'POST',
@@ -202,9 +203,7 @@ export default function QuoteDetailPage({
       }
 
       try {
-        const userId = sessionStorage.getItem('servipro_user')
-          ? JSON.parse(sessionStorage.getItem('servipro_user')!).id
-          : null
+        const userId = readSessionUserId()
         if (userId) {
           await fetch('/api/audit/action', {
             method: 'POST',
@@ -253,9 +252,7 @@ export default function QuoteDetailPage({
 
       void (async () => {
         try {
-          const userId = sessionStorage.getItem('servipro_user')
-            ? JSON.parse(sessionStorage.getItem('servipro_user')!).id
-            : null
+          const userId = readSessionUserId()
           if (userId) {
             await fetch('/api/audit/action', {
               method: 'POST',
@@ -287,7 +284,7 @@ export default function QuoteDetailPage({
     
     // Log de auditoria
     try {
-      const userId = sessionStorage.getItem('servipro_user') ? JSON.parse(sessionStorage.getItem('servipro_user')!).id : null
+      const userId = readSessionUserId()
       if (userId) {
         await fetch('/api/audit/action', {
           method: 'POST',
@@ -336,9 +333,7 @@ export default function QuoteDetailPage({
       }
 
       try {
-        const userId = sessionStorage.getItem('servipro_user')
-          ? JSON.parse(sessionStorage.getItem('servipro_user')!).id
-          : null
+        const userId = readSessionUserId()
         if (userId) {
           await fetch('/api/audit/action', {
             method: 'POST',
@@ -382,9 +377,7 @@ export default function QuoteDetailPage({
 
       void (async () => {
         try {
-          const userId = sessionStorage.getItem('servipro_user')
-            ? JSON.parse(sessionStorage.getItem('servipro_user')!).id
-            : null
+          const userId = readSessionUserId()
           if (userId) {
             await fetch('/api/audit/action', {
               method: 'POST',
@@ -528,11 +521,11 @@ export default function QuoteDetailPage({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border/50">
           <div className="flex items-center gap-4">
-          <Link href="/dashboard">
-            <Button variant="ghost" size="icon" className="rounded-xl hover:bg-accent/50 min-w-[48px] min-h-[48px] touch-manipulation">
+          <Button variant="ghost" size="icon" className="rounded-xl hover:bg-accent/50 min-w-[48px] min-h-[48px] touch-manipulation" asChild>
+            <Link href="/dashboard" aria-label="Voltar ao dashboard">
               <ArrowLeft className="w-6 h-6 sm:w-5 sm:h-5" />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
           <div>
             <div className="flex flex-wrap items-center gap-3 mb-2">
               <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">{quote.number}</h1>
@@ -892,12 +885,12 @@ export default function QuoteDetailPage({
             <CardHeader className="pb-4">
               <CardTitle className="text-xl sm:text-2xl font-bold tracking-tight flex items-center justify-between">
                 <span>Histórico de Pagamentos</span>
-                <Link href="/dashboard/pagamentos">
-                  <Button variant="outline" size="sm" className="min-h-[40px]">
+                <Button variant="outline" size="sm" className="min-h-[40px]" asChild>
+                  <Link href={`/dashboard/pagamentos?quoteId=${quote.id}&openDialog=1`}>
                     <Plus className="w-4 h-4 mr-2" />
                     Registrar Pagamento
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -905,12 +898,12 @@ export default function QuoteDetailPage({
                 <div className="text-center py-8">
                   <CreditCard className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
                   <p className="text-muted-foreground mb-4">Nenhum pagamento registrado ainda</p>
-                  <Link href="/dashboard/pagamentos">
-                    <Button variant="outline" className="min-h-[48px]">
+                  <Button variant="outline" className="min-h-[48px]" asChild>
+                    <Link href={`/dashboard/pagamentos?quoteId=${quote.id}&openDialog=1`}>
                       <Plus className="w-4 h-4 mr-2" />
                       Registrar Primeiro Pagamento
-                    </Button>
-                  </Link>
+                    </Link>
+                  </Button>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -967,12 +960,12 @@ export default function QuoteDetailPage({
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-3">
-            <Link href="/dashboard">
-              <Button className="bg-primary hover:bg-primary/90 min-h-[48px] text-base sm:text-sm px-6 py-3 sm:py-2 touch-manipulation">
+            <Button className="bg-primary hover:bg-primary/90 min-h-[48px] text-base sm:text-sm px-6 py-3 sm:py-2 touch-manipulation" asChild>
+              <Link href="/dashboard">
                 <ArrowLeft className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
                 Voltar ao Dashboard
-              </Button>
-            </Link>
+              </Link>
+            </Button>
             {/* Botões de status básicos (apenas para rascunho/enviado) */}
             {quote.status !== 'approved' && quote.status !== 'rejected' && quote.status !== 'in_progress' && quote.status !== 'completed' && quote.status !== 'cancelled' && (
               <>
@@ -1031,12 +1024,12 @@ export default function QuoteDetailPage({
 
             {/* Botão de editar (não disponível para finalizados ou cancelados) */}
             {quote.status !== 'completed' && quote.status !== 'cancelled' && (
-              <Link href={`/dashboard/editar-orcamento/${quote.id}`}>
-                <Button variant="outline" className="min-h-[48px] text-base sm:text-sm px-6 py-3 sm:py-2 touch-manipulation">
+              <Button variant="outline" className="min-h-[48px] text-base sm:text-sm px-6 py-3 sm:py-2 touch-manipulation" asChild>
+                <Link href={`/dashboard/editar-orcamento/${quote.id}`}>
                   <Edit className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
                   Editar
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             )}
 
             {/* Botão de excluir (não disponível para finalizados ou cancelados) */}

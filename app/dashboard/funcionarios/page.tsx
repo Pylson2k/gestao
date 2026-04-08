@@ -400,12 +400,12 @@ export default function FuncionariosPage() {
                     <Edit className="w-4 h-4 mr-2" />
                     Editar
                   </Button>
-                  <Link href={`/dashboard/funcionarios/${employee.id}`} className="flex-1">
-                    <Button variant="outline" size="sm" className="w-full">
+                  <Button variant="outline" size="sm" className="w-full flex-1" asChild>
+                    <Link href={`/dashboard/funcionarios/${employee.id}`}>
                       <FileText className="w-4 h-4 mr-2" />
                       Relatório
-                    </Button>
-                  </Link>
+                    </Link>
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"

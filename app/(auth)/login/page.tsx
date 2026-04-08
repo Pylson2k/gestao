@@ -3,6 +3,7 @@
 import React from "react"
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { APP_DISPLAY_NAME } from '@/lib/app-constants'
 import { useAuth } from '@/contexts/auth-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,7 +18,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [companyLogo, setCompanyLogo] = useState<string | null>(null)
-  const [companyName, setCompanyName] = useState('ServiPro')
+  const [companyName, setCompanyName] = useState(APP_DISPLAY_NAME)
 
   // Redirect if already authenticated
   useEffect(() => {

@@ -86,9 +86,9 @@ export default function EditListaMateriaisPage({
       <div className="text-center py-12">
         <Package className="w-12 h-12 mx-auto text-muted-foreground/40 mb-4" />
         <h2 className="text-xl font-semibold mb-2">Lista não encontrada</h2>
-        <Link href="/dashboard/listas-materiais">
-          <Button>Voltar</Button>
-        </Link>
+        <Button asChild>
+          <Link href="/dashboard/listas-materiais">Voltar</Link>
+        </Button>
       </div>
     )
   }

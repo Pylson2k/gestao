@@ -17,7 +17,7 @@ async function main() {
     create: {
       username: 'gustavo',
       name: 'Gustavo',
-      email: 'gustavo@servipro.com',
+      email: 'gustavo@sinaiengenharia.com',
       password: hashedPassword,
       mustChangePassword: true,
     },
