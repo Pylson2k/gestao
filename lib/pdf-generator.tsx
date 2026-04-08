@@ -1,3 +1,4 @@
+/// <reference path="./html2pdf-bundle.d.ts" />
 import { APP_DISPLAY_NAME } from '@/lib/app-constants'
 import type { Quote, CompanySettings, MaterialList, Payment } from './types'
 import { formatQuantityWithUnitPdf } from './material-units'
@@ -1231,56 +1232,184 @@ export function openViewWindow(html: string) {
   }
 }
 
-/** Pré-carrega html2pdf.js — reduz atraso no primeiro download nesta sessão. */
+/**
+ * Injeta no DOM o conteúdo de um HTML completo (com &lt;head&gt; e estilos) de forma que o html2canvas
+ * enxergue CSS e markup — atribuir o string inteiro a div.innerHTML descarta &lt;style&gt; do &lt;head&gt;.
+ */
+function appendFullHtmlDocumentToContainer(container: HTMLElement, fullHtml: string): void {
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(fullHtml, 'text/html')
+  if (doc.querySelector('parsererror')) {
+    container.innerHTML = fullHtml
+    return
+  }
+  doc.head?.querySelectorAll('style').forEach((styleEl) => {
+    const s = document.createElement('style')
+    s.textContent = styleEl.textContent
+    container.appendChild(s)
+  })
+  if (doc.body) {
+    Array.from(doc.body.childNodes).forEach((node) => {
+      try {
+        container.appendChild(document.importNode(node, true))
+      } catch {
+        if (node.nodeType === Node.TEXT_NODE) {
+          container.appendChild(document.createTextNode(node.textContent ?? ''))
+        }
+      }
+    })
+  }
+}
+
+function waitForImages(root: HTMLElement): Promise<void> {
+  const imgs = root.querySelectorAll('img')
+  return Promise.all(
+    Array.from(imgs).map(
+      (img) =>
+        new Promise<void>((resolve) => {
+          if (img.complete && (img.naturalHeight !== 0 || img.src === '')) {
+            resolve()
+            return
+          }
+          const done = () => resolve()
+          img.addEventListener('load', done, { once: true })
+          img.addEventListener('error', done, { once: true })
+          setTimeout(done, 10000)
+        })
+    )
+  ).then(() => undefined)
+}
+
+function triggerBlobDownload(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.rel = 'noopener'
+  a.style.display = 'none'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
+function openHtmlForPrintFallback(html: string): void {
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const w = window.open(url, '_blank', 'noopener,noreferrer')
+  if (w) {
+    setTimeout(() => {
+      try {
+        w.focus()
+        w.print()
+      } catch {
+        /* ignore */
+      }
+      setTimeout(() => URL.revokeObjectURL(url), 120_000)
+    }, 500)
+    return
+  }
+  const printWindow = window.open('', '_blank')
+  if (printWindow) {
+    printWindow.document.write(html)
+    printWindow.document.close()
+    setTimeout(() => {
+      try {
+        printWindow.print()
+      } catch {
+        /* ignore */
+      }
+    }, 500)
+  }
+}
+
+async function loadHtml2PdfFactory(): Promise<() => unknown> {
+  try {
+    const bundle = await import('html2pdf.js/dist/html2pdf.bundle.min.js')
+    const fn = (bundle as { default?: unknown }).default ?? bundle
+    if (typeof fn === 'function') return fn as () => unknown
+  } catch {
+    /* tenta entry principal */
+  }
+  const mod = await import('html2pdf.js')
+  const fn = (mod as { default?: unknown }).default ?? mod
+  return fn as () => unknown
+}
+
+/** Pré-carrega html2pdf (bundle com html2canvas/jspdf embutidos, mais confiável no Next). */
 export function preloadHtml2Pdf(): void {
   if (typeof window === 'undefined') return
-  void import('html2pdf.js')
+  void import('html2pdf.js/dist/html2pdf.bundle.min.js').catch(() => import('html2pdf.js'))
 }
 
 export async function downloadPDF(html: string, filename: string = 'orcamento.pdf') {
-  const element = document.createElement('div')
-  element.style.cssText =
-    'position:absolute;left:-9999px;top:0;width:720px;overflow:visible;pointer-events:none;'
-  element.innerHTML = html
-  document.body.appendChild(element)
+  const safeFilename = filename.replace(/[<>:"/\\|?*\u0000-\u001f]+/g, '-').trim() || 'documento.pdf'
+
+  const container = document.createElement('div')
+  container.setAttribute('lang', 'pt-BR')
+  container.style.cssText =
+    'position:fixed;left:-9999px;top:0;width:794px;max-width:100%;overflow:visible;pointer-events:none;background:#fff;z-index:-1;'
+
+  appendFullHtmlDocumentToContainer(container, html)
+  document.body.appendChild(container)
 
   try {
-    const html2pdfModule = await import('html2pdf.js')
-    const html2pdf = html2pdfModule.default || html2pdfModule
-
+    await waitForImages(container)
     await new Promise<void>((resolve) =>
       requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
     )
 
+    const html2pdfRaw = await loadHtml2PdfFactory()
+    if (typeof html2pdfRaw !== 'function') {
+      throw new Error('html2pdf não carregou corretamente')
+    }
+    const html2pdf = html2pdfRaw as () => {
+      set: (o: unknown) => { from: (el: HTMLElement) => { outputPdf: (t: string) => Promise<Blob>; save: () => Promise<void> } }
+    }
+
     const opt = {
       margin: [6, 6, 6, 6] as [number, number, number, number],
-      filename: filename,
-      image: { type: 'jpeg' as const, quality: 0.9 },
+      filename: safeFilename,
+      image: { type: 'jpeg' as const, quality: 0.92 },
       html2canvas: {
-        scale: 1.35,
+        scale: Math.min(2, Math.max(1.25, (typeof window !== 'undefined' ? window.devicePixelRatio : 1) * 1.25)),
         useCORS: true,
+        allowTaint: true,
         logging: false,
         letterRendering: false,
         backgroundColor: '#ffffff',
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: container.scrollWidth || 794,
       },
       jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
     }
 
-    await html2pdf().set(opt as any).from(element).save()
+    let blob: Blob | null = null
+    try {
+      const out = await html2pdf().set(opt as unknown).from(container).outputPdf('blob')
+      blob = out instanceof Blob ? out : null
+    } catch (e) {
+      console.warn('html2pdf outputPdf(blob) falhou, tentando .save()', e)
+    }
+
+    if (blob instanceof Blob && blob.size > 80) {
+      triggerBlobDownload(blob, safeFilename)
+      return
+    }
+
+    try {
+      await html2pdf().set(opt as unknown).from(container).save()
+    } catch (e) {
+      console.warn('html2pdf .save() falhou', e)
+      openHtmlForPrintFallback(html)
+    }
   } catch (error) {
     console.error('Erro ao gerar PDF:', error)
-    const printWindow = window.open('', '_blank')
-    if (printWindow) {
-      printWindow.document.write(html)
-      printWindow.document.close()
-      setTimeout(() => {
-        printWindow.print()
-      }, 500)
-    }
-    throw error
+    openHtmlForPrintFallback(html)
   } finally {
-    if (element.parentNode) {
-      element.parentNode.removeChild(element)
+    if (container.parentNode) {
+      container.parentNode.removeChild(container)
     }
   }
 }

@@ -15,6 +15,8 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  /** html2pdf.js depende de html2canvas/jspdf — transpilar evita falhas de import/resolução no bundle do cliente. */
+  transpilePackages: ['html2pdf.js', 'html2canvas', 'jspdf'],
   // Next.js 16: serverComponentsExternalPackages moved to root level
   serverExternalPackages: ['@prisma/client', 'bcryptjs'],
   // PWA Configuration
