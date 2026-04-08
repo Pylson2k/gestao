@@ -216,6 +216,65 @@ const PDF_BASE_COMPACT_CSS = `
   }
 `.trim()
 
+/** Estilos extras para recibo de pagamento (comprovante ao cliente). */
+const PDF_RECEIPT_EXTRA_CSS = `
+  .pdf-receipt-declaration {
+    font-size: 10pt;
+    line-height: 1.5;
+    color: #334155;
+    margin: 0 0 12px 0;
+    text-align: justify;
+  }
+  .pdf-receipt-amount-box {
+    margin: 12px 0 14px 0;
+    padding: 12px 14px;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    text-align: center;
+  }
+  .pdf-receipt-amount-box .pdf-amt-label {
+    font-size: 8pt;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: 0 0 6px 0;
+  }
+  .pdf-receipt-amount-box .pdf-amt-value {
+    font-size: 20pt;
+    font-weight: 700;
+    color: #1e3a5f;
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+  .pdf-receipt-meta-table td:first-child {
+    width: 38%;
+    color: #64748b;
+    font-weight: 600;
+    font-size: 9pt;
+  }
+  .pdf-signature-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    margin-top: 36px;
+    page-break-inside: avoid;
+  }
+  .pdf-signature-col {
+    flex: 1;
+    text-align: center;
+    min-width: 0;
+  }
+  .pdf-signature-line {
+    border-top: 1px solid #64748b;
+    margin: 40px 12px 6px 12px;
+    padding-top: 6px;
+    font-size: 8.5pt;
+    color: #64748b;
+    line-height: 1.3;
+  }
+`.trim()
+
 function pdfEscapeHtml(s: string): string {
   return s
     .replace(/&/g, '&amp;')
@@ -857,6 +916,213 @@ export function generateServiceOrderPDF(
   `
 
   return html
+}
+
+export type PaymentReceiptTotals = {
+  /** Soma de todos os pagamentos já registrados neste orçamento (situação atual). */
+  totalPaidOnQuote: number
+}
+
+/**
+ * Recibo de pagamento referente a serviços / orçamento — documento para entregar ao cliente pagador.
+ */
+export function generatePaymentReceiptPDF(
+  payment: Payment,
+  quote: Quote,
+  companySettings: CompanySettings,
+  totals: PaymentReceiptTotals
+): string {
+  const payDate = new Date(payment.paymentDate)
+  const payDateLong = payDate.toLocaleDateString('pt-BR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+  const payDateShort = payDate.toLocaleDateString('pt-BR')
+  const issuedNow = new Date().toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+  const methodLabel = paymentMethodLabelPt(String(payment.paymentMethod))
+  const amountStr = payment.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  const receiptRef = payment.id.slice(-10).toUpperCase()
+
+  const serviceHint =
+    quote.services.length === 0
+      ? 'serviços e/ou fornecimentos relacionados ao documento comercial indicado abaixo'
+      : quote.services.length === 1
+        ? `o serviço de <strong>${pdfEscapeHtml(quote.services[0].name)}</strong> e demais itens discriminados no orçamento`
+        : `os serviços contratados (entre eles <strong>${pdfEscapeHtml(quote.services[0].name)}</strong> e outros constantes do orçamento)`
+
+  const obsHtml = payment.observations
+    ? pdfEscapeHtml(payment.observations).replace(/\n/g, '<br/>')
+    : '—'
+
+  const quoteTotalStr =
+    quote.total > 0
+      ? quote.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+      : 'Conforme orçamento / combinação entre as partes'
+
+  const totalPaidStr = totals.totalPaidOnQuote.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  })
+
+  const remaining =
+    quote.total > 0 ? Math.max(0, quote.total - totals.totalPaidOnQuote) : null
+  const remainingRow =
+    remaining !== null
+      ? `
+        <div class="pdf-summary-row">
+          <span>Saldo remanescente no orçamento (após todos os pagamentos)</span>
+          <span>${remaining.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+        </div>`
+      : ''
+
+  const html = `
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="utf-8">
+      <title>Recibo de pagamento — ${pdfEscapeHtml(quote.number)}</title>
+      <style>${PDF_BASE_COMPACT_CSS}\n${PDF_RECEIPT_EXTRA_CSS}</style>
+    </head>
+    <body>
+      <header class="pdf-header">
+        <div class="pdf-header-left">
+          ${companySettings.logo ? `<img src="${companySettings.logo}" alt="" />` : ''}
+          <div>
+            <p class="pdf-company-name">${pdfEscapeHtml(companySettings.name || APP_DISPLAY_NAME)}</p>
+            ${companySettings.phone ? `<p class="pdf-company-line">${pdfEscapeHtml(companySettings.phone)}</p>` : ''}
+            ${companySettings.email ? `<p class="pdf-company-line">${pdfEscapeHtml(companySettings.email)}</p>` : ''}
+            ${companySettings.address ? `<p class="pdf-company-line">${pdfEscapeHtml(companySettings.address)}</p>` : ''}
+            ${companySettings.cnpj ? `<p class="pdf-company-line">CNPJ ${pdfEscapeHtml(companySettings.cnpj)}</p>` : ''}
+          </div>
+        </div>
+        <div class="pdf-meta">
+          <p class="pdf-doc-title">Recibo de pagamento</p>
+          <p class="pdf-doc-ref">Ref. ${pdfEscapeHtml(receiptRef)}</p>
+          <p class="pdf-doc-ref">Emitido em ${pdfEscapeHtml(issuedNow)}</p>
+        </div>
+      </header>
+
+      <p class="pdf-notice">
+        Documento emitido pelo prestador em comprovação do recebimento do valor discriminado abaixo,
+        referente a pagamento vinculado ao orçamento / ordem de serviço indicado.
+      </p>
+
+      <section class="pdf-section">
+        <h2 class="pdf-section-title">Pagador (cliente)</h2>
+        <div class="pdf-client">
+          <p><strong>${pdfEscapeHtml(quote.client.name)}</strong></p>
+          <p>${pdfEscapeHtml(quote.client.phone)}</p>
+          <p>${pdfEscapeHtml(quote.client.address)}</p>
+          ${quote.client.email ? `<p>${pdfEscapeHtml(quote.client.email)}</p>` : ''}
+        </div>
+      </section>
+
+      <p class="pdf-receipt-declaration">
+        <strong>${pdfEscapeHtml(companySettings.name || APP_DISPLAY_NAME)}</strong> declara ter recebido de
+        <strong>${pdfEscapeHtml(quote.client.name)}</strong>, nesta data de
+        <strong>${pdfEscapeHtml(payDateLong)}</strong>, por meio de
+        <strong>${pdfEscapeHtml(methodLabel)}</strong>, a importância relacionada a
+        ${serviceHint}, conforme o documento comercial
+        <strong>nº ${pdfEscapeHtml(quote.number)}</strong>, nos termos acordados entre as partes.
+      </p>
+
+      <div class="pdf-receipt-amount-box">
+        <p class="pdf-amt-label">Valor recebido neste pagamento</p>
+        <p class="pdf-amt-value">${amountStr}</p>
+      </div>
+
+      <section class="pdf-section">
+        <h2 class="pdf-section-title">Detalhes do lançamento</h2>
+        <div class="pdf-table-wrap">
+          <table class="pdf-table pdf-receipt-meta-table">
+            <tbody>
+              <tr>
+                <td>Forma de pagamento</td>
+                <td>${pdfEscapeHtml(methodLabel)}</td>
+              </tr>
+              <tr>
+                <td>Data do pagamento</td>
+                <td>${pdfEscapeHtml(payDateShort)}</td>
+              </tr>
+              <tr>
+                <td>Orçamento / OS de referência</td>
+                <td>${pdfEscapeHtml(quote.number)}</td>
+              </tr>
+              <tr>
+                <td>Observações do lançamento</td>
+                <td>${obsHtml}</td>
+              </tr>
+              <tr>
+                <td>Identificador interno</td>
+                <td style="font-size:8pt;word-break:break-all;">${pdfEscapeHtml(payment.id)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="pdf-summary">
+        <div class="pdf-summary-row">
+          <span>Total do orçamento (referência)</span>
+          <span>${quoteTotalStr}</span>
+        </div>
+        <div class="pdf-summary-row">
+          <span>Total pago no orçamento (todos os lançamentos)</span>
+          <span>${totalPaidStr}</span>
+        </div>
+        ${remainingRow}
+      </div>
+
+      <div class="pdf-signature-row">
+        <div class="pdf-signature-col">
+          <div class="pdf-signature-line">
+            Assinatura do pagador<br/>
+            ${pdfEscapeHtml(quote.client.name)}
+          </div>
+        </div>
+        <div class="pdf-signature-col">
+          <div class="pdf-signature-line">
+            ${pdfEscapeHtml(companySettings.name || APP_DISPLAY_NAME)}<br/>
+            Responsável / carimbo
+          </div>
+        </div>
+      </div>
+
+      <footer class="pdf-footer">
+        <p>Recibo ref. ${pdfEscapeHtml(receiptRef)} · Orç. ${pdfEscapeHtml(quote.number)} · ${pdfEscapeHtml(companySettings.name || APP_DISPLAY_NAME)}</p>
+        ${companySettings.additionalInfo ? `<p>${pdfEscapeHtml(companySettings.additionalInfo)}</p>` : ''}
+      </footer>
+    </body>
+    </html>
+  `
+
+  return html
+}
+
+/** Texto para WhatsApp — recibo de pagamento (PDF anexo gerado em segundo plano na UI). */
+export function generatePaymentReceiptWhatsAppMessage(quote: Quote, payment: Payment): string {
+  const amountStr = payment.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  const dateStr = new Date(payment.paymentDate).toLocaleDateString('pt-BR')
+  const method = paymentMethodLabelPt(String(payment.paymentMethod))
+  const ref = payment.id.slice(-10).toUpperCase()
+  const message = `Ola ${quote.client.name}!
+
+Confirmamos o recebimento de *${amountStr}* referente ao servico vinculado ao orcamento *${quote.number}*, em *${dateStr}*, via *${method}*.
+
+Recibo ref. *${ref}*.
+
+Segue em anexo o PDF do recibo para seus arquivos.
+
+Obrigado!`
+
+  return encodeURIComponent(message)
 }
 
 export function generateServiceOrderWhatsAppMessage(quote: Quote, totalPaid: number): string {

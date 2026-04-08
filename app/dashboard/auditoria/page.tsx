@@ -55,6 +55,8 @@ const actionLabels: Record<string, string> = {
   update_material_list: 'Atualizar lista de materiais',
   delete_material_list: 'Excluir lista de materiais',
   download_material_list_pdf: 'PDF lista de materiais',
+  download_payment_receipt_pdf: 'PDF recibo de pagamento',
+  send_payment_receipt_whatsapp: 'WhatsApp recibo de pagamento',
   send_quote_whatsapp: 'Enviar WhatsApp',
   send_service_order_whatsapp: 'WhatsApp ordem de serviço',
   // Despesas
@@ -119,6 +121,8 @@ const actionColors: Record<string, string> = {
   update_material_list: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
   delete_material_list: 'bg-red-500/10 text-red-500 border-red-500/20',
   download_material_list_pdf: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20',
+  download_payment_receipt_pdf: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20',
+  send_payment_receipt_whatsapp: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
   send_quote_whatsapp: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
   send_service_order_whatsapp: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
   // Despesas
@@ -183,6 +187,8 @@ const actionIcons: Record<string, any> = {
   update_material_list: Edit,
   delete_material_list: Trash2,
   download_material_list_pdf: CheckCircle,
+  download_payment_receipt_pdf: CheckCircle,
+  send_payment_receipt_whatsapp: CheckCircle,
   send_quote_whatsapp: CheckCircle,
   send_service_order_whatsapp: CheckCircle,
   // Despesas

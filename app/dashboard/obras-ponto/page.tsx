@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Plus, RefreshCw } from 'lucide-react'
+import { Check, Copy, Plus, RefreshCw } from 'lucide-react'
 import { PageHeader } from '@/components/layout/page-header'
 
 const hdr = (): HeadersInit => ({
@@ -97,6 +97,13 @@ export default function ObrasPontoPage() {
   const [acctLogin, setAcctLogin] = useState('')
   const [acctPass, setAcctPass] = useState('')
   const [acctSaving, setAcctSaving] = useState(false)
+
+  const [workerLoginUrl, setWorkerLoginUrl] = useState('')
+  const [linkJustCopied, setLinkJustCopied] = useState(false)
+
+  useEffect(() => {
+    setWorkerLoginUrl(`${window.location.origin}/trabalhador/login`)
+  }, [])
 
   const load = useCallback(async () => {
     setErr('')
@@ -303,17 +310,43 @@ export default function ObrasPontoPage() {
 
   const pendingCount = pending.dayLogs.length + pending.submissions.length
 
+  async function copyWorkerLoginLink() {
+    if (!workerLoginUrl) return
+    try {
+      await navigator.clipboard.writeText(workerLoginUrl)
+      setLinkJustCopied(true)
+      window.setTimeout(() => setLinkJustCopied(false), 2000)
+    } catch {
+      window.prompt('Copie o link do trabalhador:', workerLoginUrl)
+    }
+  }
+
   return (
     <div className="mx-auto max-w-6xl space-y-8">
       <PageHeader
         title="Obras, diárias e empreitas"
-        description={
-          <>
-            Vínculos aprovados pelo gestor. Totais apenas após aprovação. App do trabalhador:{' '}
-            <code className="rounded bg-muted px-1 py-0.5 text-xs">/trabalhador</code>
-          </>
-        }
+        description="Vínculos aprovados pelo gestor. Totais apenas após aprovação. Copie o link abaixo para o trabalhador abrir o login no celular (WhatsApp, SMS etc.)."
       >
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={copyWorkerLoginLink}
+          disabled={!workerLoginUrl}
+          className="gap-2"
+        >
+          {linkJustCopied ? (
+            <>
+              <Check className="h-4 w-4 text-green-600" />
+              Link copiado
+            </>
+          ) : (
+            <>
+              <Copy className="h-4 w-4" />
+              Link do trabalhador
+            </>
+          )}
+        </Button>
         <Button variant="outline" size="sm" onClick={() => load()} disabled={loading} className="gap-2">
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           Atualizar

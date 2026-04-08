@@ -4,6 +4,15 @@ import { useState, useMemo, useEffect, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { usePayments } from '@/contexts/payments-context'
 import { useQuotes } from '@/contexts/quotes-context'
+import { useCompany } from '@/contexts/company-context'
+import {
+  generatePaymentReceiptPDF,
+  generatePaymentReceiptWhatsAppMessage,
+  downloadPDF,
+  preloadHtml2Pdf,
+  openWhatsApp,
+} from '@/lib/pdf-generator'
+import { readSessionUserId } from '@/lib/app-constants'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -25,7 +34,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Plus, Trash2, Edit, DollarSign, Calendar, FileText, CreditCard } from 'lucide-react'
+import { Plus, Trash2, Edit, DollarSign, Calendar, FileText, CreditCard, Receipt, MessageCircle } from 'lucide-react'
 import type { Payment, PaymentMethod } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -51,6 +60,7 @@ export default function PagamentosPage() {
   const searchParams = useSearchParams()
   const { payments, addPayment, updatePayment, deletePayment, isLoading, refreshPayments, getTotalPaidByQuoteId } = usePayments()
   const { quotes } = useQuotes()
+  const { settings: companySettings } = useCompany()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null)
   const [formData, setFormData] = useState({
@@ -67,6 +77,11 @@ export default function PagamentosPage() {
   const [filterMethod, setFilterMethod] = useState<string>('all')
 
   const hasOpenedFromUrl = useRef(false)
+
+  useEffect(() => {
+    preloadHtml2Pdf()
+  }, [])
+
   // Suporte a link direto: /dashboard/pagamentos?quoteId=xxx ou ?quoteId=xxx&openDialog=1
   useEffect(() => {
     const quoteId = searchParams.get('quoteId')
@@ -239,6 +254,120 @@ export default function PagamentosPage() {
       .filter(p => p.quoteId === quoteId)
       .reduce((sum, p) => sum + p.amount, 0)
     return quote.total - totalPaid
+  }
+
+  const handleDownloadPaymentReceipt = async (payment: Payment) => {
+    const quote = getQuoteByPayment(payment)
+    if (!quote) {
+      alert('Orçamento não encontrado para este pagamento.')
+      return
+    }
+    const html = generatePaymentReceiptPDF(payment, quote, companySettings, {
+      totalPaidOnQuote: getTotalPaidByQuoteId(quote.id),
+    })
+    const safeNum = quote.number.replace(/\s+/g, '-')
+    const filename = `recibo-pagamento-${safeNum}-${payment.id.slice(0, 8)}.pdf`
+
+    try {
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      )
+      if (isMobile) {
+        const viewWindow = window.open('', '_blank')
+        if (viewWindow) {
+          viewWindow.document.write(html)
+          viewWindow.document.close()
+          setTimeout(() => {
+            if (viewWindow && !viewWindow.closed) {
+              viewWindow.focus()
+              void downloadPDF(html, filename).catch(() => {})
+            }
+          }, 400)
+        } else {
+          alert('Por favor, permita pop-ups para baixar o PDF do recibo.')
+        }
+      } else {
+        await downloadPDF(html, filename)
+      }
+
+      try {
+        const userId = readSessionUserId()
+        if (userId) {
+          await fetch('/api/audit/action', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-user-id': userId,
+            },
+            body: JSON.stringify({
+              action: 'download_payment_receipt_pdf',
+              entityType: 'payment',
+              entityId: payment.id,
+              description: `PDF recibo de pagamento — ${quote.number} — R$ ${payment.amount.toFixed(2)}`,
+            }),
+          })
+        }
+      } catch {
+        /* ignore audit failure */
+      }
+    } catch (e) {
+      console.error(e)
+      alert('Erro ao gerar o recibo. Tente imprimir a partir da visualização ou use outro navegador.')
+    }
+  }
+
+  const handleWhatsAppPaymentReceipt = (payment: Payment) => {
+    const quote = getQuoteByPayment(payment)
+    if (!quote) {
+      alert('Orçamento não encontrado para este pagamento.')
+      return
+    }
+    try {
+      const digits = quote.client.phone.replace(/\D/g, '')
+      if (!digits || digits.length < 10) {
+        alert(
+          'Cadastre um telefone válido com DDD no cliente para abrir o WhatsApp (ex.: 11999998888).'
+        )
+        return
+      }
+
+      openWhatsApp(quote.client.phone, generatePaymentReceiptWhatsAppMessage(quote, payment))
+
+      const html = generatePaymentReceiptPDF(payment, quote, companySettings, {
+        totalPaidOnQuote: getTotalPaidByQuoteId(quote.id),
+      })
+      const safeNum = quote.number.replace(/\s+/g, '-')
+      const filename = `recibo-pagamento-${safeNum}-${payment.id.slice(0, 8)}.pdf`
+      void downloadPDF(html, filename).catch((err) => {
+        console.error('PDF recibo após WhatsApp:', err)
+      })
+
+      void (async () => {
+        try {
+          const userId = readSessionUserId()
+          if (userId) {
+            await fetch('/api/audit/action', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-user-id': userId,
+              },
+              body: JSON.stringify({
+                action: 'send_payment_receipt_whatsapp',
+                entityType: 'payment',
+                entityId: payment.id,
+                description: `Recibo ${quote.number} — WhatsApp — R$ ${payment.amount.toFixed(2)}`,
+              }),
+            })
+          }
+        } catch {
+          /* ignore */
+        }
+      })()
+    } catch (e) {
+      console.error(e)
+      alert('Não foi possível abrir o WhatsApp.')
+    }
   }
 
   if (isLoading) {
@@ -443,7 +572,30 @@ export default function PagamentosPage() {
                           </p>
                         )}
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownloadPaymentReceipt(payment)}
+                          disabled={!getQuoteByPayment(payment)}
+                          className="min-h-[40px] gap-1.5"
+                          title="Baixar PDF do recibo"
+                        >
+                          <Receipt className="h-4 w-4" />
+                          <span className="hidden sm:inline">Recibo</span>
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => handleWhatsAppPaymentReceipt(payment)}
+                          disabled={!getQuoteByPayment(payment)}
+                          className="min-h-[40px] gap-1.5 bg-emerald-600 text-white hover:bg-emerald-700"
+                          title="WhatsApp: mensagem e PDF do recibo em segundo plano"
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                          <span className="hidden sm:inline">WhatsApp</span>
+                        </Button>
                         <Button
                           variant="outline"
                           size="sm"

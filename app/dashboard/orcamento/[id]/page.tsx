@@ -25,6 +25,8 @@ import {
   generateQuotePDF,
   generateServiceOrderPDF,
   generateMaterialsListPDF,
+  generatePaymentReceiptPDF,
+  generatePaymentReceiptWhatsAppMessage,
   downloadPDF,
   openViewWindow,
   preloadHtml2Pdf,
@@ -35,6 +37,7 @@ import {
 import { readSessionUserId } from '@/lib/app-constants'
 import { cn } from '@/lib/utils'
 import { formatQuantityWithUnitPdf } from '@/lib/material-units'
+import type { Payment } from '@/lib/types'
 import {
   ArrowLeft,
   FileText,
@@ -353,6 +356,110 @@ export default function QuoteDetailPage({
     } catch (error) {
       console.error('Erro ao baixar ordem de serviço:', error)
       alert('Erro ao baixar PDF da ordem de serviço. Tente visualizar e usar impressão do navegador.')
+    }
+  }
+
+  const handleDownloadPaymentReceipt = async (payment: Payment) => {
+    try {
+      const html = generatePaymentReceiptPDF(payment, quote, companySettings, {
+        totalPaidOnQuote: getTotalPaidByQuoteId(quote.id),
+      })
+      const filename = `recibo-pagamento-${quote.number.replace(/\s+/g, '-')}-${payment.id.slice(0, 8)}.pdf`
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      )
+
+      if (isMobile) {
+        const viewWindow = window.open('', '_blank')
+        if (viewWindow) {
+          viewWindow.document.write(html)
+          viewWindow.document.close()
+          setTimeout(() => {
+            if (viewWindow && !viewWindow.closed) {
+              viewWindow.focus()
+              try {
+                downloadPDF(html, filename).catch(() => {})
+              } catch {}
+            }
+          }, 500)
+        } else {
+          alert('Por favor, permita pop-ups para baixar o PDF do recibo.')
+        }
+      } else {
+        await downloadPDF(html, filename)
+      }
+
+      try {
+        const userId = readSessionUserId()
+        if (userId) {
+          await fetch('/api/audit/action', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-user-id': userId,
+            },
+            body: JSON.stringify({
+              action: 'download_payment_receipt_pdf',
+              entityType: 'payment',
+              entityId: payment.id,
+              description: `PDF recibo de pagamento — ${quote.number} — R$ ${payment.amount.toFixed(2)}`,
+            }),
+          })
+        }
+      } catch {
+        /* ignore */
+      }
+    } catch (error) {
+      console.error('Erro ao baixar recibo:', error)
+      alert('Erro ao gerar o recibo. Tente novamente ou use impressão do navegador.')
+    }
+  }
+
+  const handleWhatsAppPaymentReceipt = (payment: Payment) => {
+    try {
+      const digits = quote.client.phone.replace(/\D/g, '')
+      if (!digits || digits.length < 10) {
+        alert(
+          'Cadastre um telefone válido com DDD no cliente para abrir o WhatsApp (ex.: 11999998888).'
+        )
+        return
+      }
+
+      openWhatsApp(quote.client.phone, generatePaymentReceiptWhatsAppMessage(quote, payment))
+
+      const html = generatePaymentReceiptPDF(payment, quote, companySettings, {
+        totalPaidOnQuote: getTotalPaidByQuoteId(quote.id),
+      })
+      const filename = `recibo-pagamento-${quote.number.replace(/\s+/g, '-')}-${payment.id.slice(0, 8)}.pdf`
+      void downloadPDF(html, filename).catch((err) => {
+        console.error('PDF recibo em segundo plano após WhatsApp:', err)
+      })
+
+      void (async () => {
+        try {
+          const userId = readSessionUserId()
+          if (userId) {
+            await fetch('/api/audit/action', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-user-id': userId,
+              },
+              body: JSON.stringify({
+                action: 'send_payment_receipt_whatsapp',
+                entityType: 'payment',
+                entityId: payment.id,
+                description: `Recibo ${quote.number} — WhatsApp para ${quote.client.name} — R$ ${payment.amount.toFixed(2)}`,
+              }),
+            })
+          }
+        } catch {
+          /* ignore */
+        }
+      })()
+    } catch (error) {
+      console.error('Erro ao abrir WhatsApp (recibo):', error)
+      alert('Não foi possível abrir o WhatsApp. Verifique o telefone do cliente.')
     }
   }
 
@@ -914,9 +1021,9 @@ export default function QuoteDetailPage({
                         key={payment.id}
                         className="border border-border/50 rounded-lg p-4 hover:bg-muted/30 transition-colors"
                       >
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                          <div className="flex-1">
-                            <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="min-w-0 flex-1">
+                            <div className="mb-2 flex flex-wrap items-center gap-2">
                               <Badge className={cn('text-xs', paymentMethodColors[payment.paymentMethod] || 'bg-gray-500/10 text-gray-500')}>
                                 {paymentMethodLabels[payment.paymentMethod] || payment.paymentMethod}
                               </Badge>
@@ -929,8 +1036,8 @@ export default function QuoteDetailPage({
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <DollarSign className="w-4 h-4 text-primary" />
-                              <span className="font-bold text-lg text-foreground">
+                              <DollarSign className="h-4 w-4 shrink-0 text-primary" />
+                              <span className="text-lg font-bold text-foreground">
                                 {payment.amount.toLocaleString('pt-BR', {
                                   style: 'currency',
                                   currency: 'BRL',
@@ -938,10 +1045,33 @@ export default function QuoteDetailPage({
                               </span>
                             </div>
                             {payment.observations && (
-                              <p className="text-sm text-muted-foreground mt-2">
+                              <p className="mt-2 text-sm text-muted-foreground">
                                 {payment.observations}
                               </p>
                             )}
+                          </div>
+                          <div className="flex shrink-0 flex-wrap gap-2 self-start sm:self-center">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-9 gap-1.5"
+                              onClick={() => handleDownloadPaymentReceipt(payment)}
+                              title="Baixar PDF do recibo"
+                            >
+                              <Receipt className="h-4 w-4" />
+                              Recibo
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              className="h-9 gap-1.5 bg-emerald-600 text-white hover:bg-emerald-700"
+                              onClick={() => handleWhatsAppPaymentReceipt(payment)}
+                              title="WhatsApp: mensagem + PDF do recibo em segundo plano"
+                            >
+                              <MessageCircle className="h-4 w-4" />
+                              <span className="hidden sm:inline">WhatsApp</span>
+                            </Button>
                           </div>
                         </div>
                       </div>

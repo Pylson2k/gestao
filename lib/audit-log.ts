@@ -21,6 +21,8 @@ export type AuditAction =
   | 'update_material_list'
   | 'delete_material_list'
   | 'download_material_list_pdf'
+  | 'download_payment_receipt_pdf'
+  | 'send_payment_receipt_whatsapp'
   | 'send_quote_whatsapp'
   | 'send_service_order_whatsapp'
   // Despesas
