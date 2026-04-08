@@ -25,7 +25,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { HardHat, Plus, RefreshCw } from 'lucide-react'
+import { Plus, RefreshCw } from 'lucide-react'
+import { PageHeader } from '@/components/layout/page-header'
 
 const hdr = (): HeadersInit => ({
   'Content-Type': 'application/json',
@@ -303,25 +304,21 @@ export default function ObrasPontoPage() {
   const pendingCount = pending.dayLogs.length + pending.submissions.length
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-6xl">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg">
-            <HardHat className="w-7 h-7" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Obras, diárias e empreitas</h1>
-            <p className="text-muted-foreground text-sm">
-              Crie vínculos, ative após conferir. Totais só com aprovação. Trabalhador:{' '}
-              <code className="text-xs bg-muted px-1 rounded">/trabalhador</code>
-            </p>
-          </div>
-        </div>
-        <Button variant="outline" size="sm" onClick={() => load()} disabled={loading}>
-          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+    <div className="mx-auto max-w-6xl space-y-8">
+      <PageHeader
+        title="Obras, diárias e empreitas"
+        description={
+          <>
+            Vínculos aprovados pelo gestor. Totais apenas após aprovação. App do trabalhador:{' '}
+            <code className="rounded bg-muted px-1 py-0.5 text-xs">/trabalhador</code>
+          </>
+        }
+      >
+        <Button variant="outline" size="sm" onClick={() => load()} disabled={loading} className="gap-2">
+          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           Atualizar
         </Button>
-      </div>
+      </PageHeader>
 
       {err ? (
         <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">{err}</p>

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { HardHat } from 'lucide-react'
 
 export default function TrabalhadorLoginPage() {
   const router = useRouter()
@@ -51,45 +52,45 @@ export default function TrabalhadorLoginPage() {
   }
 
   return (
-    <div className="flex min-h-dvh items-center justify-center p-4">
-      <Card className="w-full max-w-md border-slate-800 bg-slate-900/80 shadow-xl">
+    <div className="flex min-h-dvh flex-col items-center justify-center px-4 py-10">
+      <div className="mb-6 flex flex-col items-center gap-2 text-center">
+        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+          <HardHat className="h-6 w-6" />
+        </div>
+        <p className="text-sm font-medium text-muted-foreground">Campo · obra</p>
+      </div>
+      <Card className="w-full max-w-md border border-border/80 shadow-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-xl text-white">Area do trabalhador</CardTitle>
-          <CardDescription className="text-slate-400">
-            Use o login e a senha fornecidos pelo gestor.
-          </CardDescription>
+          <CardTitle className="text-lg font-semibold">Área do trabalhador</CardTitle>
+          <CardDescription>Use o login e a senha definidos pelo gestor.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="wu" className="text-slate-200">
-                Login
-              </Label>
+              <Label htmlFor="wu">Login</Label>
               <Input
                 id="wu"
                 autoComplete="username"
-                className="bg-slate-950 border-slate-700 text-white"
+                className="bg-background"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="seu.login"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="wp" className="text-slate-200">
-                Senha
-              </Label>
+              <Label htmlFor="wp">Senha</Label>
               <Input
                 id="wp"
                 type="password"
                 autoComplete="current-password"
-                className="bg-slate-950 border-slate-700 text-white"
+                className="bg-background"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-            {error ? <p className="text-sm text-red-400">{error}</p> : null}
-            <Button type="submit" className="w-full min-h-11" disabled={submitting || isLoading}>
-              {submitting ? 'Entrando...' : 'Entrar'}
+            {error ? <p className="text-sm text-destructive">{error}</p> : null}
+            <Button type="submit" className="h-11 w-full" disabled={submitting || isLoading}>
+              {submitting ? 'Entrando…' : 'Entrar'}
             </Button>
           </form>
         </CardContent>

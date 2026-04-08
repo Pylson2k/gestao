@@ -6,7 +6,6 @@ import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/auth-context'
 import { Button } from '@/components/ui/button'
 import {
-  Zap,
   LayoutDashboard,
   FileText,
   History,
@@ -28,12 +27,25 @@ import {
   AlertTriangle,
   Package,
   HardHat,
+  Building2,
 } from 'lucide-react'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo, type ComponentType } from 'react'
 import { APP_DISPLAY_NAME } from '@/lib/app-constants'
 import { useCompany } from '@/contexts/company-context'
 import { useQuotes } from '@/contexts/quotes-context'
 import { usePayments } from '@/contexts/payments-context'
+
+type NavItem = {
+  name: string
+  href: string
+  icon: ComponentType<{ className?: string }>
+  showBadge?: boolean
+}
+
+function navActive(pathname: string, href: string): boolean {
+  if (href === '/dashboard') return pathname === '/dashboard'
+  return pathname === href || pathname.startsWith(`${href}/`)
+}
 
 function PendingCountBadge() {
   const { quotes } = useQuotes()
@@ -54,31 +66,51 @@ function PendingCountBadge() {
   }, [quotes, getTotalPaidByQuoteId])
   if (count === 0) return null
   return (
-    <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-amber-500 text-white text-xs font-bold">
+    <span className="flex min-h-[1.125rem] min-w-[1.125rem] items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-bold text-white tabular-nums">
       {count > 99 ? '99+' : count}
     </span>
   )
 }
 
-const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, showBadge: true },
-  { name: 'Novo Orcamento', href: '/dashboard/novo-orcamento', icon: FileText, showBadge: false },
-  { name: 'Historico', href: '/dashboard/historico', icon: History, showBadge: false },
-  { name: 'Faturamento', href: '/dashboard/faturamento', icon: DollarSign, showBadge: false },
-  { name: 'Pagamentos', href: '/dashboard/pagamentos', icon: CreditCard, showBadge: false },
-  { name: 'Inadimplentes', href: '/dashboard/inadimplentes', icon: AlertTriangle, showBadge: false },
-  { name: 'Listas de materiais', href: '/dashboard/listas-materiais', icon: Package, showBadge: false },
-  { name: 'Clientes', href: '/dashboard/clientes', icon: UserCircle, showBadge: false },
-  { name: 'Servicos', href: '/dashboard/servicos', icon: Wrench, showBadge: false },
-  { name: 'Funcionarios', href: '/dashboard/funcionarios', icon: Users, showBadge: false },
-  { name: 'Obras e ponto', href: '/dashboard/obras-ponto', icon: HardHat, showBadge: false },
-  { name: 'Fechamento de Caixa', href: '/dashboard/fechamento-caixa', icon: Wallet, showBadge: false },
-  { name: 'Relatorios de Fechamentos', href: '/dashboard/relatorios-fechamentos', icon: Calendar, showBadge: false },
-  { name: 'Despesas', href: '/dashboard/despesas', icon: Receipt, showBadge: false },
-  { name: 'Relatorios Financeiros', href: '/dashboard/relatorios-financeiros', icon: BarChart3, showBadge: false },
-  { name: 'Auditoria', href: '/dashboard/auditoria', icon: Shield, showBadge: false },
-  { name: 'Configuracoes', href: '/dashboard/configuracoes', icon: Settings, showBadge: false },
-  { name: 'Perfil', href: '/dashboard/perfil', icon: User, showBadge: false },
+const navGroups: { label: string; items: NavItem[] }[] = [
+  {
+    label: 'Visão geral',
+    items: [
+      { name: 'Painel', href: '/dashboard', icon: LayoutDashboard, showBadge: true },
+      { name: 'Novo orçamento', href: '/dashboard/novo-orcamento', icon: FileText },
+      { name: 'Histórico', href: '/dashboard/historico', icon: History },
+    ],
+  },
+  {
+    label: 'Financeiro',
+    items: [
+      { name: 'Faturamento', href: '/dashboard/faturamento', icon: DollarSign },
+      { name: 'Pagamentos', href: '/dashboard/pagamentos', icon: CreditCard },
+      { name: 'Inadimplentes', href: '/dashboard/inadimplentes', icon: AlertTriangle },
+      { name: 'Despesas', href: '/dashboard/despesas', icon: Receipt },
+      { name: 'Relatórios financeiros', href: '/dashboard/relatorios-financeiros', icon: BarChart3 },
+    ],
+  },
+  {
+    label: 'Operação',
+    items: [
+      { name: 'Listas de materiais', href: '/dashboard/listas-materiais', icon: Package },
+      { name: 'Clientes', href: '/dashboard/clientes', icon: UserCircle },
+      { name: 'Serviços', href: '/dashboard/servicos', icon: Wrench },
+      { name: 'Funcionários', href: '/dashboard/funcionarios', icon: Users },
+      { name: 'Obras e ponto', href: '/dashboard/obras-ponto', icon: HardHat },
+      { name: 'Fechamento de caixa', href: '/dashboard/fechamento-caixa', icon: Wallet },
+      { name: 'Relatórios de fechamentos', href: '/dashboard/relatorios-fechamentos', icon: Calendar },
+    ],
+  },
+  {
+    label: 'Sistema',
+    items: [
+      { name: 'Auditoria', href: '/dashboard/auditoria', icon: Shield },
+      { name: 'Configurações', href: '/dashboard/configuracoes', icon: Settings },
+      { name: 'Perfil', href: '/dashboard/perfil', icon: User },
+    ],
+  },
 ]
 
 export function Sidebar() {
@@ -95,98 +127,107 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Mobile menu button */}
       <button
         type="button"
-        className="fixed top-4 left-4 z-50 lg:hidden p-3 rounded-lg bg-sidebar text-sidebar-foreground min-w-[48px] min-h-[48px] touch-manipulation shadow-lg"
+        className={cn(
+          'fixed z-50 flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md border border-sidebar-border bg-sidebar text-sidebar-foreground shadow-sm transition-colors',
+          'left-[max(0.75rem,env(safe-area-inset-left))] top-[max(0.75rem,env(safe-area-inset-top))]',
+          'lg:hidden',
+          'hover:bg-sidebar-accent'
+        )}
         onClick={() => setMobileOpen(!mobileOpen)}
+        aria-expanded={mobileOpen}
+        aria-label={mobileOpen ? 'Fechar menu' : 'Abrir menu'}
       >
-        {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </button>
 
-      {/* Mobile overlay */}
-      {mobileOpen && (
+      {mobileOpen ? (
         <div
-          className="fixed inset-0 bg-foreground/50 z-40 lg:hidden"
+          className="fixed inset-0 z-40 bg-foreground/40 backdrop-blur-[2px] lg:hidden"
           onClick={() => setMobileOpen(false)}
+          aria-hidden
         />
-      )}
+      ) : null}
 
-      {/* Sidebar */}
       <aside
         className={cn(
-          'fixed left-0 top-0 h-full w-64 bg-sidebar text-sidebar-foreground flex flex-col z-40 transition-transform duration-300',
+          'fixed left-0 top-0 z-40 flex h-full w-[var(--sidebar-width)] flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-transform duration-200 ease-out',
           'lg:translate-x-0',
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        {/* Logo */}
-        <div className="flex items-center gap-3 p-6 border-b border-sidebar-border">
+        <div className="flex items-center gap-3 border-b border-sidebar-border px-4 py-4 lg:py-5">
           {companySettings.logo ? (
-            <img 
-              src={companySettings.logo} 
-              alt={companySettings.name || 'Logo'}
-              className="w-10 h-10 object-contain rounded-lg bg-white/10 p-1.5"
+            <img
+              src={companySettings.logo}
+              alt=""
+              className="h-10 w-10 shrink-0 rounded-md border border-sidebar-border bg-card object-contain p-1"
             />
           ) : (
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
-              <Zap className="w-5 h-5 text-white" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
+              <Building2 className="h-5 w-5" />
             </div>
           )}
-          <span className="text-xl font-bold text-white tracking-tight">
-            {companySettings.name || APP_DISPLAY_NAME}
-          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold leading-tight tracking-tight">
+              {companySettings.name || APP_DISPLAY_NAME}
+            </p>
+            <p className="truncate text-xs text-sidebar-foreground/50">Gestão</p>
+          </div>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 p-3 sm:p-4 space-y-1 sm:space-y-1 overflow-y-auto">
-          {navigation.map((item) => {
-            const isActive = pathname === item.href
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                className={cn(
-                  'flex items-center gap-3 px-4 py-3 sm:py-2.5 rounded-xl text-base sm:text-sm font-medium transition-all duration-200 group min-h-[48px] touch-manipulation',
-                  isActive
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30'
-                    : 'text-slate-300 hover:bg-slate-700/50 hover:text-white hover:translate-x-1 active:scale-[0.98]'
-                )}
-              >
-                <item.icon className={cn(
-                  'w-6 h-6 sm:w-5 sm:h-5 transition-transform shrink-0',
-                  isActive ? 'scale-110' : 'group-hover:scale-110'
-                )} />
-                <span className={cn(
-                  'transition-all flex-1',
-                  isActive ? 'font-semibold' : ''
-                )}>{item.name}</span>
-                {item.showBadge && <PendingCountBadge />}
-              </Link>
-            )
-          })}
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-3" aria-label="Principal">
+          {navGroups.map((group) => (
+            <div key={group.label} className="mb-4 last:mb-0">
+              <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/45">
+                {group.label}
+              </p>
+              <ul className="space-y-0.5">
+                {group.items.map((item) => {
+                  const active = navActive(pathname, item.href)
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        onClick={() => setMobileOpen(false)}
+                        className={cn(
+                          'flex min-h-[40px] items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                          active
+                            ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm'
+                            : 'text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                        )}
+                      >
+                        <item.icon
+                          className={cn('h-4 w-4 shrink-0 opacity-90', active && 'opacity-100')}
+                        />
+                        <span className="min-w-0 flex-1 truncate">{item.name}</span>
+                        {item.showBadge ? <PendingCountBadge /> : null}
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          ))}
         </nav>
 
-        {/* User section */}
-        <div className="p-4 border-t border-slate-700/50 bg-slate-800/50">
-          <div className="flex items-center gap-3 mb-4 px-2">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
-              <span className="text-sm font-bold text-white">
-                {user?.name?.charAt(0).toUpperCase() || 'U'}
-              </span>
+        <div className="border-t border-sidebar-border bg-sidebar/95 p-3">
+          <div className="mb-3 flex items-center gap-3 rounded-md border border-sidebar-border/80 bg-card/50 px-2.5 py-2">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sidebar-primary text-xs font-semibold text-sidebar-primary-foreground">
+              {user?.name?.charAt(0).toUpperCase() || 'U'}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-white truncate">{user?.name || 'Usuário'}</p>
-              <p className="text-xs text-slate-400 truncate">{user?.email}</p>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium leading-tight">{user?.name || 'Usuário'}</p>
+              <p className="truncate text-xs text-sidebar-foreground/55">{user?.email}</p>
             </div>
           </div>
           <Button
             variant="ghost"
-            className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-xl transition-all min-h-[48px] text-base sm:text-sm touch-manipulation"
+            className="h-10 w-full justify-start text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             onClick={handleLogout}
           >
-            <LogOut className="w-6 h-6 sm:w-5 sm:h-5 mr-3" />
+            <LogOut className="mr-2 h-4 w-4" />
             Sair
           </Button>
         </div>

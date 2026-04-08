@@ -582,7 +582,7 @@ export default function QuoteDetailPage({
               <Button
                 onClick={handleWhatsAppServiceOrder}
                 title="Abre o WhatsApp; o PDF da ordem de serviço é baixado em seguida para anexar."
-                className="bg-gradient-to-r from-green-700 to-emerald-700 hover:from-green-800 hover:to-emerald-800 rounded-xl shadow-lg shadow-green-600/25 min-h-[48px] text-base sm:text-sm px-6 py-3 sm:py-2 touch-manipulation"
+                className="h-11 gap-2 bg-emerald-600 text-white hover:bg-emerald-700"
               >
                 <MessageCircle className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
                 OS no WhatsApp
@@ -592,7 +592,7 @@ export default function QuoteDetailPage({
           <Button 
             onClick={handleWhatsApp} 
             title="Abre o WhatsApp com o número do cliente. O PDF do orçamento é baixado em seguida para você anexar."
-            className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-xl shadow-lg shadow-green-500/30 min-h-[48px] text-base sm:text-sm px-6 py-3 sm:py-2 touch-manipulation"
+            className="h-11 gap-2 bg-emerald-600 text-white hover:bg-emerald-700"
           >
             <MessageCircle className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
             WhatsApp
@@ -602,7 +602,7 @@ export default function QuoteDetailPage({
 
       {/* Client & Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm lg:col-span-2">
+        <Card className="lg:col-span-2">
           <CardHeader className="pb-4">
             <CardTitle className="text-xl sm:text-2xl font-bold tracking-tight">Dados do Cliente</CardTitle>
           </CardHeader>
@@ -627,7 +627,7 @@ export default function QuoteDetailPage({
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-white to-primary/5 shadow-lg">
+        <Card className="border-y border-r border-border/80 border-l-4 border-l-primary">
           <CardHeader className="pb-4">
             <CardTitle className="text-xl sm:text-2xl font-bold tracking-tight">Resumo Financeiro</CardTitle>
           </CardHeader>
@@ -648,7 +648,7 @@ export default function QuoteDetailPage({
                     </span>
                   </div>
                 )}
-                <div className="border-t-2 border-primary/30 pt-4 mt-2 flex justify-between items-center bg-gradient-to-r from-primary/10 to-transparent p-4 rounded-lg">
+                <div className="mt-2 flex items-center justify-between rounded-lg border border-border/80 bg-muted/30 p-4 pt-4">
                   <span className="font-bold text-foreground text-xl sm:text-lg">Total</span>
                   <span className="text-3xl sm:text-2xl font-bold text-primary">
                     {quote.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
@@ -760,7 +760,7 @@ export default function QuoteDetailPage({
 
       {/* Services */}
       {quote.services.length > 0 && (
-        <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
+        <Card>
           <CardHeader className="pb-4">
             <CardTitle className="text-xl sm:text-2xl font-bold tracking-tight">Serviços</CardTitle>
           </CardHeader>
@@ -768,18 +768,18 @@ export default function QuoteDetailPage({
             <div className="overflow-x-auto rounded-lg border border-border/50">
               <table className="w-full text-base sm:text-sm">
                 <thead>
-                  <tr className="bg-gradient-to-r from-slate-50 to-slate-100 border-b-2 border-slate-200">
-                    <th className="text-left py-4 sm:py-3 px-4 sm:px-3 font-bold text-slate-700 uppercase text-sm sm:text-xs tracking-wider">Descrição</th>
-                    <th className="text-center py-4 sm:py-3 px-4 sm:px-3 font-bold text-slate-700 uppercase text-sm sm:text-xs tracking-wider">Qtd</th>
-                    <th className="text-right py-4 sm:py-3 px-4 sm:px-3 font-bold text-slate-700 uppercase text-sm sm:text-xs tracking-wider">Valor Unit.</th>
-                    <th className="text-right py-4 sm:py-3 px-4 sm:px-3 font-bold text-slate-700 uppercase text-sm sm:text-xs tracking-wider">Total</th>
+                  <tr className="border-b border-border bg-muted/60">
+                    <th className="px-4 py-4 text-left text-sm font-semibold uppercase tracking-wider text-foreground sm:px-3 sm:py-3 sm:text-xs">Descrição</th>
+                    <th className="px-4 py-4 text-center text-sm font-semibold uppercase tracking-wider text-foreground sm:px-3 sm:py-3 sm:text-xs">Qtd</th>
+                    <th className="px-4 py-4 text-right text-sm font-semibold uppercase tracking-wider text-foreground sm:px-3 sm:py-3 sm:text-xs">Valor Unit.</th>
+                    <th className="px-4 py-4 text-right text-sm font-semibold uppercase tracking-wider text-foreground sm:px-3 sm:py-3 sm:text-xs">Total</th>
                   </tr>
                 </thead>
                 <tbody>
                   {quote.services.map((item, index) => (
                     <tr key={item.id} className={cn(
-                      "border-b border-border/30 transition-colors hover:bg-slate-50/50",
-                      index % 2 === 0 ? "bg-white" : "bg-slate-50/30"
+                      "border-b border-border/30 transition-colors hover:bg-muted/40",
+                      index % 2 === 0 ? "bg-card" : "bg-muted/25"
                     )}>
                       <td className="py-4 sm:py-3 px-4 sm:px-3 text-foreground font-medium text-base sm:text-sm">{item.name}</td>
                       <td className="py-4 sm:py-3 px-4 sm:px-3 text-center text-foreground font-semibold text-base sm:text-sm">{item.quantity}</td>
@@ -803,7 +803,7 @@ export default function QuoteDetailPage({
 
       {/* Materials */}
       {quote.materials.length > 0 && (
-        <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
+        <Card>
           <CardHeader className="pb-4">
             <CardTitle className="text-xl sm:text-2xl font-bold tracking-tight">Materiais</CardTitle>
           </CardHeader>
@@ -811,18 +811,18 @@ export default function QuoteDetailPage({
             <div className="overflow-x-auto rounded-lg border border-border/50">
               <table className="w-full text-base sm:text-sm">
                 <thead>
-                  <tr className="bg-gradient-to-r from-slate-50 to-slate-100 border-b-2 border-slate-200">
-                    <th className="text-left py-4 sm:py-3 px-4 sm:px-3 font-bold text-slate-700 uppercase text-sm sm:text-xs tracking-wider">Descrição</th>
-                    <th className="text-center py-4 sm:py-3 px-4 sm:px-3 font-bold text-slate-700 uppercase text-sm sm:text-xs tracking-wider">Qtd / un.</th>
-                    <th className="text-right py-4 sm:py-3 px-4 sm:px-3 font-bold text-slate-700 uppercase text-sm sm:text-xs tracking-wider">Valor Unit.</th>
-                    <th className="text-right py-4 sm:py-3 px-4 sm:px-3 font-bold text-slate-700 uppercase text-sm sm:text-xs tracking-wider">Total</th>
+                  <tr className="border-b border-border bg-muted/60">
+                    <th className="px-4 py-4 text-left text-sm font-semibold uppercase tracking-wider text-foreground sm:px-3 sm:py-3 sm:text-xs">Descrição</th>
+                    <th className="px-4 py-4 text-center text-sm font-semibold uppercase tracking-wider text-foreground sm:px-3 sm:py-3 sm:text-xs">Qtd / un.</th>
+                    <th className="px-4 py-4 text-right text-sm font-semibold uppercase tracking-wider text-foreground sm:px-3 sm:py-3 sm:text-xs">Valor Unit.</th>
+                    <th className="px-4 py-4 text-right text-sm font-semibold uppercase tracking-wider text-foreground sm:px-3 sm:py-3 sm:text-xs">Total</th>
                   </tr>
                 </thead>
                 <tbody>
                   {quote.materials.map((item, index) => (
                     <tr key={item.id} className={cn(
-                      "border-b border-border/30 transition-colors hover:bg-slate-50/50",
-                      index % 2 === 0 ? "bg-white" : "bg-slate-50/30"
+                      "border-b border-border/30 transition-colors hover:bg-muted/40",
+                      index % 2 === 0 ? "bg-card" : "bg-muted/25"
                     )}>
                       <td className="py-4 sm:py-3 px-4 sm:px-3 text-foreground font-medium text-base sm:text-sm">{item.name}</td>
                       <td className="py-4 sm:py-3 px-4 sm:px-3 text-center text-foreground font-semibold text-base sm:text-sm">
@@ -848,10 +848,10 @@ export default function QuoteDetailPage({
 
       {/* Observations */}
       {quote.observations && (
-        <Card className="border-amber-200/50 bg-gradient-to-br from-amber-50/50 via-white to-amber-50/30 shadow-sm">
+        <Card className="border-y border-r border-border/80 border-l-4 border-l-amber-500/50 bg-muted/20">
           <CardHeader className="pb-4">
             <CardTitle className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
-              <span className="text-amber-600">Observações</span>
+              <span className="text-foreground">Observações</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -881,7 +881,7 @@ export default function QuoteDetailPage({
         }
         
         return (
-          <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
+          <Card>
             <CardHeader className="pb-4">
               <CardTitle className="text-xl sm:text-2xl font-bold tracking-tight flex items-center justify-between">
                 <span>Histórico de Pagamentos</span>

@@ -145,7 +145,7 @@ export function MaterialListForm({ initialData }: MaterialListFormProps) {
         <Button
           type="submit"
           disabled={saving}
-          className="rounded-xl min-h-[48px] bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/25"
+          className="h-11 w-full sm:w-auto"
         >
           {saving ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-5 h-5 mr-2" />}
           Salvar

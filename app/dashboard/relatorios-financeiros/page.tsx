@@ -202,7 +202,7 @@ export default function RelatoriosFinanceirosPage() {
       </Card>
 
       {/* Para o contador */}
-      <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+      <Card className="border-y border-r border-border/80 border-l-4 border-l-primary bg-muted/20">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <FileDown className="w-5 h-5" />

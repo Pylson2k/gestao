@@ -30,11 +30,11 @@ interface QuoteCardProps {
 const statusConfig = {
   draft: { label: 'Rascunho', className: 'bg-muted text-muted-foreground' },
   sent: { label: 'Enviado', className: 'bg-primary/10 text-primary' },
-  approved: { label: 'Aprovado', className: 'bg-accent/10 text-accent' },
+  approved: { label: 'Aprovado', className: 'bg-chart-2/12 text-chart-2' },
   rejected: { label: 'Rejeitado', className: 'bg-destructive/10 text-destructive' },
-  in_progress: { label: 'Em Servico', className: 'bg-blue-500/10 text-blue-500' },
-  completed: { label: 'Finalizado', className: 'bg-green-500/10 text-green-500' },
-  cancelled: { label: 'Cancelado', className: 'bg-orange-500/10 text-orange-500' },
+  in_progress: { label: 'Em serviço', className: 'bg-primary/10 text-primary' },
+  completed: { label: 'Finalizado', className: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' },
+  cancelled: { label: 'Cancelado', className: 'bg-muted text-muted-foreground' },
 }
 
 export function QuoteCard({ quote }: QuoteCardProps) {
@@ -59,8 +59,8 @@ export function QuoteCard({ quote }: QuoteCardProps) {
     quote.total === 0
       ? { label: 'Sem valor', className: 'bg-muted text-muted-foreground' }
       : totalPaid >= quote.total
-        ? { label: 'Pago', className: 'bg-green-500/10 text-green-500' }
-        : { label: 'Pendente', className: 'bg-amber-500/10 text-amber-600' }
+        ? { label: 'Pago', className: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' }
+        : { label: 'Pendente', className: 'bg-amber-500/10 text-amber-800 dark:text-amber-500' }
 
   const handleStartServiceClick = () => {
     setShowDiscountDialog(true)
@@ -170,13 +170,13 @@ export function QuoteCard({ quote }: QuoteCardProps) {
 
   return (
     <Card
-      className="border-border/50 bg-white/60 backdrop-blur-sm hover:shadow-lg hover:border-primary/20 transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.98] touch-manipulation cursor-pointer"
+      className="cursor-pointer border-border/80 transition-shadow hover:border-primary/25 hover:shadow-md"
       onClick={goToQuoteDetail}
     >
       <CardContent className="p-4 sm:p-5">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
             <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
-              <div className="flex items-center justify-center w-12 h-12 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 shadow-sm shrink-0">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10 sm:h-10 sm:w-10">
                 <FileText className="w-6 h-6 sm:w-5 sm:h-5 text-primary" />
               </div>
               <div className="flex-1 min-w-0">

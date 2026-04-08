@@ -210,7 +210,7 @@ export default function InadimplentesPage() {
 
       {/* Estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-2 border-red-500/20 bg-gradient-to-br from-red-500/5 via-white to-red-500/5">
+        <Card className="border-y border-r border-border/80 border-l-4 border-l-red-500/50 bg-muted/30">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -227,7 +227,7 @@ export default function InadimplentesPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
+        <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -239,7 +239,7 @@ export default function InadimplentesPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
+        <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -251,7 +251,7 @@ export default function InadimplentesPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
+        <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -270,7 +270,7 @@ export default function InadimplentesPage() {
       </div>
 
       {/* Filtros */}
-      <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
+      <Card>
         <CardHeader>
           <CardTitle className="text-lg">Filtros</CardTitle>
         </CardHeader>
@@ -329,7 +329,7 @@ export default function InadimplentesPage() {
       </Card>
 
       {/* Lista de Clientes Inadimplentes */}
-      <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
+      <Card>
         <CardHeader>
           <CardTitle className="text-xl">
             Lista de Inadimplentes ({filteredAndSorted.length})

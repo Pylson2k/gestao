@@ -27,8 +27,8 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse text-muted-foreground">Carregando...</div>
+      <div className="flex min-h-dvh items-center justify-center bg-muted/30">
+        <div className="animate-pulse text-sm text-muted-foreground">Carregando…</div>
       </div>
     )
   }
@@ -38,10 +38,14 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-muted/25">
       <Sidebar />
-      <main className="lg:pl-64">
-        <div className="p-4 sm:p-6 pt-20 sm:pt-16 lg:pt-6">{children}</div>
+      <main className="min-h-dvh lg:pl-[var(--sidebar-width)]">
+        <div
+          className="app-shell-pad mx-auto w-full max-w-[min(100%,88rem)] py-5 pt-[calc(4.25rem+env(safe-area-inset-top))] sm:py-6 sm:pt-[calc(4.5rem+env(safe-area-inset-top))] lg:py-8 lg:pt-8"
+        >
+          {children}
+        </div>
       </main>
     </div>
   )

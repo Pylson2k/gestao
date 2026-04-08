@@ -360,10 +360,10 @@ export default function AuditoriaPage() {
 
       {/* Alert para ações críticas */}
       {criticalActions.length > 0 && (
-        <Card className="border-2 border-orange-300/50 bg-gradient-to-r from-orange-50/80 via-white to-orange-50/40 shadow-lg">
+        <Card className="border-y border-r border-border/80 border-l-4 border-l-amber-500 bg-muted/30">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-orange-500/20">
+              <div className="rounded-xl bg-amber-500/15 p-3">
                 <AlertTriangle className="w-6 h-6 text-orange-600" />
               </div>
               <div className="flex-1">
@@ -380,7 +380,7 @@ export default function AuditoriaPage() {
       )}
 
       {/* Filters */}
-      <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
+      <Card>
         <CardHeader className="pb-4">
           <CardTitle className="text-lg font-bold tracking-tight flex items-center gap-2">
             <Filter className="w-5 h-5 text-primary" />
@@ -481,8 +481,8 @@ export default function AuditoriaPage() {
               <Card 
                 key={log.id} 
                 className={cn(
-                  "border-border/50 bg-white/60 backdrop-blur-sm hover:shadow-lg transition-all duration-300",
-                  isCritical && "border-2 border-orange-300/50 bg-gradient-to-r from-orange-50/50 via-white to-orange-50/30"
+                  "border-border/80 transition-shadow hover:shadow-md",
+                  isCritical && "border-l-4 border-l-amber-500 bg-amber-500/5"
                 )}
               >
                 <CardContent className="p-5">
@@ -497,7 +497,7 @@ export default function AuditoriaPage() {
                       {/* Header com usuário destacado */}
                       <div className="flex items-start justify-between mb-3 pb-3 border-b border-border/30">
                         <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20">
+                          <div className="flex items-center gap-2 rounded-md border border-primary/20 bg-primary/10 px-3 py-1.5">
                             <User className="w-4 h-4 text-primary" />
                             <div className="flex flex-col">
                               <span className="text-xs text-muted-foreground font-medium">Realizado por</span>

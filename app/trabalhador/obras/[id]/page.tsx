@@ -203,18 +203,18 @@ export default function TrabalhadorObraPage() {
 
   if (isLoading || !isAuthenticated) {
     return (
-      <div className="flex min-h-dvh items-center justify-center text-slate-400">Carregando...</div>
+      <div className="flex min-h-dvh items-center justify-center text-muted-foreground">Carregando...</div>
     )
   }
 
   if (!assignment) {
     return (
       <div className="mx-auto max-w-lg px-4 py-8 space-y-4">
-        <Link href="/trabalhador" className="text-sm text-blue-400 inline-flex items-center gap-1">
+        <Link href="/trabalhador" className="text-sm text-primary inline-flex items-center gap-1">
           <ArrowLeft className="w-4 h-4" />
           Voltar
         </Link>
-        <p className="text-slate-300">{err || 'Carregando...'}</p>
+        <p className="text-foreground">{err || 'Carregando...'}</p>
       </div>
     )
   }
@@ -222,59 +222,59 @@ export default function TrabalhadorObraPage() {
   return (
     <div className="mx-auto max-w-lg px-4 py-6 space-y-6 pb-24">
       <div>
-        <Link href="/trabalhador" className="text-sm text-blue-400 inline-flex items-center gap-1 mb-3">
+        <Link href="/trabalhador" className="text-sm text-primary inline-flex items-center gap-1 mb-3">
           <ArrowLeft className="w-4 h-4" />
           Todas as obras
         </Link>
-        <h1 className="text-xl font-semibold text-white">{assignment.title}</h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <h1 className="text-xl font-semibold text-foreground">{assignment.title}</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Valores pagos só após aprovação do gestor.
         </p>
       </div>
 
-      {err ? <p className="text-sm text-amber-400">{err}</p> : null}
+      {err ? <p className="text-sm text-amber-800 dark:text-amber-500">{err}</p> : null}
 
       {assignment.mode === 'DAILY' && (
-        <Card className="border-slate-800 bg-slate-900/60">
+        <Card className="border-border/80 bg-card">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base text-white">Registrar ponto</CardTitle>
+            <CardTitle className="text-base text-foreground">Registrar ponto</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={submitDayLog} className="space-y-3">
               <div className="space-y-1">
-                <Label className="text-slate-300">Data do trabalho</Label>
+                <Label className="text-foreground">Data do trabalho</Label>
                 <Input
                   type="date"
-                  className="bg-slate-950 border-slate-700 text-white"
+                  className="bg-background"
                   value={workDate}
                   onChange={(e) => setWorkDate(e.target.value)}
                   required
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-slate-300">Entrada</Label>
+                <Label className="text-foreground">Entrada</Label>
                 <Input
                   type="datetime-local"
-                  className="bg-slate-950 border-slate-700 text-white"
+                  className="bg-background"
                   value={clockIn}
                   onChange={(e) => setClockIn(e.target.value)}
                   required
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-slate-300">Saída</Label>
+                <Label className="text-foreground">Saída</Label>
                 <Input
                   type="datetime-local"
-                  className="bg-slate-950 border-slate-700 text-white"
+                  className="bg-background"
                   value={clockOut}
                   onChange={(e) => setClockOut(e.target.value)}
                   required
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-slate-300">Observação (opcional)</Label>
+                <Label className="text-foreground">Observação (opcional)</Label>
                 <Textarea
-                  className="bg-slate-950 border-slate-700 text-white min-h-[72px]"
+                  className="bg-background min-h-[72px]"
                   value={dayNote}
                   onChange={(e) => setDayNote(e.target.value)}
                 />
@@ -288,32 +288,32 @@ export default function TrabalhadorObraPage() {
       )}
 
       {assignment.mode === 'CONTRACT_PERCENT' && (
-        <Card className="border-slate-800 bg-slate-900/60">
+        <Card className="border-border/80 bg-card">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base text-white">Avanço da obra (%)</CardTitle>
-            <p className="text-xs text-slate-500 font-normal">
+            <CardTitle className="text-base text-foreground">Avanço da obra (%)</CardTitle>
+            <p className="text-xs text-muted-foreground font-normal">
               Aprovado hoje: {assignment.approvedPercent}% — proponha o novo percentual total executado.
             </p>
           </CardHeader>
           <CardContent>
             <form onSubmit={submitPercent} className="space-y-3">
               <div className="space-y-1">
-                <Label className="text-slate-300">Novo percentual (0–100)</Label>
+                <Label className="text-foreground">Novo percentual (0–100)</Label>
                 <Input
                   type="number"
                   min={0}
                   max={100}
                   step={0.5}
-                  className="bg-slate-950 border-slate-700 text-white"
+                  className="bg-background"
                   value={proposedPct}
                   onChange={(e) => setProposedPct(e.target.value)}
                   required
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-slate-300">Observação</Label>
+                <Label className="text-foreground">Observação</Label>
                 <Textarea
-                  className="bg-slate-950 border-slate-700 text-white min-h-[64px]"
+                  className="bg-background min-h-[64px]"
                   value={pctNote}
                   onChange={(e) => setPctNote(e.target.value)}
                 />
@@ -327,27 +327,27 @@ export default function TrabalhadorObraPage() {
       )}
 
       {assignment.mode === 'CONTRACT_STEPS' && (
-        <Card className="border-slate-800 bg-slate-900/60">
+        <Card className="border-border/80 bg-card">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base text-white">Etapas</CardTitle>
+            <CardTitle className="text-base text-foreground">Etapas</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {assignment.steps.map((st) => (
               <div
                 key={st.id}
-                className="flex flex-col gap-2 rounded-lg border border-slate-800 p-3 bg-slate-950/50"
+                className="flex flex-col gap-2 rounded-lg border border-border p-3 bg-muted/50"
               >
                 <div className="flex justify-between gap-2">
-                  <span className="text-sm text-white font-medium">{st.title}</span>
+                  <span className="text-sm text-foreground font-medium">{st.title}</span>
                   {st.approvedDone ? (
-                    <Badge className="bg-emerald-600">Pago / ok</Badge>
+                    <Badge className="border-0 bg-emerald-600 text-white hover:bg-emerald-600">Pago / ok</Badge>
                   ) : (
-                    <Badge variant="outline" className="border-slate-600 text-slate-300">
+                    <Badge variant="outline" className="border-border text-foreground">
                       Pendente
                     </Badge>
                   )}
                 </div>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-muted-foreground">
                   Valor da etapa:{' '}
                   {st.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </p>
@@ -369,16 +369,16 @@ export default function TrabalhadorObraPage() {
       )}
 
       {(assignment.mode === 'DAILY' || assignment.mode === 'CONTRACT_PERCENT') && (
-        <Card className="border-slate-800 bg-slate-900/60">
+        <Card className="border-border/80 bg-card">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base text-white">Meus envios recentes</CardTitle>
+            <CardTitle className="text-base text-foreground">Meus envios recentes</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             {assignment.mode === 'DAILY' &&
               dayLogs.slice(0, 12).map((l) => (
-                <div key={l.id} className="border-b border-slate-800 pb-2 last:border-0">
+                <div key={l.id} className="border-b border-border pb-2 last:border-0">
                   <div className="flex justify-between">
-                    <span className="text-slate-300">
+                    <span className="text-foreground">
                       {new Date(l.workDate).toLocaleDateString('pt-BR')}
                     </span>
                     <Badge
@@ -408,9 +408,9 @@ export default function TrabalhadorObraPage() {
                 .filter((s) => s.kind === 'PERCENT')
                 .slice(0, 12)
                 .map((s) => (
-                  <div key={s.id} className="border-b border-slate-800 pb-2 last:border-0">
+                  <div key={s.id} className="border-b border-border pb-2 last:border-0">
                     <div className="flex justify-between">
-                      <span className="text-slate-300">
+                      <span className="text-foreground">
                         {s.proposedPercent != null ? `${s.proposedPercent}%` : '—'}
                       </span>
                       <Badge
@@ -436,20 +436,20 @@ export default function TrabalhadorObraPage() {
       )}
 
       {assignment.mode === 'CONTRACT_STEPS' && submissions.filter((s) => s.kind === 'STEP_DONE').length > 0 && (
-        <Card className="border-slate-800 bg-slate-900/60">
+        <Card className="border-border/80 bg-card">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base text-white">Pedidos de etapa</CardTitle>
+            <CardTitle className="text-base text-foreground">Pedidos de etapa</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             {submissions
               .filter((s) => s.kind === 'STEP_DONE')
               .slice(0, 15)
               .map((s) => (
-                <div key={s.id} className="flex justify-between border-b border-slate-800 pb-2">
-                  <span className="text-slate-400">
+                <div key={s.id} className="flex justify-between border-b border-border pb-2">
+                  <span className="text-muted-foreground">
                     {new Date(s.createdAt).toLocaleString('pt-BR')}
                   </span>
-                  <Badge variant="outline" className="border-slate-600">
+                  <Badge variant="outline" className="border-border">
                     {s.status}
                   </Badge>
                 </div>

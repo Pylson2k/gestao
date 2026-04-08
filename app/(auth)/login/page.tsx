@@ -1,6 +1,6 @@
 'use client'
 
-import React from "react"
+import React from 'react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { APP_DISPLAY_NAME } from '@/lib/app-constants'
@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Zap, Loader2, ShieldAlert } from 'lucide-react'
+import { Building2, Loader2, ShieldAlert } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -20,14 +20,12 @@ export default function LoginPage() {
   const [companyLogo, setCompanyLogo] = useState<string | null>(null)
   const [companyName, setCompanyName] = useState(APP_DISPLAY_NAME)
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
       router.push('/dashboard')
     }
   }, [isAuthenticated, isLoading, router])
 
-  // Buscar logo e nome da empresa
   useEffect(() => {
     const fetchCompanyInfo = async () => {
       try {
@@ -38,8 +36,7 @@ export default function LoginPage() {
         }
         if (data.name) {
           setCompanyName(data.name)
-          // Atualizar título da página
-          document.title = `${data.name} - Acesso ao Sistema`
+          document.title = `${data.name} — Acesso`
         }
       } catch (error) {
         console.error('Error fetching company info:', error)
@@ -66,36 +63,40 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black p-4">
-      <div className="w-full max-w-md">
-        <div className="flex items-center justify-center gap-3 mb-8">
+    <div className="relative flex min-h-dvh flex-col bg-muted/30">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,oklch(0.42_0.13_264/0.12),transparent)]" />
+      <div className="relative flex flex-1 flex-col items-center justify-center px-4 py-10 sm:px-6">
+        <div className="mb-8 flex w-full max-w-md flex-col items-center gap-4 text-center sm:mb-10">
           {companyLogo ? (
-            <img 
-              src={companyLogo} 
-              alt={companyName}
-              className="w-16 h-16 object-contain rounded-lg bg-white/10 p-2"
+            <img
+              src={companyLogo}
+              alt=""
+              className="h-14 w-14 rounded-lg border border-border bg-card object-contain p-2 shadow-sm"
             />
           ) : (
-            <div className="flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg">
-              <Zap className="w-8 h-8 text-primary-foreground" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+              <Building2 className="h-7 w-7" />
             </div>
           )}
-          <span className="text-3xl font-bold text-white tracking-tight">{companyName}</span>
+          <div>
+            <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">{companyName}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Acesso ao sistema de gestão</p>
+          </div>
         </div>
 
-        <Card className="border-border shadow-lg">
-          <CardHeader className="text-center">
-            <CardTitle className="text-xl">Acesso ao Sistema</CardTitle>
-            <CardDescription>Entre com suas credenciais para continuar</CardDescription>
+        <Card className="w-full max-w-md border border-border/80 shadow-lg shadow-foreground/5">
+          <CardHeader className="space-y-1 pb-2 text-center sm:text-left">
+            <CardTitle className="text-lg font-semibold">Entrar</CardTitle>
+            <CardDescription>Use suas credenciais corporativas.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username">Usuario</Label>
+                <Label htmlFor="username">Usuário</Label>
                 <Input
                   id="username"
                   type="text"
-                  placeholder="gustavo"
+                  placeholder="Identificador"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="bg-background"
@@ -109,7 +110,7 @@ export default function LoginPage() {
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Sua senha"
+                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="bg-background"
@@ -119,29 +120,27 @@ export default function LoginPage() {
               </div>
 
               {error && (
-                <div className="flex items-center gap-2 p-3 rounded-md bg-destructive/10 text-destructive text-sm">
-                  <ShieldAlert className="h-4 w-4 shrink-0" />
+                <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                  <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
                   <span>{error}</span>
                 </div>
               )}
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="h-11 w-full font-medium" disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Entrando...
+                    Entrando…
                   </>
                 ) : (
-                  'Entrar'
+                  'Continuar'
                 )}
               </Button>
             </form>
 
-            <div className="mt-6 pt-4 border-t border-border">
-              <p className="text-xs text-muted-foreground text-center">
-                Sistema de uso restrito. Acesso apenas para usuarios autorizados.
-              </p>
-            </div>
+            <p className="mt-6 border-t border-border pt-4 text-center text-xs leading-relaxed text-muted-foreground">
+              Uso restrito a pessoas autorizadas. O acesso é monitorado.
+            </p>
           </CardContent>
         </Card>
       </div>

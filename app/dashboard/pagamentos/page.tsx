@@ -266,7 +266,7 @@ export default function PagamentosPage() {
       </div>
 
       {/* Filtros */}
-      <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
+      <Card>
         <CardHeader>
           <CardTitle className="text-lg">Filtros</CardTitle>
         </CardHeader>
@@ -330,7 +330,7 @@ export default function PagamentosPage() {
 
       {/* Resumo */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-white to-primary/5">
+        <Card className="border-y border-r border-border/80 border-l-4 border-l-primary bg-muted/20">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -343,7 +343,7 @@ export default function PagamentosPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
+        <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -356,7 +356,7 @@ export default function PagamentosPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
+        <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -377,7 +377,7 @@ export default function PagamentosPage() {
       </div>
 
       {/* Lista de Pagamentos */}
-      <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
+      <Card>
         <CardHeader>
           <CardTitle className="text-xl">Lista de Pagamentos</CardTitle>
         </CardHeader>

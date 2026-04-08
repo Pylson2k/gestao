@@ -196,7 +196,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
       </div>
 
       {/* Client Info */}
-      <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
+      <Card>
         <CardHeader className="pb-4">
           <CardTitle className="text-xl font-bold tracking-tight flex items-center gap-2">
             <UserCircle className="w-5 h-5 text-primary" />
@@ -283,7 +283,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
       </Card>
 
       {/* Services */}
-      <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-4">
           <CardTitle className="text-xl font-bold tracking-tight">Serviços</CardTitle>
           <div className="flex gap-2">
@@ -350,7 +350,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
       </Card>
 
       {/* Materials */}
-      <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-4">
           <CardTitle className="text-xl font-bold tracking-tight">Materiais</CardTitle>
           <Button type="button" variant="outline" size="sm" onClick={addMaterial}>
@@ -384,9 +384,9 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
 
       {/* Summary & Observations */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="border-amber-200/50 bg-gradient-to-br from-amber-50/50 via-white to-amber-50/30 shadow-sm">
+        <Card className="border-y border-r border-border/80 border-l-4 border-l-amber-500/50 bg-muted/20">
           <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-bold tracking-tight text-amber-700">Observações</CardTitle>
+            <CardTitle className="text-xl font-bold tracking-tight text-foreground">Observações</CardTitle>
           </CardHeader>
           <CardContent>
             <Textarea
@@ -399,7 +399,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-white to-primary/5 shadow-lg">
+        <Card className="border-y border-r border-border/80 border-l-4 border-l-primary">
           <CardHeader className="pb-4">
             <CardTitle className="text-xl font-bold tracking-tight">Resumo Financeiro</CardTitle>
           </CardHeader>
@@ -424,7 +424,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
                 className="w-36 bg-background text-right rounded-xl border-2"
               />
             </div>
-            <div className="border-t-2 border-primary/30 pt-5 mt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-gradient-to-r from-primary/10 to-transparent p-4 rounded-xl">
+            <div className="mt-2 flex flex-col gap-3 rounded-lg border border-border/80 bg-muted/30 p-4 pt-5 sm:flex-row sm:items-center sm:justify-between">
               <Label htmlFor="total" className="font-bold text-foreground text-lg">
                 Total do orçamento
               </Label>
@@ -472,7 +472,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
         <Button 
           type="submit" 
           disabled={isSubmitting} 
-          className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-11 rounded-md disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isSubmitting ? (
             <>

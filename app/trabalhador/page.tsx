@@ -53,23 +53,23 @@ export default function TrabalhadorHomePage() {
 
   if (isLoading || !isAuthenticated) {
     return (
-      <div className="flex min-h-dvh items-center justify-center text-slate-400">Carregando...</div>
+      <div className="flex min-h-dvh items-center justify-center text-muted-foreground">Carregando…</div>
     )
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-6 space-y-6">
+    <div className="mx-auto max-w-lg space-y-6 py-6">
       <header className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm text-slate-500">Ola,</p>
-          <h1 className="text-xl font-semibold text-white">{employeeName}</h1>
-          <p className="text-sm text-slate-400 mt-1">Obras ativas para registrar ponto ou empreita.</p>
+          <p className="text-sm text-muted-foreground">Olá,</p>
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">{employeeName}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Obras ativas para registrar ponto ou empreita.</p>
         </div>
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="border-slate-600 text-slate-200 shrink-0"
+          className="shrink-0"
           onClick={() => {
             logout()
             router.replace('/trabalhador/login')
@@ -80,25 +80,25 @@ export default function TrabalhadorHomePage() {
         </Button>
       </header>
 
-      {loadError ? <p className="text-sm text-amber-400">{loadError}</p> : null}
+      {loadError ? <p className="text-sm text-amber-700 dark:text-amber-500">{loadError}</p> : null}
 
       <div className="space-y-3">
         {assignments.length === 0 ? (
-          <Card className="border-slate-800 bg-slate-900/60">
-            <CardContent className="py-8 text-center text-slate-400 text-sm">
+          <Card>
+            <CardContent className="py-8 text-center text-sm text-muted-foreground">
               Nenhuma obra ativa no momento. O gestor precisa criar e ativar sua atribuicao.
             </CardContent>
           </Card>
         ) : (
           assignments.map((a) => (
             <Link key={a.id} href={`/trabalhador/obras/${a.id}`}>
-              <Card className="border-slate-800 bg-slate-900/60 hover:bg-slate-900 transition-colors">
-                <CardHeader className="py-4 flex-row items-center justify-between space-y-0">
-                  <CardTitle className="text-base font-medium text-white pr-2">{a.title}</CardTitle>
-                  <ChevronRight className="w-5 h-5 text-slate-500 shrink-0" />
+              <Card className="transition-shadow hover:shadow-md">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 py-4">
+                  <CardTitle className="pr-2 text-base font-medium text-foreground">{a.title}</CardTitle>
+                  <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
                 </CardHeader>
-                <CardContent className="pt-0 pb-4">
-                  <span className="text-xs uppercase tracking-wide text-slate-500">
+                <CardContent className="pb-4 pt-0">
+                  <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     {a.mode === 'DAILY' && 'Diaria'}
                     {a.mode === 'CONTRACT_PERCENT' && 'Empreita %'}
                     {a.mode === 'CONTRACT_STEPS' && 'Empreita etapas'}

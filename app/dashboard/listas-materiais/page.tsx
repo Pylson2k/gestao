@@ -41,7 +41,7 @@ export default function ListasMateriaisPage() {
           </div>
         </div>
         <Button
-          className="rounded-xl min-h-[48px] w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/25"
+          className="h-11 w-full sm:w-auto"
           asChild
         >
           <Link href="/dashboard/listas-materiais/nova">

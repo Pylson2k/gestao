@@ -214,7 +214,7 @@ export default function DespesasPage() {
             <Download className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
             Exportar CSV
           </Button>
-          <Button onClick={handleOpenDialogForNew} className="gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 min-h-[48px] text-base sm:text-sm touch-manipulation w-full sm:w-auto">
+          <Button onClick={handleOpenDialogForNew} className="h-11 w-full touch-manipulation gap-2 text-base sm:w-auto sm:text-sm">
             <Plus className="w-5 h-5 sm:w-4 sm:h-4" />
             Nova Despesa
           </Button>
@@ -337,7 +337,7 @@ export default function DespesasPage() {
                   </Button>
                   <Button 
                     type="submit"
-                    className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 min-h-[48px] text-base sm:text-sm touch-manipulation w-full sm:w-auto"
+                    className="h-11 w-full touch-manipulation text-base sm:w-auto sm:text-sm"
                   >
                     {editingExpense ? 'Atualizar' : 'Adicionar'}
                   </Button>
@@ -349,7 +349,7 @@ export default function DespesasPage() {
       </div>
 
       {/* Total Card */}
-      <Card className="border-2 border-red-200/50 bg-gradient-to-br from-red-50/80 via-white to-red-50/40 shadow-lg">
+      <Card className="border-y border-r border-border/80 border-l-4 border-l-destructive/50 bg-muted/20">
         <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
@@ -361,15 +361,15 @@ export default function DespesasPage() {
                 })}
               </p>
             </div>
-            <div className="p-3 sm:p-4 rounded-2xl bg-gradient-to-br from-red-500 to-red-600 shadow-lg shrink-0 ml-3">
-              <DollarSign className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+            <div className="ml-3 shrink-0 rounded-xl bg-destructive/15 p-3 sm:p-4">
+              <DollarSign className="h-7 w-7 text-destructive sm:h-8 sm:w-8" />
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Filters */}
-      <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
+      <Card>
         <CardHeader className="pb-3 sm:pb-4 p-4 sm:p-6">
           <CardTitle className="text-lg sm:text-xl font-bold tracking-tight">Filtros</CardTitle>
         </CardHeader>
@@ -433,7 +433,7 @@ export default function DespesasPage() {
       ) : filteredExpenses.length > 0 ? (
         <div className="space-y-3">
           {filteredExpenses.map((expense) => (
-            <Card key={expense.id} className="border-border/50 bg-white/60 backdrop-blur-sm hover:shadow-lg hover:border-primary/20 transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.98] touch-manipulation">
+            <Card key={expense.id} className="touch-manipulation border-border/80 transition-shadow hover:border-primary/25 hover:shadow-md">
               <CardContent className="p-4 sm:p-5">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
                   <div className="flex-1 min-w-0 w-full sm:w-auto">

@@ -103,7 +103,7 @@ export function InstallPrompt() {
   }
 
   return (
-    <Card className="fixed bottom-4 left-4 right-4 z-50 shadow-2xl border-2 border-primary/20 bg-gradient-to-br from-blue-50 via-white to-blue-50/30 md:left-auto md:right-4 md:w-96 animate-in slide-in-from-bottom-5">
+    <Card className="animate-in slide-in-from-bottom-5 fixed bottom-4 left-4 right-4 z-50 border border-border/80 shadow-lg md:left-auto md:right-4 md:w-96">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-bold text-foreground">
@@ -126,7 +126,7 @@ export function InstallPrompt() {
         <div className="flex gap-2">
           <Button
             onClick={handleInstallClick}
-            className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30"
+            className="h-10 flex-1"
           >
             <Download className="w-4 h-4 mr-2" />
             Instalar Agora

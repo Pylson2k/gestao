@@ -99,8 +99,12 @@ export default function HistoryPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-1">Histórico de Orçamentos</h1>
-            <p className="text-muted-foreground text-sm sm:text-base font-medium">{filteredQuotes.length} orçamento(s) encontrado(s)</p>
+            <h1 className="mb-1 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+              Histórico de orçamentos
+            </h1>
+            <p className="text-sm font-medium text-muted-foreground sm:text-base">
+              {filteredQuotes.length} orçamento(s) encontrado(s)
+            </p>
           </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
@@ -113,10 +117,7 @@ export default function HistoryPage() {
             <Download className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
             Exportar CSV
           </Button>
-          <Button
-            className="gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 min-h-[48px] text-base sm:text-sm touch-manipulation w-full sm:w-auto"
-            asChild
-          >
+          <Button className="h-11 w-full gap-2 sm:w-auto" asChild>
             <Link href="/dashboard/novo-orcamento">
               <Plus className="w-5 h-5 sm:w-4 sm:h-4" />
               Novo Orçamento
@@ -126,7 +127,7 @@ export default function HistoryPage() {
       </div>
 
       {/* Filters */}
-      <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-sm">
+      <Card>
         <CardHeader className="pb-3 sm:pb-4 p-4 sm:p-6">
           <CardTitle className="text-lg sm:text-xl font-bold tracking-tight flex items-center gap-2">
             <Filter className="w-5 h-5 sm:w-4 sm:h-4 text-primary" />
@@ -249,11 +250,11 @@ function QuoteListItem({ quote }: { quote: Quote }) {
 
   return (
     <Link href={`/dashboard/orcamento/${quote.id}`}>
-      <Card className="border-border/50 bg-white/60 backdrop-blur-sm hover:shadow-xl hover:border-primary/30 transition-all duration-300 cursor-pointer hover:-translate-y-1 group active:scale-[0.98] touch-manipulation">
+      <Card className="group cursor-pointer transition-shadow hover:border-primary/25 hover:shadow-md">
         <CardContent className="p-4 sm:p-5">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
             <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
-              <div className="flex items-center justify-center w-14 h-14 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 shadow-sm group-hover:scale-110 transition-transform shrink-0">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-primary/10 transition-transform group-hover:scale-[1.02] sm:h-12 sm:w-12">
                 <FileText className="w-7 h-7 sm:w-6 sm:h-6 text-primary" />
               </div>
               <div className="flex-1 min-w-0">

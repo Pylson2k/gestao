@@ -97,21 +97,21 @@ export default function ResetPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-50 p-4">
+    <div className="flex min-h-dvh items-center justify-center bg-muted/30 px-4 py-10">
       <div className="w-full max-w-2xl space-y-6">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg">
-              <Shield className="w-7 h-7 text-primary-foreground" />
+        <div className="mb-8 text-center">
+          <div className="mb-4 flex items-center justify-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+              <Shield className="h-7 w-7" />
             </div>
-            <span className="text-3xl font-bold text-foreground">
+            <span className="text-2xl font-semibold tracking-tight text-foreground">
               {APP_DISPLAY_NAME} — Admin
             </span>
           </div>
-          <p className="text-muted-foreground">Ferramentas administrativas do sistema</p>
+          <p className="text-sm text-muted-foreground">Ferramentas administrativas do sistema</p>
         </div>
 
-        <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-lg">
+        <Card>
           <CardHeader>
             <CardTitle className="text-base">Chave administrativa</CardTitle>
             <CardDescription>
@@ -132,7 +132,7 @@ export default function ResetPage() {
         </Card>
 
         {/* Reset Senhas */}
-        <Card className="border-border/50 bg-white/80 backdrop-blur-sm shadow-lg">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <RefreshCw className="w-5 h-5 text-primary" />
@@ -143,11 +143,7 @@ export default function ResetPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button 
-              onClick={handleResetPasswords} 
-              disabled={status === 'loading'}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg"
-            >
+            <Button onClick={handleResetPasswords} disabled={status === 'loading'} className="h-11 w-full">
               {status === 'loading' && resetType === 'passwords' ? (
                 <>Processando...</>
               ) : (
@@ -168,9 +164,9 @@ export default function ResetPage() {
         </Card>
 
         {/* Reset Banco de Dados */}
-        <Card className="border-2 border-red-200/50 bg-gradient-to-br from-red-50/50 via-white to-red-50/30 shadow-xl">
+        <Card className="border-l-4 border-l-destructive">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-600">
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-destructive">
               <Trash2 className="w-5 h-5" />
               Limpar Banco de Dados
             </CardTitle>
@@ -202,12 +198,7 @@ export default function ResetPage() {
                 </div>
               </div>
             </div>
-            <Button 
-              onClick={handleResetDatabase} 
-              disabled={status === 'loading'}
-              variant="destructive"
-              className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 shadow-lg"
-            >
+            <Button onClick={handleResetDatabase} disabled={status === 'loading'} variant="destructive" className="h-11 w-full">
               {status === 'loading' && resetType === 'database' ? (
                 <>Limpando banco...</>
               ) : (
