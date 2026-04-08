@@ -7,14 +7,22 @@ function isPublicApi(pathname: string): boolean {
   if (pathname.startsWith('/api/audit/login')) return true
   if (pathname.startsWith('/api/audit/logout')) return true
   if (pathname.startsWith('/api/company/logo')) return true
+  // Navegador/PWA pedem favicon e ícones sem headers customizados — não podem passar por auth
+  if (pathname.startsWith('/api/company/favicon')) return true
+  if (pathname.startsWith('/api/company/pwa-icon')) return true
   if (pathname.startsWith('/api/manifest')) return true
   if (pathname.startsWith('/api/admin/')) return true
+  if (pathname === '/api/health') return true
   return false
 }
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   if (!pathname.startsWith('/api/')) {
+    return NextResponse.next()
+  }
+  // Preflight CORS (raro neste app same-origin, mas evita 403 em ferramentas/proxies)
+  if (request.method === 'OPTIONS') {
     return NextResponse.next()
   }
   if (isPublicApi(pathname)) {

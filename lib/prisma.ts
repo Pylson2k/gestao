@@ -31,9 +31,10 @@ function createPrismaClient(): PrismaClient {
   if (!globalForPrisma.pool) {
     globalForPrisma.pool = new Pool({
       connectionString: databaseUrl,
-      max: 20,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
+      // Serverless (Vercel + Neon): poucas conexões por instância; cold start precisa de timeout maior
+      max: Number(process.env.PG_POOL_MAX) || 5,
+      idleTimeoutMillis: 20000,
+      connectionTimeoutMillis: Number(process.env.PG_CONNECTION_TIMEOUT_MS) || 15000,
     })
   }
 
