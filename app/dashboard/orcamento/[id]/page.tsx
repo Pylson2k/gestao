@@ -120,35 +120,7 @@ export default function QuoteDetailPage({
     try {
       const html = generateQuotePDF(quote, companySettings)
       const filename = `orcamento-${quote.number.replace(/\s+/g, '-')}.pdf`
-      
-      // Verificar se está em mobile/PWA
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-      
-      if (isMobile) {
-        // No mobile, abrir em nova aba para visualizar e permitir download manual
-        const viewWindow = window.open('', '_blank')
-        if (viewWindow) {
-          viewWindow.document.write(html)
-          viewWindow.document.close()
-          // Adicionar botão de impressão/salvar
-          setTimeout(() => {
-            if (viewWindow && !viewWindow.closed) {
-              viewWindow.focus()
-              // Tentar download automático também
-              try {
-                downloadPDF(html, filename).catch(() => {
-                  // Se falhar, pelo menos a janela está aberta para o usuário salvar manualmente
-                })
-              } catch {}
-            }
-          }, 500)
-        } else {
-          alert('Por favor, permita pop-ups para baixar o PDF')
-        }
-      } else {
-        // Desktop: download direto
-        await downloadPDF(html, filename)
-      }
+      await downloadPDF(html, filename)
       
       // Log de auditoria
       try {
@@ -183,27 +155,7 @@ export default function QuoteDetailPage({
     try {
       const html = generateMaterialsListPDF(quote, companySettings)
       const filename = `lista-materiais-${quote.number.replace(/\s+/g, '-')}.pdf`
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-
-      if (isMobile) {
-        const viewWindow = window.open('', '_blank')
-        if (viewWindow) {
-          viewWindow.document.write(html)
-          viewWindow.document.close()
-          setTimeout(() => {
-            if (viewWindow && !viewWindow.closed) {
-              viewWindow.focus()
-              try {
-                downloadPDF(html, filename).catch(() => {})
-              } catch {}
-            }
-          }, 500)
-        } else {
-          alert('Por favor, permita pop-ups para baixar o PDF')
-        }
-      } else {
-        await downloadPDF(html, filename)
-      }
+      await downloadPDF(html, filename)
 
       try {
         const userId = readSessionUserId()
@@ -310,30 +262,7 @@ export default function QuoteDetailPage({
     try {
       const html = generateServiceOrderPDF(quote, companySettings, quotePayments)
       const filename = `ordem-servico-${quote.number.replace(/\s+/g, '-')}.pdf`
-
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      )
-
-      if (isMobile) {
-        const viewWindow = window.open('', '_blank')
-        if (viewWindow) {
-          viewWindow.document.write(html)
-          viewWindow.document.close()
-          setTimeout(() => {
-            if (viewWindow && !viewWindow.closed) {
-              viewWindow.focus()
-              try {
-                downloadPDF(html, filename).catch(() => {})
-              } catch {}
-            }
-          }, 500)
-        } else {
-          alert('Por favor, permita pop-ups para baixar o PDF')
-        }
-      } else {
-        await downloadPDF(html, filename)
-      }
+      await downloadPDF(html, filename)
 
       try {
         const userId = readSessionUserId()
@@ -365,29 +294,7 @@ export default function QuoteDetailPage({
         totalPaidOnQuote: getTotalPaidByQuoteId(quote.id),
       })
       const filename = `recibo-pagamento-${quote.number.replace(/\s+/g, '-')}-${payment.id.slice(0, 8)}.pdf`
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      )
-
-      if (isMobile) {
-        const viewWindow = window.open('', '_blank')
-        if (viewWindow) {
-          viewWindow.document.write(html)
-          viewWindow.document.close()
-          setTimeout(() => {
-            if (viewWindow && !viewWindow.closed) {
-              viewWindow.focus()
-              try {
-                downloadPDF(html, filename).catch(() => {})
-              } catch {}
-            }
-          }, 500)
-        } else {
-          alert('Por favor, permita pop-ups para baixar o PDF do recibo.')
-        }
-      } else {
-        await downloadPDF(html, filename)
-      }
+      await downloadPDF(html, filename)
 
       try {
         const userId = readSessionUserId()

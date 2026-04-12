@@ -111,26 +111,7 @@ export default function ListaMateriaisDetailPage({
     try {
       const html = generateStandaloneMaterialListPDF(list, companySettings)
       const filename = `${list.number.replace(/\s+/g, '-')}.pdf`
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      )
-      if (isMobile) {
-        const w = window.open('', '_blank')
-        if (w) {
-          w.document.write(html)
-          w.document.close()
-          setTimeout(() => {
-            if (w && !w.closed) {
-              w.focus()
-              downloadPDF(html, filename).catch(() => {})
-            }
-          }, 500)
-        } else {
-          alert('Permita pop-ups para baixar o PDF.')
-        }
-      } else {
-        await downloadPDF(html, filename)
-      }
+      await downloadPDF(html, filename)
       try {
         if (user?.id) {
           await fetch('/api/audit/action', {

@@ -269,26 +269,7 @@ export default function PagamentosPage() {
     const filename = `recibo-pagamento-${safeNum}-${payment.id.slice(0, 8)}.pdf`
 
     try {
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      )
-      if (isMobile) {
-        const viewWindow = window.open('', '_blank')
-        if (viewWindow) {
-          viewWindow.document.write(html)
-          viewWindow.document.close()
-          setTimeout(() => {
-            if (viewWindow && !viewWindow.closed) {
-              viewWindow.focus()
-              void downloadPDF(html, filename).catch(() => {})
-            }
-          }, 400)
-        } else {
-          alert('Por favor, permita pop-ups para baixar o PDF do recibo.')
-        }
-      } else {
-        await downloadPDF(html, filename)
-      }
+      await downloadPDF(html, filename)
 
       try {
         const userId = readSessionUserId()

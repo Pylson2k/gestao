@@ -1280,6 +1280,160 @@ function waitForImages(root: HTMLElement): Promise<void> {
   ).then(() => undefined)
 }
 
+/** Celular / tablet com toque — PDF exige fluxo diferente (Share ou overlay com gesto explícito). */
+function isTouchMobileDevice(): boolean {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return false
+  const ua = navigator.userAgent || ''
+  if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua)) return true
+  if (navigator.maxTouchPoints > 1 && /Macintosh/.test(ua)) return true
+  try {
+    if (window.matchMedia('(max-width: 768px)').matches && navigator.maxTouchPoints > 0) return true
+  } catch {
+    /* ignore */
+  }
+  return false
+}
+
+async function tryWebSharePdf(pdf: Blob, filename: string): Promise<boolean> {
+  const nav = navigator as Navigator & {
+    share?: (data: ShareData) => Promise<void>
+    canShare?: (data: ShareData) => boolean
+  }
+  if (typeof nav.share !== 'function') return false
+  const safeName = filename.replace(/[<>:"/\\|?*\u0000-\u001f]+/g, '-').trim() || 'documento.pdf'
+  const file = new File([pdf], safeName, { type: 'application/pdf', lastModified: Date.now() })
+  const data: ShareData = { files: [file], title: safeName, text: 'PDF gerado' }
+  if (typeof nav.canShare === 'function' && !nav.canShare(data)) return false
+  try {
+    await nav.share(data)
+    return true
+  } catch (e) {
+    const name = (e as { name?: string }).name
+    if (name === 'AbortError') return true
+    return false
+  }
+}
+
+/**
+ * Mobile: o Safari/Chrome costumam ignorar download programático após await.
+ * Overlay em tela cheia: o toque em "Salvar PDF" dispara o download com gesto válido.
+ */
+function showMobilePdfSaveOverlay(pdf: Blob, filename: string): void {
+  const safeName = filename.replace(/[<>:"/\\|?*\u0000-\u001f]+/g, '-').trim() || 'documento.pdf'
+  const url = URL.createObjectURL(pdf)
+
+  const backdrop = document.createElement('div')
+  backdrop.setAttribute('role', 'dialog')
+  backdrop.setAttribute('aria-modal', 'true')
+  backdrop.style.cssText = [
+    'position:fixed',
+    'inset:0',
+    'z-index:2147483647',
+    'background:rgba(15,23,42,.78)',
+    'display:flex',
+    'align-items:center',
+    'justify-content:center',
+    'padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))',
+    'box-sizing:border-box',
+  ].join(';')
+
+  const card = document.createElement('div')
+  card.style.cssText = [
+    'background:#fff',
+    'color:#0f172a',
+    'border-radius:16px',
+    'padding:22px 20px',
+    'max-width:min(400px,100%)',
+    'width:100%',
+    'box-shadow:0 25px 50px rgba(0,0,0,.4)',
+    'font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif',
+  ].join(';')
+
+  const h = document.createElement('h2')
+  h.textContent = 'PDF pronto'
+  h.style.cssText = 'margin:0 0 8px;font-size:1.25rem;font-weight:700'
+
+  const p = document.createElement('p')
+  p.textContent =
+    'Toque em Salvar para baixar o arquivo. Se não funcionar, use Abrir e depois compartilhe ou salve pelo menu do navegador.'
+  p.style.cssText = 'margin:0 0 18px;font-size:14px;line-height:1.5;color:#64748b'
+
+  const row = document.createElement('div')
+  row.style.cssText = 'display:flex;flex-direction:column;gap:10px'
+
+  function cleanup() {
+    URL.revokeObjectURL(url)
+    backdrop.remove()
+  }
+
+  const btnSave = document.createElement('button')
+  btnSave.type = 'button'
+  btnSave.textContent = 'Salvar PDF'
+  btnSave.style.cssText = [
+    'min-height:52px',
+    'border-radius:12px',
+    'border:none',
+    'background:#1e3a5f',
+    'color:#fff',
+    'font-size:17px',
+    'font-weight:600',
+    'cursor:pointer',
+    'touch-action:manipulation',
+    'width:100%',
+    '-webkit-tap-highlight-color:transparent',
+  ].join(';')
+  btnSave.onclick = () => {
+    const a = document.createElement('a')
+    a.href = url
+    a.download = safeName
+    a.rel = 'noopener'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    cleanup()
+  }
+
+  const btnOpen = document.createElement('button')
+  btnOpen.type = 'button'
+  btnOpen.textContent = 'Abrir PDF'
+  btnOpen.style.cssText = [
+    'min-height:48px',
+    'border-radius:12px',
+    'border:2px solid #e2e8f0',
+    'background:#fff',
+    'color:#0f172a',
+    'font-size:16px',
+    'font-weight:600',
+    'cursor:pointer',
+    'touch-action:manipulation',
+    'width:100%',
+    '-webkit-tap-highlight-color:transparent',
+  ].join(';')
+  btnOpen.onclick = () => {
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
+
+  const btnClose = document.createElement('button')
+  btnClose.type = 'button'
+  btnClose.textContent = 'Fechar'
+  btnClose.style.cssText =
+    'min-height:44px;border:none;background:transparent;color:#64748b;font-size:15px;cursor:pointer;touch-action:manipulation'
+  btnClose.onclick = () => cleanup()
+
+  backdrop.addEventListener('click', (e) => {
+    if (e.target === backdrop) cleanup()
+  })
+
+  row.appendChild(btnSave)
+  row.appendChild(btnOpen)
+  row.appendChild(btnClose)
+  card.appendChild(h)
+  card.appendChild(p)
+  card.appendChild(row)
+  backdrop.appendChild(card)
+  document.body.appendChild(backdrop)
+}
+
 function normalizePdfBlob(out: unknown): Blob | null {
   if (out instanceof Blob) {
     return new Blob([out], { type: 'application/pdf' })
@@ -1327,6 +1481,7 @@ type SaveFilePickerWindow = Window &
  */
 async function savePdfBlobToDisk(blob: Blob, filename: string): Promise<void> {
   const pdf = blob.type === 'application/pdf' ? blob : new Blob([blob], { type: 'application/pdf' })
+  const mobile = isTouchMobileDevice()
 
   const nav = navigator as Navigator & { msSaveOrOpenBlob?: (b: Blob, name: string) => void }
   if (typeof nav.msSaveOrOpenBlob === 'function') {
@@ -1336,6 +1491,16 @@ async function savePdfBlobToDisk(blob: Blob, filename: string): Promise<void> {
     } catch {
       /* continua */
     }
+  }
+
+  if (mobile) {
+    try {
+      if (await tryWebSharePdf(pdf, filename)) return
+    } catch {
+      /* segue para overlay */
+    }
+    showMobilePdfSaveOverlay(pdf, filename)
+    return
   }
 
   const w = typeof window !== 'undefined' ? (window as SaveFilePickerWindow) : null
@@ -1459,11 +1624,21 @@ export function preloadHtml2Pdf(): void {
 
 export async function downloadPDF(html: string, filename: string = 'orcamento.pdf') {
   const safeFilename = filename.replace(/[<>:"/\\|?*\u0000-\u001f]+/g, '-').trim() || 'documento.pdf'
+  const mobile = isTouchMobileDevice()
+  const pdfWidth =
+    typeof window !== 'undefined'
+      ? mobile
+        ? Math.min(Math.max(320, window.innerWidth - 16), 794)
+        : 794
+      : 794
+  const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1
+  const canvasScale = mobile
+    ? Math.min(1.75, Math.max(1, dpr * 0.85))
+    : Math.min(2, Math.max(1.25, dpr * 1.25))
 
   const container = document.createElement('div')
   container.setAttribute('lang', 'pt-BR')
-  container.style.cssText =
-    'position:fixed;left:-9999px;top:0;width:794px;max-width:100%;overflow:visible;pointer-events:none;background:#fff;z-index:-1;'
+  container.style.cssText = `position:fixed;left:-9999px;top:0;width:${pdfWidth}px;max-width:100%;overflow:visible;pointer-events:none;background:#fff;z-index:-1;`
 
   appendFullHtmlDocumentToContainer(container, html)
   document.body.appendChild(container)
@@ -1487,7 +1662,7 @@ export async function downloadPDF(html: string, filename: string = 'orcamento.pd
       filename: safeFilename,
       image: { type: 'jpeg' as const, quality: 0.92 },
       html2canvas: {
-        scale: Math.min(2, Math.max(1.25, (typeof window !== 'undefined' ? window.devicePixelRatio : 1) * 1.25)),
+        scale: canvasScale,
         useCORS: true,
         allowTaint: true,
         logging: false,
@@ -1495,7 +1670,7 @@ export async function downloadPDF(html: string, filename: string = 'orcamento.pd
         backgroundColor: '#ffffff',
         scrollX: 0,
         scrollY: 0,
-        windowWidth: container.scrollWidth || 794,
+        windowWidth: container.scrollWidth || pdfWidth,
       },
       jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
     }
@@ -1510,6 +1685,12 @@ export async function downloadPDF(html: string, filename: string = 'orcamento.pd
 
     if (blob && blob.size > 80) {
       await savePdfBlobToDisk(blob, safeFilename)
+      return
+    }
+
+    if (mobile) {
+      console.warn('PDF blob não gerado no mobile; usando impressão / visualização')
+      openHtmlForPrintFallback(html)
       return
     }
 
