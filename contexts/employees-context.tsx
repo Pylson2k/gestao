@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react'
 import { useAuth } from './auth-context'
 import type { Employee } from '@/lib/types'
+import { apiFetch } from '@/modules/core/http'
 
 const STALE_MS = 10 * 60 * 1000
 
@@ -33,11 +34,7 @@ export function EmployeesProvider({ children }: { children: ReactNode }) {
     fetchingRef.current = true
     setIsFetching(true)
     try {
-      const response = await fetch('/api/employees', {
-        headers: {
-          'x-user-id': user.id,
-        },
-      })
+      const response = await apiFetch('/api/employees', { userId: user.id })
 
       if (response.ok) {
         lastFetchedAt.current = Date.now()
@@ -85,12 +82,10 @@ export function EmployeesProvider({ children }: { children: ReactNode }) {
       throw new Error('Usuario nao autenticado')
     }
 
-    const response = await fetch('/api/employees', {
+    const response = await apiFetch('/api/employees', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-user-id': user.id,
-      },
+      userId: user.id,
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(employeeData),
     })
 
@@ -116,12 +111,10 @@ export function EmployeesProvider({ children }: { children: ReactNode }) {
       throw new Error('Usuario nao autenticado')
     }
 
-    const response = await fetch(`/api/employees/${id}`, {
+    const response = await apiFetch(`/api/employees/${id}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-user-id': user.id,
-      },
+      userId: user.id,
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(employeeData),
     })
 
@@ -150,11 +143,9 @@ export function EmployeesProvider({ children }: { children: ReactNode }) {
       throw new Error('Usuario nao autenticado')
     }
 
-    const response = await fetch(`/api/employees/${id}`, {
+    const response = await apiFetch(`/api/employees/${id}`, {
       method: 'DELETE',
-      headers: {
-        'x-user-id': user.id,
-      },
+      userId: user.id,
     })
 
     if (!response.ok) {

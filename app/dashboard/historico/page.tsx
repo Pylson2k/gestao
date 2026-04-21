@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { Suspense, useState, useMemo, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Link } from '@/components/app-link'
 import { useQuotes } from '@/contexts/quotes-context'
@@ -42,7 +42,7 @@ const statusConfig = {
 
 const validStatuses = ['draft', 'sent', 'approved', 'rejected', 'in_progress', 'completed', 'cancelled']
 
-export default function HistoryPage() {
+function HistoryInnerPage() {
   const searchParams = useSearchParams()
   const { quotes } = useQuotes()
   const [searchTerm, setSearchTerm] = useState('')
@@ -237,6 +237,14 @@ export default function HistoryPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function HistoryPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-sm text-muted-foreground">Carregando…</div>}>
+      <HistoryInnerPage />
+    </Suspense>
   )
 }
 

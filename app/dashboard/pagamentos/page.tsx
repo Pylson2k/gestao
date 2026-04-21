@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { Suspense, useState, useMemo, useEffect, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { usePayments } from '@/contexts/payments-context'
 import { useQuotes } from '@/contexts/quotes-context'
@@ -56,7 +56,7 @@ const paymentMethodColors: Record<PaymentMethod, string> = {
   boleto: 'bg-orange-500/10 text-orange-500',
 }
 
-export default function PagamentosPage() {
+function PagamentosInnerPage() {
   const searchParams = useSearchParams()
   const { payments, addPayment, updatePayment, deletePayment, isLoading, refreshPayments, getTotalPaidByQuoteId } = usePayments()
   const { quotes } = useQuotes()
@@ -735,5 +735,13 @@ export default function PagamentosPage() {
         </DialogContent>
       </Dialog>
     </div>
+  )
+}
+
+export default function PagamentosPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-sm text-muted-foreground">Carregando…</div>}>
+      <PagamentosInnerPage />
+    </Suspense>
   )
 }

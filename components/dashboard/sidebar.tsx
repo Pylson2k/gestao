@@ -97,7 +97,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
       { name: 'Listas de materiais', href: '/operacao/listas-materiais', icon: Package },
       { name: 'Clientes', href: '/operacao/clientes', icon: UserCircle },
       { name: 'Serviços', href: '/operacao/servicos', icon: Wrench },
-      { name: 'Funcionários', href: '/funcionarios', icon: Users },
+      { name: 'Funcionários', href: '/dashboard/funcionarios', icon: Users },
       { name: 'Obras e ponto', href: '/operacao/obras-ponto', icon: HardHat },
       { name: 'Fechamento de caixa', href: '/operacao/fechamento-caixa', icon: Wallet },
       { name: 'Relatórios de fechamentos', href: '/operacao/relatorios-fechamentos', icon: Calendar },
