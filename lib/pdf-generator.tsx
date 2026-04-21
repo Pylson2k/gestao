@@ -1361,8 +1361,22 @@ function showMobilePdfSaveOverlay(pdf: Blob, filename: string): void {
   const row = document.createElement('div')
   row.style.cssText = 'display:flex;flex-direction:column;gap:10px'
 
-  function cleanup() {
-    URL.revokeObjectURL(url)
+  let revoked = false
+  function scheduleRevoke() {
+    if (revoked) return
+    revoked = true
+    // Não revogar imediatamente — pode cancelar download/abertura em alguns browsers/PWA.
+    setTimeout(() => {
+      try {
+        URL.revokeObjectURL(url)
+      } catch {
+        /* ignore */
+      }
+    }, 90_000)
+  }
+
+  function closeOverlay() {
+    scheduleRevoke()
     backdrop.remove()
   }
 
@@ -1390,7 +1404,7 @@ function showMobilePdfSaveOverlay(pdf: Blob, filename: string): void {
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
-    cleanup()
+    closeOverlay()
   }
 
   const btnOpen = document.createElement('button')
@@ -1418,10 +1432,10 @@ function showMobilePdfSaveOverlay(pdf: Blob, filename: string): void {
   btnClose.textContent = 'Fechar'
   btnClose.style.cssText =
     'min-height:44px;border:none;background:transparent;color:#64748b;font-size:15px;cursor:pointer;touch-action:manipulation'
-  btnClose.onclick = () => cleanup()
+  btnClose.onclick = () => closeOverlay()
 
   backdrop.addEventListener('click', (e) => {
-    if (e.target === backdrop) cleanup()
+    if (e.target === backdrop) closeOverlay()
   })
 
   row.appendChild(btnSave)
