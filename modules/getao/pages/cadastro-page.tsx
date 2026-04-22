@@ -46,6 +46,7 @@ function emptyForm(): FormState {
 export function GetaoCadastroPage() {
   const [list, setList] = useState<Funcionario[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [q, setQ] = useState('')
 
   const [open, setOpen] = useState(false)
@@ -61,8 +62,12 @@ export function GetaoCadastroPage() {
   async function refresh() {
     setLoading(true)
     try {
+      setError(null)
       const data = await getaoApi.funcionarios.list()
       setList(data)
+    } catch (e: unknown) {
+      setList([])
+      setError(e instanceof Error ? e.message : 'Erro ao carregar cadastro')
     } finally {
       setLoading(false)
     }
@@ -208,6 +213,12 @@ export function GetaoCadastroPage() {
         />
         <p className="text-sm text-muted-foreground">{filtered.length} resultado(s)</p>
       </div>
+
+      {error ? (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+          {error}
+        </div>
+      ) : null}
 
       <div className="rounded-lg border bg-card">
         {loading ? (

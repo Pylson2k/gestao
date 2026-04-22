@@ -26,6 +26,7 @@ function money(v: number) {
 
 export function GetaoValesPage() {
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([])
+  const [error, setError] = useState<string | null>(null)
   const ativos = useMemo(() => funcionarios.filter((f) => f.status === 'ativo'), [funcionarios])
 
   const [filterFuncionarioId, setFilterFuncionarioId] = useState<number | 'all'>('all')
@@ -38,19 +39,29 @@ export function GetaoValesPage() {
   const [novoDesc, setNovoDesc] = useState('')
 
   async function loadFuncionarios() {
-    const list = await getaoApi.funcionarios.list()
-    setFuncionarios(list)
-    if (!novoFuncionarioId) {
-      const first = list.find((f) => f.status === 'ativo')
-      if (first) setNovoFuncionarioId(first.id)
+    try {
+      setError(null)
+      const list = await getaoApi.funcionarios.list()
+      setFuncionarios(list)
+      if (!novoFuncionarioId) {
+        const first = list.find((f) => f.status === 'ativo')
+        if (first) setNovoFuncionarioId(first.id)
+      }
+    } catch (e: unknown) {
+      setFuncionarios([])
+      setError(e instanceof Error ? e.message : 'Erro ao carregar funcionários')
     }
   }
 
   async function loadVales() {
     setLoading(true)
     try {
+      setError(null)
       const list = await getaoApi.vales.list(filterFuncionarioId === 'all' ? undefined : filterFuncionarioId)
       setVales(list)
+    } catch (e: unknown) {
+      setVales([])
+      setError(e instanceof Error ? e.message : 'Erro ao carregar vales')
     } finally {
       setLoading(false)
     }
@@ -187,6 +198,12 @@ export function GetaoValesPage() {
         </div>
         <div className="text-sm text-muted-foreground">{vales.length} lançamento(s)</div>
       </div>
+
+      {error ? (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+          {error}
+        </div>
+      ) : null}
 
       <div className="rounded-lg border bg-card">
         {loading ? (

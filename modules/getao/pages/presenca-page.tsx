@@ -61,16 +61,23 @@ export function GetaoPresencaPage() {
   const [mes, setMes] = useState<Date>(() => startOfMonth(new Date()))
   const [map, setMap] = useState<PresencaMap>({})
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [actionDay, setActionDay] = useState<string | null>(null)
 
   const ativos = useMemo(() => funcionarios.filter((f) => f.status === 'ativo'), [funcionarios])
 
   async function loadFuncionarios() {
-    const list = await getaoApi.funcionarios.list()
-    setFuncionarios(list)
-    if (!funcionarioId) {
-      const first = list.find((f) => f.status === 'ativo')
-      if (first) setFuncionarioId(first.id)
+    try {
+      setError(null)
+      const list = await getaoApi.funcionarios.list()
+      setFuncionarios(list)
+      if (!funcionarioId) {
+        const first = list.find((f) => f.status === 'ativo')
+        if (first) setFuncionarioId(first.id)
+      }
+    } catch (e: unknown) {
+      setFuncionarios([])
+      setError(e instanceof Error ? e.message : 'Erro ao carregar funcionários')
     }
   }
 
@@ -78,10 +85,14 @@ export function GetaoPresencaPage() {
     if (!funcionarioId) return
     setLoading(true)
     try {
+      setError(null)
       const year = mes.getFullYear()
       const month = mes.getMonth() + 1
       const m = await getaoApi.funcionarios.presencaMes(funcionarioId, year, month)
       setMap(m)
+    } catch (e: unknown) {
+      setMap({})
+      setError(e instanceof Error ? e.message : 'Erro ao carregar presença')
     } finally {
       setLoading(false)
     }
@@ -117,18 +128,28 @@ export function GetaoPresencaPage() {
 
   async function setStatus(iso: string, status: PresencaStatus) {
     if (!funcionarioId) return
-    await getaoApi.funcionarios.presencaSet(funcionarioId, iso, status)
-    setMap((prev) => ({ ...prev, [iso]: status }))
+    try {
+      setError(null)
+      await getaoApi.funcionarios.presencaSet(funcionarioId, iso, status)
+      setMap((prev) => ({ ...prev, [iso]: status }))
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Erro ao salvar presença')
+    }
   }
 
   async function removeStatus(iso: string) {
     if (!funcionarioId) return
-    await getaoApi.funcionarios.presencaDelete(funcionarioId, iso)
-    setMap((prev) => {
-      const next = { ...prev }
-      delete next[iso]
-      return next
-    })
+    try {
+      setError(null)
+      await getaoApi.funcionarios.presencaDelete(funcionarioId, iso)
+      setMap((prev) => {
+        const next = { ...prev }
+        delete next[iso]
+        return next
+      })
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Erro ao remover presença')
+    }
   }
 
   return (
@@ -172,6 +193,12 @@ export function GetaoPresencaPage() {
         </div>
         <div className="text-sm text-muted-foreground">{selectedName ? selectedName : '—'}</div>
       </div>
+
+      {error ? (
+        <Card className="border-destructive/40">
+          <CardContent className="p-4 text-sm text-destructive">{error}</CardContent>
+        </Card>
+      ) : null}
 
       <Card>
         <CardContent className="p-4 sm:p-5">
