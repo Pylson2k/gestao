@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { parseBrDate, toBrDate, toIsoDate } from '@/modules/getao/lib/date'
 import { CheckCircle2, Plus, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 function money(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -81,12 +82,12 @@ export function GetaoValesPage() {
     if (!novoFuncionarioId) return
     const v = Number(novoValor.replace(',', '.'))
     if (!Number.isFinite(v) || v < 0) {
-      alert('Valor inválido')
+      toast.error('Valor inválido')
       return
     }
     const iso = parseBrDate(novoData)
     if (!iso) {
-      alert('Data inválida (use DD/MM/AAAA)')
+      toast.error('Data inválida (use DD/MM/AAAA)')
       return
     }
     try {
@@ -99,8 +100,9 @@ export function GetaoValesPage() {
       setNovoValor('')
       setNovoDesc('')
       await loadVales()
+      toast.success('Vale lançado com sucesso.')
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : 'Erro ao criar vale')
+      toast.error(e instanceof Error ? e.message : 'Erro ao criar vale')
     }
   }
 
@@ -108,8 +110,9 @@ export function GetaoValesPage() {
     try {
       await getaoApi.vales.patch(vale.id, { status: 'pago' })
       await loadVales()
+      toast.success('Vale marcado como pago.')
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : 'Erro ao atualizar vale')
+      toast.error(e instanceof Error ? e.message : 'Erro ao atualizar vale')
     }
   }
 
@@ -118,8 +121,9 @@ export function GetaoValesPage() {
     try {
       await getaoApi.vales.delete(vale.id)
       await loadVales()
+      toast.success('Vale excluído com sucesso.')
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : 'Erro ao excluir vale')
+      toast.error(e instanceof Error ? e.message : 'Erro ao excluir vale')
     }
   }
 
@@ -183,7 +187,7 @@ export function GetaoValesPage() {
             value={filterFuncionarioId === 'all' ? 'all' : String(filterFuncionarioId)}
             onValueChange={(v) => setFilterFuncionarioId(v === 'all' ? 'all' : Number(v))}
           >
-            <SelectTrigger className="min-h-11 w-[260px]">
+            <SelectTrigger className="min-h-11 w-full sm:w-[260px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

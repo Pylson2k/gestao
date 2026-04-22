@@ -27,6 +27,7 @@ import { Switch } from '@/components/ui/switch'
 import { getaoApi } from '@/modules/getao/api/client'
 import type { Funcionario } from '@/modules/getao/api/types'
 import { Plus, Trash2, Pencil } from 'lucide-react'
+import { toast } from 'sonner'
 
 function money(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -97,7 +98,7 @@ export function GetaoCadastroPage() {
   async function onSubmit() {
     const nome = form.nome.trim()
     if (!nome) {
-      alert('Informe o nome')
+      toast.error('Informe o nome')
       return
     }
 
@@ -108,7 +109,7 @@ export function GetaoCadastroPage() {
         : Number(String(valorRaw).replace(',', '.'))
 
     if (valor !== null && (!Number.isFinite(valor) || valor < 0)) {
-      alert('Diária inválida')
+      toast.error('Diária inválida')
       return
     }
 
@@ -127,8 +128,9 @@ export function GetaoCadastroPage() {
       }
       setOpen(false)
       await refresh()
+      toast.success(editing ? 'Funcionário atualizado com sucesso.' : 'Funcionário cadastrado com sucesso.')
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : 'Erro ao salvar')
+      toast.error(e instanceof Error ? e.message : 'Erro ao salvar')
     }
   }
 
@@ -137,8 +139,9 @@ export function GetaoCadastroPage() {
     try {
       await getaoApi.funcionarios.delete(f.id)
       await refresh()
+      toast.success('Funcionário excluído com sucesso.')
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : 'Erro ao excluir')
+      toast.error(e instanceof Error ? e.message : 'Erro ao excluir')
     }
   }
 

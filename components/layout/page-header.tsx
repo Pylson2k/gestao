@@ -6,12 +6,15 @@ interface PageHeaderProps {
   description?: ReactNode
   className?: string
   children?: ReactNode
+  actions?: ReactNode
 }
 
 /**
  * Cabeçalho de página padrão: título, subtítulo e ações alinhados (mobile + desktop).
  */
-export function PageHeader({ title, description, className, children }: PageHeaderProps) {
+export function PageHeader({ title, description, className, children, actions }: PageHeaderProps) {
+  const rightSide = actions ?? children
+
   return (
     <div
       className={cn(
@@ -27,9 +30,9 @@ export function PageHeader({ title, description, className, children }: PageHead
           <div className="max-w-2xl text-sm leading-relaxed text-muted-foreground">{description}</div>
         ) : null}
       </div>
-      {children ? (
+      {rightSide ? (
         <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
-          {children}
+          {rightSide}
         </div>
       ) : null}
     </div>

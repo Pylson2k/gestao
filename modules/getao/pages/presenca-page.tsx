@@ -23,6 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { toast } from 'sonner'
 
 function startOfMonth(d: Date) {
   return new Date(d.getFullYear(), d.getMonth(), 1)
@@ -132,8 +133,10 @@ export function GetaoPresencaPage() {
       setError(null)
       await getaoApi.funcionarios.presencaSet(funcionarioId, iso, status)
       setMap((prev) => ({ ...prev, [iso]: status }))
+      toast.success('Presença atualizada.')
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Erro ao salvar presença')
+      toast.error(e instanceof Error ? e.message : 'Erro ao salvar presença')
     }
   }
 
@@ -147,8 +150,10 @@ export function GetaoPresencaPage() {
         delete next[iso]
         return next
       })
+      toast.success('Registro removido.')
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Erro ao remover presença')
+      toast.error(e instanceof Error ? e.message : 'Erro ao remover presença')
     }
   }
 
@@ -162,7 +167,7 @@ export function GetaoPresencaPage() {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <div className="w-full sm:w-[320px]">
+          <div className="w-full sm:max-w-[320px]">
             <Select
               value={funcionarioId ? String(funcionarioId) : ''}
               onValueChange={(v) => setFuncionarioId(Number(v))}

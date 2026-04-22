@@ -37,6 +37,7 @@ import {
 import { Plus, Trash2, Edit, DollarSign, Calendar, FileText, CreditCard, Receipt, MessageCircle } from 'lucide-react'
 import type { Payment, PaymentMethod } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 
 const paymentMethodLabels: Record<PaymentMethod, string> = {
   dinheiro: 'Dinheiro',
@@ -179,13 +180,13 @@ function PagamentosInnerPage() {
     e.preventDefault()
 
     if (!formData.quoteId || !formData.amount || !formData.paymentDate || !formData.paymentMethod) {
-      alert('Preencha todos os campos obrigatórios')
+      toast.error('Preencha todos os campos obrigatórios')
       return
     }
 
     const amount = parseFloat(formData.amount)
     if (isNaN(amount) || amount <= 0) {
-      alert('O valor deve ser maior que zero')
+      toast.error('O valor deve ser maior que zero')
       return
     }
 
@@ -199,7 +200,7 @@ function PagamentosInnerPage() {
 
       if (newTotalPaid > quote.total) {
         const remaining = quote.total - totalPaid
-        alert(`Valor excede o total do orçamento. Total: R$ ${quote.total.toFixed(2)}\nJá pago: R$ ${totalPaid.toFixed(2)}\nRestante: R$ ${remaining.toFixed(2)}`)
+        toast.error(`Valor excede o total do orçamento. Total: R$ ${quote.total.toFixed(2)} | Já pago: R$ ${totalPaid.toFixed(2)} | Restante: R$ ${remaining.toFixed(2)}`)
         return
       }
     }
@@ -226,7 +227,7 @@ function PagamentosInnerPage() {
       handleCloseDialog()
     } catch (error: any) {
       console.error('Error saving payment:', error)
-      alert(error.message || 'Erro ao salvar pagamento')
+      toast.error(error.message || 'Erro ao salvar pagamento')
     }
   }
 
@@ -239,7 +240,7 @@ function PagamentosInnerPage() {
       await deletePayment(payment.id)
     } catch (error: any) {
       console.error('Error deleting payment:', error)
-      alert(error.message || 'Erro ao excluir pagamento')
+      toast.error(error.message || 'Erro ao excluir pagamento')
     }
   }
 
@@ -259,7 +260,7 @@ function PagamentosInnerPage() {
   const handleDownloadPaymentReceipt = async (payment: Payment) => {
     const quote = getQuoteByPayment(payment)
     if (!quote) {
-      alert('Orçamento não encontrado para este pagamento.')
+      toast.error('Orçamento não encontrado para este pagamento.')
       return
     }
     const html = generatePaymentReceiptPDF(payment, quote, companySettings, {
@@ -293,22 +294,20 @@ function PagamentosInnerPage() {
       }
     } catch (e) {
       console.error(e)
-      alert('Erro ao gerar o recibo. Tente imprimir a partir da visualização ou use outro navegador.')
+      toast.error('Erro ao gerar o recibo. Tente imprimir a partir da visualização ou use outro navegador.')
     }
   }
 
   const handleWhatsAppPaymentReceipt = (payment: Payment) => {
     const quote = getQuoteByPayment(payment)
     if (!quote) {
-      alert('Orçamento não encontrado para este pagamento.')
+      toast.error('Orçamento não encontrado para este pagamento.')
       return
     }
     try {
       const digits = quote.client.phone.replace(/\D/g, '')
       if (!digits || digits.length < 10) {
-        alert(
-          'Cadastre um telefone válido com DDD no cliente para abrir o WhatsApp (ex.: 11999998888).'
-        )
+        toast.error('Cadastre um telefone válido com DDD no cliente para abrir o WhatsApp (ex.: 11999998888).')
         return
       }
 
@@ -347,7 +346,7 @@ function PagamentosInnerPage() {
       })()
     } catch (e) {
       console.error(e)
-      alert('Não foi possível abrir o WhatsApp.')
+      toast.error('Não foi possível abrir o WhatsApp.')
     }
   }
 

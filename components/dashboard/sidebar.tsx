@@ -49,8 +49,13 @@ function navActive(pathname: string, href: string): boolean {
 
 function PendingCountBadge() {
   const { quotes } = useQuotes()
-  const { getTotalPaidByQuoteId } = usePayments()
+  const { payments } = usePayments()
   const count = useMemo(() => {
+    const totalByQuote = new Map<string, number>()
+    for (const payment of payments) {
+      totalByQuote.set(payment.quoteId, (totalByQuote.get(payment.quoteId) ?? 0) + payment.amount)
+    }
+
     let n = 0
     const threeDaysAgo = new Date()
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 3)
@@ -58,12 +63,12 @@ function PendingCountBadge() {
       if (q.status === 'sent' && new Date(q.createdAt) < threeDaysAgo) n++
       if (q.status === 'approved') n++
       if (q.status === 'approved' || q.status === 'in_progress' || q.status === 'completed') {
-        const paid = getTotalPaidByQuoteId(q.id)
+        const paid = totalByQuote.get(q.id) ?? 0
         if (q.inDelinquencyList && q.total - paid > 0) n++
       }
     })
     return n
-  }, [quotes, getTotalPaidByQuoteId])
+  }, [quotes, payments])
   if (count === 0) return null
   return (
     <span className="flex min-h-[1.125rem] min-w-[1.125rem] items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-bold text-white tabular-nums">
@@ -182,7 +187,7 @@ export function Sidebar() {
               <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/45">
                 {group.label}
               </p>
-              <ul className="space-y-0.5">
+              <ul className="space-y-1">
                 {group.items.map((item) => {
                   const active = navActive(pathname, item.href)
                   return (
@@ -191,7 +196,7 @@ export function Sidebar() {
                         href={item.href}
                         onClick={() => setMobileOpen(false)}
                         className={cn(
-                          'flex min-h-[40px] items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                          'flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                           active
                             ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm'
                             : 'text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'

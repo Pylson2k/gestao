@@ -21,6 +21,7 @@ import type { Quote } from '@/lib/types'
 import { FileText, ChevronRight, Play, X, CheckCircle2, CreditCard } from 'lucide-react'
 import { useQuotes } from '@/contexts/quotes-context'
 import { usePayments } from '@/contexts/payments-context'
+import { toast } from 'sonner'
 
 interface QuoteCardProps {
   quote: Quote
@@ -82,14 +83,14 @@ export function QuoteCard({ quote }: QuoteCardProps) {
 
       // Se houve desconto, valida e calcula
       if (!discountValue || parseFloat(discountValue) <= 0) {
-        alert('Por favor, informe o valor do desconto')
+        toast.error('Por favor, informe o valor do desconto')
         setIsProcessing(false)
         return
       }
 
       const discountNum = parseFloat(discountValue)
       if (isNaN(discountNum) || discountNum <= 0) {
-        alert('Por favor, informe um valor valido para o desconto')
+        toast.error('Por favor, informe um valor válido para o desconto')
         setIsProcessing(false)
         return
       }
@@ -119,9 +120,10 @@ export function QuoteCard({ quote }: QuoteCardProps) {
       } as any)
 
       setShowDiscountDialog(false)
+      toast.success('Serviço iniciado com sucesso.')
     } catch (error) {
       console.error('Erro ao iniciar serviço:', error)
-      alert('Erro ao iniciar servico. Tente novamente.')
+      toast.error('Erro ao iniciar serviço. Tente novamente.')
     } finally {
       setIsProcessing(false)
     }
@@ -149,15 +151,23 @@ export function QuoteCard({ quote }: QuoteCardProps) {
 
   const handleCancelService = () => {
     if (confirm('Tem certeza que deseja cancelar este servico? Esta acao nao pode ser desfeita.')) {
-      updateQuote(quote.id, { status: 'cancelled' })
+      void updateQuote(quote.id, { status: 'cancelled' }).then(() => {
+        toast.success('Serviço cancelado.')
+      }).catch(() => {
+        toast.error('Não foi possível cancelar o serviço.')
+      })
     }
   }
 
   const handleCompleteService = () => {
     if (confirm('Deseja finalizar este servico?')) {
-      updateQuote(quote.id, { 
+      void updateQuote(quote.id, {
         status: 'completed',
         serviceCompletedAt: new Date()
+      }).then(() => {
+        toast.success('Serviço finalizado com sucesso.')
+      }).catch(() => {
+        toast.error('Não foi possível finalizar o serviço.')
       })
     }
   }

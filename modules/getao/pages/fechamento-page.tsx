@@ -19,6 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { toast } from 'sonner'
 
 function money(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -64,15 +65,16 @@ export function GetaoFechamentoPage() {
     const inicio = parseBrDate(inicioBr)
     const fim = parseBrDate(fimBr)
     if (!inicio || !fim) {
-      alert('Datas inválidas (use DD/MM/AAAA)')
+      toast.error('Datas inválidas (use DD/MM/AAAA)')
       return
     }
     setLoading(true)
     try {
       const data = await getaoApi.fechamento.list(inicio, fim, apenasAtivos)
       setRows(data)
+      toast.success('Fechamento gerado com sucesso.')
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : 'Erro ao gerar fechamento')
+      toast.error(e instanceof Error ? e.message : 'Erro ao gerar fechamento')
     } finally {
       setLoading(false)
     }
@@ -98,6 +100,7 @@ export function GetaoFechamentoPage() {
       ].join(';')
     )
     downloadCsv(`fechamento-${inicio}-a-${fim}.csv`, csvBOM() + [header, ...lines].join('\n'))
+    toast.success('CSV exportado com sucesso.')
   }
 
   return (

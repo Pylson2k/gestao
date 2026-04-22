@@ -28,6 +28,7 @@ import { Plus, Trash2, Edit, Wrench, CheckCircle, XCircle, DollarSign, Download 
 import type { Service } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { exportServicesToCSV } from '@/lib/export-utils'
+import { toast } from 'sonner'
 
 const STALE_MS = 10 * 60 * 1000
 
@@ -202,7 +203,7 @@ export default function ServicosPage() {
 
       handleCloseDialog()
     } catch (error: any) {
-      alert(error.message || 'Erro ao salvar servico')
+      toast.error(error.message || 'Erro ao salvar serviço')
     }
   }
 
@@ -229,8 +230,9 @@ export default function ServicosPage() {
           })))
         }
       }
+      toast.success('Serviço excluído com sucesso.')
     } catch (error: any) {
-      alert(error.message || 'Erro ao excluir servico')
+      toast.error(error.message || 'Erro ao excluir serviço')
     }
   }
 
@@ -417,15 +419,16 @@ export default function ServicosPage() {
             </div>
             <div className="space-y-2">
               <Label className="text-sm sm:text-base">Status</Label>
-              <select
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-base sm:text-sm min-h-[48px]"
-                value={filterActive}
-                onChange={(e) => setFilterActive(e.target.value)}
-              >
-                <option value="all">Todos</option>
-                <option value="active">Ativos</option>
-                <option value="inactive">Inativos</option>
-              </select>
+              <Select value={filterActive} onValueChange={setFilterActive}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="active">Ativos</SelectItem>
+                  <SelectItem value="inactive">Inativos</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardContent>

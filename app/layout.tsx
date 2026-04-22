@@ -6,6 +6,7 @@ import { AuthProvider } from '@/contexts/auth-context'
 import { DynamicFavicon } from '@/components/dynamic-favicon'
 import { DynamicTitle } from '@/components/dynamic-title'
 import { PWARegister } from '@/components/pwa-register'
+import { Toaster } from '@/components/ui/sonner'
 import { APP_DISPLAY_NAME, APP_TITLE_SUFFIX } from '@/lib/app-constants'
 import './globals.css'
 
@@ -79,6 +80,7 @@ export default function RootLayout({
         <AuthProvider>
           {children}
         </AuthProvider>
+        <Toaster position="top-right" richColors closeButton />
         <Analytics />
         <PWARegister />
       </body>

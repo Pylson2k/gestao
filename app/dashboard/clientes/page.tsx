@@ -22,6 +22,8 @@ import { Link } from '@/components/app-link'
 import { useQuotes } from '@/contexts/quotes-context'
 import { usePayments } from '@/contexts/payments-context'
 import { exportClientsToCSV } from '@/lib/export-utils'
+import { toast } from 'sonner'
+import { PageHeader } from '@/components/layout/page-header'
 
 export default function ClientesPage() {
   const { clients, addClient, updateClient, deleteClient, isLoading } = useClients()
@@ -96,7 +98,7 @@ export default function ClientesPage() {
 
       handleCloseDialog()
     } catch (error: any) {
-      alert(error.message || 'Erro ao salvar cliente')
+      toast.error(error.message || 'Erro ao salvar cliente')
     }
   }
 
@@ -107,111 +109,105 @@ export default function ClientesPage() {
 
     try {
       await deleteClient(id)
+      toast.success('Cliente excluído com sucesso.')
     } catch (error: any) {
-      alert(error.message || 'Erro ao excluir cliente')
+      toast.error(error.message || 'Erro ao excluir cliente')
     }
   }
 
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2">
-            <UserCircle className="w-6 h-6 sm:w-5 sm:h-5" />
-            Clientes
-          </h1>
-          <p className="text-muted-foreground text-sm sm:text-base mt-1">
-            Gerencie o cadastro de clientes e seus orçamentos
-          </p>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <Button
-            variant="outline"
-            onClick={() => exportClientsToCSV(clients)}
-            disabled={clients.length === 0}
-            className="min-h-[48px] text-base sm:text-sm touch-manipulation w-full sm:w-auto"
-          >
-            <Download className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
-            Exportar CSV
-          </Button>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => handleOpenDialog()} className="min-h-[48px] text-base sm:text-sm touch-manipulation w-full sm:w-auto">
-                <Plus className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
-                Novo Cliente
+      <div className="app-surface p-4 sm:p-5">
+        <PageHeader
+          title="Clientes"
+          description="Gerencie o cadastro de clientes e seus orçamentos."
+          actions={
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <Button
+                variant="outline"
+                onClick={() => exportClientsToCSV(clients)}
+                disabled={clients.length === 0}
+                className="w-full sm:w-auto"
+              >
+                <Download className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
+                Exportar CSV
               </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-xl sm:text-2xl">
-                {editingClient ? 'Editar Cliente' : 'Novo Cliente'}
-              </DialogTitle>
-              <DialogDescription className="text-sm sm:text-base">
-                {editingClient
-                  ? 'Atualize as informações do cliente'
-                  : 'Preencha os dados do novo cliente'}
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name" className="text-sm sm:text-base">Nome *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
-                    placeholder="Nome completo ou razão social"
-                    className="min-h-[48px] text-base sm:text-sm"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-sm sm:text-base">Telefone *</Label>
-                  <Input
-                    id="phone"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    required
-                    placeholder="(00) 00000-0000"
-                    className="min-h-[48px] text-base sm:text-sm"
-                  />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="address" className="text-sm sm:text-base">Endereço *</Label>
-                  <Input
-                    id="address"
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    required
-                    placeholder="Endereço completo"
-                    className="min-h-[48px] text-base sm:text-sm"
-                  />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="email" className="text-sm sm:text-base">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="email@exemplo.com"
-                    className="min-h-[48px] text-base sm:text-sm"
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col sm:flex-row justify-end gap-2">
-                <Button type="button" variant="outline" onClick={handleCloseDialog} className="min-h-[48px] text-base sm:text-sm touch-manipulation w-full sm:w-auto">
-                  Cancelar
-                </Button>
-                <Button type="submit" className="min-h-[48px] text-base sm:text-sm touch-manipulation w-full sm:w-auto">
-                  {editingClient ? 'Atualizar' : 'Criar'}
-                </Button>
-              </div>
-            </form>
-            </DialogContent>
-          </Dialog>
-        </div>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={() => handleOpenDialog()} className="w-full sm:w-auto">
+                    <Plus className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
+                    Novo Cliente
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle className="text-xl sm:text-2xl">
+                    {editingClient ? 'Editar Cliente' : 'Novo Cliente'}
+                  </DialogTitle>
+                  <DialogDescription className="text-sm sm:text-base">
+                    {editingClient
+                      ? 'Atualize as informações do cliente'
+                      : 'Preencha os dados do novo cliente'}
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name" className="text-sm sm:text-base">Nome *</Label>
+                      <Input
+                        id="name"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        required
+                        placeholder="Nome completo ou razão social"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone" className="text-sm sm:text-base">Telefone *</Label>
+                      <Input
+                        id="phone"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        required
+                        placeholder="(00) 00000-0000"
+                      />
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="address" className="text-sm sm:text-base">Endereço *</Label>
+                      <Input
+                        id="address"
+                        value={formData.address}
+                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                        required
+                        placeholder="Endereço completo"
+                      />
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="email" className="text-sm sm:text-base">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        placeholder="email@exemplo.com"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-col sm:flex-row justify-end gap-2">
+                    <Button type="button" variant="outline" onClick={handleCloseDialog} className="w-full sm:w-auto">
+                      Cancelar
+                    </Button>
+                    <Button type="submit" className="w-full sm:w-auto">
+                      {editingClient ? 'Atualizar' : 'Criar'}
+                    </Button>
+                  </div>
+                </form>
+                </DialogContent>
+              </Dialog>
+            </div>
+          }
+        />
       </div>
 
       {/* Stats */}

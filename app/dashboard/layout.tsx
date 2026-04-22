@@ -37,11 +37,11 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-dvh bg-muted/25">
+    <div className="min-h-dvh bg-background">
       <Sidebar />
       <main className="min-h-dvh lg:pl-[var(--sidebar-width)]">
         <div
-          className="app-shell-pad mx-auto w-full max-w-[min(100%,88rem)] py-5 pt-[calc(4.25rem+env(safe-area-inset-top))] sm:py-6 sm:pt-[calc(4.5rem+env(safe-area-inset-top))] lg:py-8 lg:pt-8"
+          className="app-shell-pad app-page py-5 pt-[calc(4.25rem+env(safe-area-inset-top))] sm:py-6 sm:pt-[calc(4.5rem+env(safe-area-inset-top))] lg:py-8 lg:pt-8"
         >
           {children}
         </div>

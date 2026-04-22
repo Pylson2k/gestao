@@ -10,6 +10,7 @@
 */
 :root {
   --sidebar-width: 16rem;
+  --content-max-width: 88rem;
   --background: oklch(0.985 0.004 264);
   --foreground: oklch(0.24 0.022 264);
   --card: oklch(1 0 0);
@@ -149,6 +150,18 @@
   .app-shell-pad {
     @apply px-4 sm:px-6 lg:px-8;
     padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+  }
+
+  .app-page {
+    @apply mx-auto w-full max-w-[var(--content-max-width)] space-y-6;
+  }
+
+  .app-surface {
+    @apply rounded-xl border border-border/80 bg-card shadow-[0_1px_2px_rgba(15,23,42,0.04)];
+  }
+
+  .app-muted-surface {
+    @apply rounded-xl border border-border/70 bg-muted/30;
   }
 }
 
