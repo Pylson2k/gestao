@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react'
 import { useExpenses } from '@/contexts/expenses-context'
-import { useEmployees } from '@/contexts/employees-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -58,7 +57,6 @@ function getCategoryColorClass(category: string): string {
 
 export function FinanceiroDespesasPage() {
   const { expenses, addExpense, updateExpense, deleteExpense, isLoading } = useExpenses()
-  const { employees } = useEmployees()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
   const [formData, setFormData] = useState({
@@ -67,7 +65,6 @@ export function FinanceiroDespesasPage() {
     amount: '',
     date: new Date().toISOString().split('T')[0],
     observations: '',
-    employeeId: '',
   })
 
   const [filterCategory, setFilterCategory] = useState<string>('all')
@@ -98,7 +95,6 @@ export function FinanceiroDespesasPage() {
       amount: '',
       date: new Date().toISOString().split('T')[0],
       observations: '',
-      employeeId: '',
     })
     setIsDialogOpen(true)
   }
@@ -112,7 +108,6 @@ export function FinanceiroDespesasPage() {
         amount: expense.amount.toString(),
         date: new Date(expense.date).toISOString().split('T')[0],
         observations: expense.observations || '',
-        employeeId: expense.employeeId || '',
       })
     } else {
       setEditingExpense(null)
@@ -122,7 +117,6 @@ export function FinanceiroDespesasPage() {
         amount: '',
         date: new Date().toISOString().split('T')[0],
         observations: '',
-        employeeId: '',
       })
     }
     setIsDialogOpen(true)
@@ -137,7 +131,6 @@ export function FinanceiroDespesasPage() {
       amount: '',
       date: new Date().toISOString().split('T')[0],
       observations: '',
-      employeeId: '',
     })
   }
 
@@ -162,13 +155,6 @@ export function FinanceiroDespesasPage() {
         amount,
         date: new Date(formData.date),
         observations: formData.observations || undefined,
-        employeeId:
-          (formData.category === 'vale_funcionario' ||
-            formData.category === 'pagamento_funcionario' ||
-            formData.category === 'almoco_funcionario') &&
-          formData.employeeId
-            ? formData.employeeId
-            : undefined,
       }
 
       if (editingExpense) {
@@ -311,34 +297,6 @@ export function FinanceiroDespesasPage() {
                     className="min-h-[48px] bg-background text-base sm:text-sm"
                   />
                 </div>
-
-                {(formData.category === 'vale_funcionario' ||
-                  formData.category === 'pagamento_funcionario' ||
-                  formData.category === 'almoco_funcionario') && (
-                  <div className="space-y-2">
-                    <Label htmlFor="employeeId" className="font-medium">
-                      Funcionário
-                    </Label>
-                    <Select
-                      value={formData.employeeId}
-                      onValueChange={(value) => setFormData({ ...formData, employeeId: value })}
-                    >
-                      <SelectTrigger className="bg-background">
-                        <SelectValue placeholder="Selecione o funcionário (opcional)" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">Nenhum (geral)</SelectItem>
-                        {employees
-                          .filter((emp) => emp.isActive)
-                          .map((employee) => (
-                            <SelectItem key={employee.id} value={employee.id}>
-                              {employee.name} {employee.position ? `(${employee.position})` : ''}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="observations" className="text-sm font-medium sm:text-base">

@@ -7,7 +7,6 @@ import { useAuth } from '@/contexts/auth-context'
 import { QuotesProvider } from '@/contexts/quotes-context'
 import { CompanyProvider } from '@/contexts/company-context'
 import { ExpensesProvider } from '@/contexts/expenses-context'
-import { EmployeesProvider } from '@/contexts/employees-context'
 import { ClientsProvider } from '@/contexts/clients-context'
 import { MaterialListsProvider } from '@/contexts/material-lists-context'
 import { ServicesProvider } from '@/contexts/services-context'
@@ -60,19 +59,17 @@ export default function DashboardLayout({
     <CompanyProvider>
       <QuotesProvider>
         <ExpensesProvider>
-          <EmployeesProvider>
-            <ClientsProvider>
-              <MaterialListsProvider>
-                <ServicesProvider>
-                  <CashClosingsProvider>
-                    <PaymentsProvider>
-                      <DashboardContent>{children}</DashboardContent>
-                    </PaymentsProvider>
-                  </CashClosingsProvider>
-                </ServicesProvider>
-              </MaterialListsProvider>
-            </ClientsProvider>
-          </EmployeesProvider>
+          <ClientsProvider>
+            <MaterialListsProvider>
+              <ServicesProvider>
+                <CashClosingsProvider>
+                  <PaymentsProvider>
+                    <DashboardContent>{children}</DashboardContent>
+                  </PaymentsProvider>
+                </CashClosingsProvider>
+              </ServicesProvider>
+            </MaterialListsProvider>
+          </ClientsProvider>
         </ExpensesProvider>
       </QuotesProvider>
     </CompanyProvider>

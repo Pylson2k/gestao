@@ -12,6 +12,22 @@ datasource db {
   provider = "postgresql"
 }
 
+enum FuncionarioStatus {
+  ativo
+  inativo
+}
+
+enum PresencaStatus {
+  presente
+  falta
+  meio_periodo
+}
+
+enum ValeStatus {
+  pendente
+  pago
+}
+
 model User {
   id                String   @id @default(cuid())
   username          String   @unique
@@ -28,14 +44,63 @@ model User {
   materialLists     MaterialList[]
   expenses          Expense[]
   auditLogs         AuditLog[]
-  employees         Employee[]
   services          Service[]
   cashClosings      CashClosing[]
   payments          Payment[]
-  workerAccounts    WorkerAccount[]
-  ownedWorkAssignments WorkAssignment[] @relation("WorkAssignmentOwner")
 
   @@map("users")
+}
+
+/// GETAO — Funcionários (modelo canônico do legado)
+model Funcionario {
+  id          Int              @id @default(autoincrement())
+  nome        String
+  /// Valor de diária (R$). No backend use Decimal para evitar float.
+  valorDiaria Decimal?         @db.Decimal(10, 2)
+  funcao      String?
+  status      FuncionarioStatus @default(ativo)
+
+  presencas   Presenca[]
+  vales       Vale[]
+
+  @@index([nome])
+  @@index([status])
+  @@map("funcionarios")
+}
+
+/// GETAO — Presença (uma linha por funcionário + data)
+model Presenca {
+  id            Int           @id @default(autoincrement())
+  funcionarioId Int
+  /// YYYY-MM-DD
+  data          String
+  horaEntrada   String?
+  horaSaida     String?
+  status        PresencaStatus @default(presente)
+
+  funcionario   Funcionario  @relation(fields: [funcionarioId], references: [id], onDelete: Cascade)
+
+  @@unique([funcionarioId, data], map: "ux_presenca_funcionario_data")
+  @@index([data], map: "ix_presenca_data")
+  @@map("presenca")
+}
+
+/// GETAO — Vales (adiantamentos)
+model Vale {
+  id            Int        @id @default(autoincrement())
+  funcionarioId Int
+  /// Valor (R$)
+  valor         Decimal    @db.Decimal(10, 2)
+  /// YYYY-MM-DD (data do lançamento)
+  data          String
+  descricao     String?
+  status        ValeStatus @default(pendente)
+
+  funcionario   Funcionario @relation(fields: [funcionarioId], references: [id], onDelete: Cascade)
+
+  @@index([data], map: "ix_vales_data")
+  @@index([funcionarioId], map: "ix_vales_funcionario")
+  @@map("vales")
 }
 
 model Client {
@@ -159,137 +224,6 @@ model CompanySettings {
   @@map("company_settings")
 }
 
-model Employee {
-  id          String   @id @default(cuid())
-  userId      String
-  name        String
-  cpf         String?
-  phone       String?
-  email       String?
-  position    String?  // Cargo
-  hireDate    DateTime?
-  isActive    Boolean  @default(true)
-  observations String?   @db.Text
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expenses    Expense[]
-  workerAccount WorkerAccount?
-  workAssignments WorkAssignment[]
-
-  @@map("employees")
-}
-
-/// Conta do trabalhador (login no app /trabalhador).
-model WorkerAccount {
-  id            String   @id @default(cuid())
-  employeeId    String   @unique
-  loginUsername String   @unique
-  passwordHash  String
-  ownerUserId   String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  employee Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  owner    User           @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
-  sessions WorkerSession[]
-
-  @@index([ownerUserId])
-  @@map("worker_accounts")
-}
-
-model WorkerSession {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  accountId String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-
-  account WorkerAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
-
-  @@map("worker_sessions")
-}
-
-/// Vínculo obra/serviço: diária ou empreita (% ou etapas). Só conta em totais após ACTIVE + aprovações.
-model WorkAssignment {
-  id              String   @id @default(cuid())
-  ownerUserId     String
-  employeeId      String
-  title           String
-  mode            String   // DAILY | CONTRACT_PERCENT | CONTRACT_STEPS
-  status          String   @default("DRAFT") // DRAFT | ACTIVE | CLOSED
-  dailyRate       Float?
-  contractTotal   Float?
-  approvedPercent Float    @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  owner    User       @relation("WorkAssignmentOwner", fields: [ownerUserId], references: [id], onDelete: Cascade)
-  employee Employee   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  steps    ContractStep[]
-  dayLogs  WorkDayLog[]
-  submissions WorkerContractSubmission[]
-
-  @@index([ownerUserId, employeeId])
-  @@index([ownerUserId, status])
-  @@map("work_assignments")
-}
-
-model ContractStep {
-  id           String   @id @default(cuid())
-  assignmentId String
-  sortOrder    Int
-  title        String
-  amount       Float
-  approvedDone Boolean  @default(false)
-  createdAt    DateTime @default(now())
-
-  assignment   WorkAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
-  submissions  WorkerContractSubmission[]
-
-  @@unique([assignmentId, sortOrder])
-  @@map("contract_steps")
-}
-
-model WorkDayLog {
-  id           String    @id @default(cuid())
-  assignmentId String
-  workDate     DateTime  @db.Date
-  clockInAt    DateTime
-  clockOutAt   DateTime
-  workerNote   String?   @db.Text
-  status       String    @default("PENDING")
-  dayUnits     Float?
-  rejectReason String?   @db.Text
-  reviewedAt   DateTime?
-  createdAt    DateTime  @default(now())
-
-  assignment WorkAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
-
-  @@index([assignmentId, workDate])
-  @@map("work_day_logs")
-}
-
-model WorkerContractSubmission {
-  id              String    @id @default(cuid())
-  assignmentId    String
-  kind            String    // PERCENT | STEP_DONE
-  proposedPercent Float?
-  stepId          String?
-  workerNote      String?   @db.Text
-  status          String    @default("PENDING")
-  rejectReason    String?   @db.Text
-  reviewedAt      DateTime?
-  createdAt       DateTime  @default(now())
-
-  assignment WorkAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
-  step       ContractStep?  @relation(fields: [stepId], references: [id], onDelete: SetNull)
-
-  @@index([assignmentId, status])
-  @@map("worker_contract_submissions")
-}
-
 model Service {
   id          String   @id @default(cuid())
   userId      String
@@ -334,12 +268,10 @@ model Expense {
   amount      Float
   date        DateTime
   observations String?   @db.Text
-  employeeId  String?  // Relação opcional com funcionário
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  employee    Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
   
   @@map("expenses")
 }
