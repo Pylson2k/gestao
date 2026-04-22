@@ -63,19 +63,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     fetchServices()
   }, [fetchServices])
 
-  // Refetch no focus só se passou 10 min
-  useEffect(() => {
-    if (!user?.id) return
-
-    const handleFocus = () => {
-      if (isFetching || isLoading) return
-      if (Date.now() - lastFetchedAt.current < STALE_MS) return
-      fetchServices()
-    }
-
-    window.addEventListener('focus', handleFocus)
-    return () => window.removeEventListener('focus', handleFocus)
-  }, [fetchServices, user?.id, isFetching, isLoading])
+  // Refetch automático ao focar janela desativado para reduzir rajadas de tráfego.
 
   const addService = useCallback(async (serviceData: Omit<Service, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
     if (!user?.id) {

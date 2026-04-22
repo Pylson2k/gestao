@@ -162,13 +162,10 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
       if (initialData) {
         await updateQuote(initialData.id, quoteData)
         setIsSubmitting(false)
-        // Usar replace para evitar problemas de navegação
         router.replace(`/dashboard/orcamento/${initialData.id}`)
       } else {
         const newQuote = await addQuote(quoteData)
         setIsSubmitting(false)
-        // Usar replace e garantir que o estado foi atualizado
-        await new Promise(resolve => setTimeout(resolve, 50))
         router.replace(`/dashboard/orcamento/${newQuote.id}`)
       }
     } catch (err: any) {

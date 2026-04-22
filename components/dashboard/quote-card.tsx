@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Link } from '@/components/app-link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -38,7 +37,6 @@ const statusConfig = {
 }
 
 export function QuoteCard({ quote }: QuoteCardProps) {
-  const router = useRouter()
   const { updateQuote } = useQuotes()
   const { getTotalPaidByQuoteId } = usePayments()
   const [showDiscountDialog, setShowDiscountDialog] = useState(false)
@@ -164,14 +162,9 @@ export function QuoteCard({ quote }: QuoteCardProps) {
     }
   }
 
-  const goToQuoteDetail = () => {
-    router.push(`/dashboard/orcamento/${quote.id}`)
-  }
-
   return (
     <Card
-      className="cursor-pointer border-border/80 transition-shadow hover:border-primary/25 hover:shadow-md"
-      onClick={goToQuoteDetail}
+      className="border-border/80 transition-shadow hover:border-primary/25 hover:shadow-md"
     >
       <CardContent className="p-4 sm:p-5">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
@@ -264,8 +257,15 @@ export function QuoteCard({ quote }: QuoteCardProps) {
                 </Button>
               )}
 
-              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground min-w-[48px] min-h-[48px] sm:min-w-[40px] sm:min-h-[40px] touch-manipulation shrink-0">
-                <ChevronRight className="w-6 h-6 sm:w-5 sm:h-5" />
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild
+                className="text-muted-foreground hover:text-foreground min-w-[48px] min-h-[48px] sm:min-w-[40px] sm:min-h-[40px] touch-manipulation shrink-0"
+              >
+                <Link href={`/dashboard/orcamento/${quote.id}`} aria-label="Abrir detalhes do orçamento">
+                  <ChevronRight className="w-6 h-6 sm:w-5 sm:h-5" />
+                </Link>
               </Button>
             </div>
           </div>

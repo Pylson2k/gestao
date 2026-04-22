@@ -76,19 +76,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     }
   }, [fetchSettings, user?.id])
 
-  // Refetch no focus só se passou 10 min
-  useEffect(() => {
-    if (!user?.id) return
-
-    const handleFocus = () => {
-      if (isFetching || isLoading) return
-      if (Date.now() - lastFetchedAt.current < STALE_MS) return
-      fetchSettings()
-    }
-
-    window.addEventListener('focus', handleFocus)
-    return () => window.removeEventListener('focus', handleFocus)
-  }, [fetchSettings, user?.id, isFetching, isLoading])
+  // Refetch automático ao focar janela desativado para evitar bloqueios de UI.
 
   const updateSettings = useCallback(async (newSettings: Partial<CompanySettings>) => {
     if (!user?.id) {

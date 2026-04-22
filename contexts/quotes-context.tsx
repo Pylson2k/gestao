@@ -122,19 +122,8 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     }
   }, [fetchQuotes, user?.id])
 
-  // Refetch no focus só se passou 10 min (reduz tráfego Neon)
-  useEffect(() => {
-    if (!user?.id) return
-
-    const handleFocus = () => {
-      if (isFetching || isLoading) return
-      if (Date.now() - lastFetchedAt.current < STALE_MS) return
-      fetchQuotes()
-    }
-
-    window.addEventListener('focus', handleFocus)
-    return () => window.removeEventListener('focus', handleFocus)
-  }, [fetchQuotes, user?.id, isFetching, isLoading])
+  // Refetch automático ao focar janela desativado para evitar rajadas de rede
+  // que degradavam a responsividade em dispositivos mais lentos.
 
   const addQuote = useCallback(async (quoteData: Omit<Quote, 'id' | 'number' | 'createdAt' | 'userId'>): Promise<Quote> => {
     if (!user?.id) {

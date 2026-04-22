@@ -3,7 +3,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react'
 import type { Payment } from '@/lib/types'
 import { useAuth } from './auth-context'
-import { useQuotes } from './quotes-context'
 
 const STALE_MS = 10 * 60 * 1000
 
@@ -23,7 +22,6 @@ const PaymentsContext = createContext<PaymentsContextType | undefined>(undefined
 
 export function PaymentsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
-  const { refreshQuotes } = useQuotes()
   const [payments, setPayments] = useState<Payment[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isFetching, setIsFetching] = useState(false)
@@ -93,19 +91,7 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
     }
   }, [fetchPayments, user?.id])
 
-  // Refetch no focus só se passou 10 min
-  useEffect(() => {
-    if (!user?.id) return
-
-    const handleFocus = () => {
-      if (isFetching || isLoading) return
-      if (Date.now() - lastFetchedAt.current < STALE_MS) return
-      fetchPayments()
-    }
-
-    window.addEventListener('focus', handleFocus)
-    return () => window.removeEventListener('focus', handleFocus)
-  }, [fetchPayments, user?.id, isFetching, isLoading])
+  // Refetch automático ao focar janela desativado para reduzir competição de requests.
 
   const addPayment = useCallback(async (paymentData: Omit<Payment, 'id' | 'createdAt' | 'updatedAt' | 'userId'>): Promise<Payment> => {
     if (!user?.id) {
@@ -166,13 +152,12 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
       }
 
       setPayments(prev => [transformedPayment, ...prev])
-      void refreshQuotes()
       return transformedPayment
     } catch (error: any) {
       console.error('Add payment error:', error)
       throw error
     }
-  }, [user?.id, refreshQuotes])
+  }, [user?.id])
 
   const updatePayment = useCallback(async (id: string, paymentData: Partial<Payment>): Promise<void> => {
     if (!user?.id) {
@@ -235,12 +220,11 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
       }
 
       setPayments(prev => prev.map(p => p.id === id ? transformedPayment : p))
-      void refreshQuotes()
     } catch (error: any) {
       console.error('Update payment error:', error)
       throw error
     }
-  }, [user?.id, refreshQuotes])
+  }, [user?.id])
 
   const deletePayment = useCallback(async (id: string): Promise<void> => {
     if (!user?.id) {
@@ -261,12 +245,11 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
       }
 
       setPayments(prev => prev.filter(p => p.id !== id))
-      void refreshQuotes()
     } catch (error: any) {
       console.error('Delete payment error:', error)
       throw error
     }
-  }, [user?.id, refreshQuotes])
+  }, [user?.id])
 
   const getPaymentById = useCallback((id: string): Payment | undefined => {
     return payments.find(p => p.id === id)

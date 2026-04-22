@@ -68,19 +68,7 @@ export function CashClosingsProvider({ children }: { children: ReactNode }) {
     }
   }, [fetchClosings, user?.id])
 
-  // Refetch no focus só se passou 10 min
-  useEffect(() => {
-    if (!user?.id) return
-
-    const handleFocus = () => {
-      if (isFetching || isLoading) return
-      if (Date.now() - lastFetchedAt.current < STALE_MS) return
-      fetchClosings()
-    }
-
-    window.addEventListener('focus', handleFocus)
-    return () => window.removeEventListener('focus', handleFocus)
-  }, [fetchClosings, user?.id, isFetching, isLoading])
+  // Refetch automático ao focar janela desativado para reduzir carga concorrente.
 
   const addClosing = useCallback(async (closingData: Omit<CashClosing, 'id' | 'userId' | 'createdAt'>) => {
     if (!user?.id) {

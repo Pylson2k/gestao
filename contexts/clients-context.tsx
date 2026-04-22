@@ -65,19 +65,7 @@ export function ClientsProvider({ children }: { children: ReactNode }) {
     }
   }, [fetchClients, user?.id])
 
-  // Refetch no focus só se passou 10 min
-  useEffect(() => {
-    if (!user?.id) return
-
-    const handleFocus = () => {
-      if (isFetching || isLoading) return
-      if (Date.now() - lastFetchedAt.current < STALE_MS) return
-      fetchClients()
-    }
-
-    window.addEventListener('focus', handleFocus)
-    return () => window.removeEventListener('focus', handleFocus)
-  }, [fetchClients, user?.id, isFetching, isLoading])
+  // Refetch automático ao focar janela desativado para reduzir travamentos por picos de requisição.
 
   const addClient = useCallback(async (clientData: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (!user?.id) {

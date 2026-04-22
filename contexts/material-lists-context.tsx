@@ -106,16 +106,7 @@ export function MaterialListsProvider({ children }: { children: ReactNode }) {
     if (user?.id) fetchLists()
   }, [fetchLists, user?.id])
 
-  useEffect(() => {
-    if (!user?.id) return
-    const handleFocus = () => {
-      if (isFetching || isLoading) return
-      if (Date.now() - lastFetchedAt.current < STALE_MS) return
-      fetchLists()
-    }
-    window.addEventListener('focus', handleFocus)
-    return () => window.removeEventListener('focus', handleFocus)
-  }, [fetchLists, user?.id, isFetching, isLoading])
+  // Refetch automático ao focar janela desativado para reduzir picos de rede.
 
   const addMaterialList = useCallback(
     async (payload: {

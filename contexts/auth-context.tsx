@@ -74,18 +74,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await res.json()
 
       if (!res.ok || !data.success) {
-        try {
-          await fetch('/api/audit/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userId: 'unknown',
-              username,
-              success: false,
-              error: data.error || 'Falha na API',
-            }),
-          })
-        } catch {}
+        void fetch('/api/audit/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: 'unknown',
+            username,
+            success: false,
+            error: data.error || 'Falha na API',
+          }),
+        }).catch(() => {})
         setIsLoading(false)
         return { success: false, error: data.error || 'Usuario ou senha invalidos' }
       }
@@ -101,17 +99,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(userData)
       sessionStorage.setItem(AUTH_SESSION_STORAGE_KEY, JSON.stringify(userData))
 
-      try {
-        await fetch('/api/audit/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: userData.id,
-            username,
-            success: true,
-          }),
-        })
-      } catch {}
+      void fetch('/api/audit/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: userData.id,
+          username,
+          success: true,
+        }),
+      }).catch(() => {})
 
       setIsLoading(false)
       return { success: true }

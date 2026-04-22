@@ -67,19 +67,7 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
     }
   }, [fetchExpenses, user?.id])
 
-  // Refetch no focus só se passou 10 min
-  useEffect(() => {
-    if (!user?.id) return
-
-    const handleFocus = () => {
-      if (isFetching || isLoading) return
-      if (Date.now() - lastFetchedAt.current < STALE_MS) return
-      fetchExpenses()
-    }
-
-    window.addEventListener('focus', handleFocus)
-    return () => window.removeEventListener('focus', handleFocus)
-  }, [fetchExpenses, user?.id, isFetching, isLoading])
+  // Refetch automático ao focar janela desativado para reduzir travamentos em navegação.
 
   const addExpense = useCallback(async (expenseData: Omit<Expense, 'id' | 'userId' | 'createdAt' | 'updatedAt'>): Promise<Expense> => {
     if (!user?.id) {
