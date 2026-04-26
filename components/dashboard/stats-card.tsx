@@ -20,12 +20,12 @@ export function StatsCard({
   iconClassName,
 }: StatsCardProps) {
   return (
-    <Card className={cn('border-border', className)}>
+    <Card className={cn('border-border/80', className)}>
       <CardContent className="p-4 sm:p-6">
         <div className="flex items-start justify-between">
           <div className="space-y-1 flex-1 min-w-0">
-            <p className="text-sm sm:text-base font-medium text-muted-foreground">{title}</p>
-            <p className="text-xl sm:text-2xl font-bold text-foreground">{value}</p>
+            <p className="text-sm font-medium text-muted-foreground">{title}</p>
+            <p className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">{value}</p>
             {description && (
               <p className="text-xs sm:text-sm text-muted-foreground">{description}</p>
             )}

@@ -308,10 +308,10 @@ export default function DashboardPage() {
   }, [profit])
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-5 sm:space-y-7">
       {/* Header - saudação */}
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+      <div className="text-balance">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
           {greeting}, {userName}
         </h1>
         <p className="mt-1.5 text-sm text-muted-foreground sm:text-base">
@@ -358,7 +358,7 @@ export default function DashboardPage() {
       )}
 
       {/* Resumo do dia e da semana */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
           <CardContent className="p-4 sm:p-5">
             <div className="mb-3 flex items-center gap-2">
@@ -481,7 +481,7 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3 sm:gap-4">
         <Link href="/dashboard/novo-orcamento" className="block h-full">
           <Card className="h-full cursor-pointer transition-shadow hover:shadow-md">
             <CardContent className="flex min-h-[132px] flex-col items-center justify-center px-5 py-6 text-center sm:min-h-[148px]">
@@ -520,7 +520,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 sm:gap-4">
         <StatsCard
           title="Faturamento do Mês"
           value={formattedRevenue}
@@ -550,7 +550,7 @@ export default function DashboardPage() {
         />
       </div>
 
-       <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
+       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 sm:gap-5">
         <Card
           className={cn(
             'border-l-4 transition-shadow hover:shadow-sm',
@@ -621,7 +621,7 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card className="border-l-4 border-l-chart-3 md:col-span-2">
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-start justify-between gap-3">

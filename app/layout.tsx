@@ -54,7 +54,10 @@ export const viewport = {
   maximumScale: 5,
   userScalable: true,
   viewportFit: 'cover',
-  themeColor: '#3b82f6',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0f172a' },
+  ],
 }
 
 export default function RootLayout({
@@ -74,7 +77,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content={APP_DISPLAY_NAME} />
         <link rel="apple-touch-icon" href="/api/company/pwa-icon/180" />
       </head>
-      <body className={`font-sans antialiased`}>
+      <body className="font-sans antialiased">
         <DynamicFavicon />
         <DynamicTitle />
         <AuthProvider>

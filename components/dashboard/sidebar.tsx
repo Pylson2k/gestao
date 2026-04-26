@@ -134,7 +134,7 @@ export function Sidebar() {
       <button
         type="button"
         className={cn(
-          'fixed z-50 flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md border border-sidebar-border bg-sidebar text-sidebar-foreground shadow-sm transition-colors',
+          'fixed z-50 flex touch-target items-center justify-center rounded-xl border border-sidebar-border bg-sidebar text-sidebar-foreground shadow-sm transition-colors',
           'left-[max(0.75rem,env(safe-area-inset-left))] top-[max(0.75rem,env(safe-area-inset-top))]',
           'lg:hidden',
           'hover:bg-sidebar-accent'
@@ -155,8 +155,10 @@ export function Sidebar() {
       ) : null}
 
       <aside
+        role="navigation"
+        aria-label="Navegação principal"
         className={cn(
-          'fixed left-0 top-0 z-40 flex h-full w-[var(--sidebar-width)] flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-transform duration-200 ease-out',
+          'fixed left-0 top-0 z-40 flex h-full w-[min(86vw,var(--sidebar-width))] flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-transform duration-200 ease-out lg:w-[var(--sidebar-width)]',
           'lg:translate-x-0',
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         )}
@@ -181,7 +183,7 @@ export function Sidebar() {
           </div>
         </div>
 
-        <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-3" aria-label="Principal">
+        <nav className="compact-scrollbar flex-1 overflow-y-auto overflow-x-hidden px-2 py-3" aria-label="Principal">
           {navGroups.map((group) => (
             <div key={group.label} className="mb-4 last:mb-0">
               <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/45">
@@ -196,7 +198,7 @@ export function Sidebar() {
                         href={item.href}
                         onClick={() => setMobileOpen(false)}
                         className={cn(
-                          'flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                          'flex touch-target items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors',
                           active
                             ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm'
                             : 'text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
@@ -228,7 +230,7 @@ export function Sidebar() {
           </div>
           <Button
             variant="ghost"
-            className="h-10 w-full justify-start text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            className="w-full justify-start text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             onClick={handleLogout}
           >
             <LogOut className="mr-2 h-4 w-4" />

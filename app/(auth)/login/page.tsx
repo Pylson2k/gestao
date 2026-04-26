@@ -65,7 +65,7 @@ export default function LoginPage() {
   return (
     <div className="relative flex min-h-dvh flex-col bg-muted/30">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,oklch(0.42_0.13_264/0.12),transparent)]" />
-      <div className="relative flex flex-1 flex-col items-center justify-center px-4 py-10 sm:px-6">
+      <div className="relative flex flex-1 flex-col items-center justify-center px-4 py-8 sm:px-6 sm:py-10">
         <div className="mb-8 flex w-full max-w-md flex-col items-center gap-4 text-center sm:mb-10">
           {companyLogo ? (
             <img
@@ -130,7 +130,7 @@ export default function LoginPage() {
                 </div>
               )}
 
-              <Button type="submit" className="h-11 w-full font-medium" disabled={isLoading}>
+              <Button type="submit" className="w-full font-medium" disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -52,14 +52,16 @@ export default function TrabalhadorLoginPage() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center px-4 py-10">
+    <div className="relative flex min-h-dvh flex-col items-center justify-center px-4 py-8 sm:py-10">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,oklch(0.44_0.1_250/0.12),transparent)]" />
+      <div className="relative w-full max-w-md">
       <div className="mb-6 flex flex-col items-center gap-2 text-center">
         <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
           <HardHat className="h-6 w-6" />
         </div>
         <p className="text-sm font-medium text-muted-foreground">Campo · obra</p>
       </div>
-      <Card className="w-full max-w-md border border-border/80 shadow-md">
+      <Card className="w-full border border-border/80 shadow-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-lg font-semibold">Área do trabalhador</CardTitle>
           <CardDescription>Use o login e a senha definidos pelo gestor.</CardDescription>
@@ -93,12 +95,13 @@ export default function TrabalhadorLoginPage() {
                 {error}
               </p>
             ) : null}
-            <Button type="submit" className="h-11 w-full" disabled={submitting || isLoading}>
+            <Button type="submit" className="w-full" disabled={submitting || isLoading}>
               {submitting ? 'Entrando…' : 'Entrar'}
             </Button>
           </form>
         </CardContent>
       </Card>
+      </div>
     </div>
   )
 }

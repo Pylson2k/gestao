@@ -173,9 +173,7 @@ export function QuoteCard({ quote }: QuoteCardProps) {
   }
 
   return (
-    <Card
-      className="border-border/80 transition-shadow hover:border-primary/25 hover:shadow-md"
-    >
+    <Card className="border-border/80 transition-shadow hover:border-primary/25">
       <CardContent className="p-4 sm:p-5">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
             <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
@@ -198,7 +196,7 @@ export function QuoteCard({ quote }: QuoteCardProps) {
             </div>
             <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
               <div className="text-left sm:text-right">
-                <p className="font-bold text-lg sm:text-xl text-foreground">{formattedTotal}</p>
+                <p className="font-semibold text-lg sm:text-xl tracking-tight text-foreground">{formattedTotal}</p>
               </div>
               
               {/* Ação rápida: Registrar pagamento (aprovado, em serviço ou finalizado) */}

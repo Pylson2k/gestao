@@ -29,6 +29,14 @@
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
   --radius: 0.625rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+  --shadow-soft: 0 1px 2px rgb(15 23 42 / 0.06), 0 8px 24px rgb(15 23 42 / 0.06);
+  --shadow-lifted: 0 2px 10px rgb(15 23 42 / 0.08), 0 18px 36px rgb(15 23 42 / 0.08);
+  --content-max: 1240px;
+  --content-pad: clamp(0.9rem, 2vw, 1.5rem);
+  --motion-fast: 140ms;
+  --motion-normal: 220ms;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -72,6 +80,8 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
+  --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.4), 0 10px 24px rgb(0 0 0 / 0.38);
+  --shadow-lifted: 0 2px 12px rgb(0 0 0 / 0.45), 0 20px 40px rgb(0 0 0 / 0.42);
 }
 
 @theme inline {
@@ -120,7 +130,10 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'cv11', 'ss01';
   }
   /* Um toque/clique só: remove atraso de 300ms e duplo toque em mobile */
   a,
@@ -129,5 +142,73 @@
   input[type="submit"],
   input[type="button"] {
     touch-action: manipulation;
+  }
+
+  :focus-visible {
+    outline: 0;
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 35%, transparent);
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--primary) 22%, transparent);
+  }
+}
+
+@layer utilities {
+  .app-shell-pad {
+    padding-inline: max(var(--content-pad), env(safe-area-inset-left), env(safe-area-inset-right));
+  }
+
+  .app-page {
+    width: 100%;
+    max-width: var(--content-max);
+    margin-inline: auto;
+  }
+
+  .surface-card {
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-soft);
+    transition:
+      box-shadow var(--motion-normal) ease,
+      transform var(--motion-fast) ease,
+      border-color var(--motion-fast) ease,
+      background-color var(--motion-fast) ease;
+  }
+
+  .surface-card:hover {
+    box-shadow: var(--shadow-lifted);
+    transform: translateY(-1px);
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .compact-scrollbar {
+    scrollbar-width: thin;
+  }
+
+  .compact-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .compact-scrollbar::-webkit-scrollbar-thumb {
+    background: color-mix(in oklab, var(--muted-foreground) 45%, transparent);
+    border-radius: 999px;
+  }
+
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .surface-card,
+    * {
+      animation: none !important;
+      transition-duration: 0ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
