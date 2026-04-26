@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react'
 import type { Payment } from '@/lib/types'
 import { useAuth } from './auth-context'
+import { apiFetch, readApiError } from '@/modules/core/http'
 
 const STALE_MS = 10 * 60 * 1000
 
@@ -37,11 +38,7 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
     setIsFetching(true)
     try {
       const url = quoteId ? `/api/payments?quoteId=${quoteId}` : '/api/payments'
-      const response = await fetch(url, {
-        headers: {
-          'x-user-id': user.id,
-        },
-      })
+      const response = await apiFetch(url)
 
       if (response.ok) {
         lastFetchedAt.current = Date.now()
@@ -99,12 +96,8 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const response = await fetch('/api/payments', {
+      const response = await apiFetch('/api/payments', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': user.id,
-        },
         body: JSON.stringify({
           quoteId: paymentData.quoteId,
           amount: paymentData.amount,
@@ -117,8 +110,7 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Erro ao criar pagamento')
+        throw new Error(await readApiError(response))
       }
 
       const newPayment = await response.json()
@@ -175,18 +167,13 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
       if (paymentData.paymentMethod !== undefined) updatePayload.paymentMethod = paymentData.paymentMethod
       if (paymentData.observations !== undefined) updatePayload.observations = paymentData.observations
 
-      const response = await fetch(`/api/payments/${id}`, {
+      const response = await apiFetch(`/api/payments/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': user.id,
-        },
         body: JSON.stringify(updatePayload),
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Erro ao atualizar pagamento')
+        throw new Error(await readApiError(response))
       }
 
       const updatedPayment = await response.json()
@@ -232,16 +219,12 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const response = await fetch(`/api/payments/${id}`, {
+      const response = await apiFetch(`/api/payments/${id}`, {
         method: 'DELETE',
-        headers: {
-          'x-user-id': user.id,
-        },
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Erro ao excluir pagamento')
+        throw new Error(await readApiError(response))
       }
 
       setPayments(prev => prev.filter(p => p.id !== id))

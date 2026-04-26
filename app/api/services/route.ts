@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDbUserId, getOwnerDbUserIds } from '@/lib/user-mapping'
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log'
+import { apiError, apiOk } from '@/lib/api-response'
+import { logger } from '@/lib/logger'
 
 // GET - List all services for a user
 export async function GET(request: NextRequest) {
@@ -11,14 +13,11 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search')
 
     if (!userId) {
-      return NextResponse.json(
-        { error: 'Usuario nao autenticado' },
-        { status: 401 }
-      )
+      return apiError('Usuario nao autenticado', 401)
     }
 
     if (!process.env.DATABASE_URL) {
-      return NextResponse.json([])
+      return apiOk([])
     }
 
     const { prisma } = await import('@/lib/prisma')
@@ -48,13 +47,14 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    return NextResponse.json(services)
+    return apiOk(services)
   } catch (error) {
-    console.error('Get services error:', error)
-    return NextResponse.json(
-      { error: 'Erro ao buscar servicos' },
-      { status: 500 }
-    )
+    logger.error({
+      scope: 'api.services.get',
+      message: 'Get services error',
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return apiError('Erro ao buscar servicos', 500)
   }
 }
 
@@ -64,17 +64,11 @@ export async function POST(request: NextRequest) {
     const userId = request.headers.get('x-user-id')
 
     if (!userId) {
-      return NextResponse.json(
-        { error: 'Usuario nao autenticado' },
-        { status: 401 }
-      )
+      return apiError('Usuario nao autenticado', 401)
     }
 
     if (!process.env.DATABASE_URL) {
-      return NextResponse.json(
-        { error: 'Banco de dados nao configurado' },
-        { status: 500 }
-      )
+      return apiError('Banco de dados nao configurado', 500)
     }
 
     const body = await request.json()
@@ -82,17 +76,11 @@ export async function POST(request: NextRequest) {
 
     // Validações
     if (!name || name.trim() === '') {
-      return NextResponse.json(
-        { error: 'Nome e obrigatorio' },
-        { status: 400 }
-      )
+      return apiError('Nome e obrigatorio', 400)
     }
 
     if (unitPrice === undefined || unitPrice < 0) {
-      return NextResponse.json(
-        { error: 'Preco unitario deve ser maior ou igual a zero' },
-        { status: 400 }
-      )
+      return apiError('Preco unitario deve ser maior ou igual a zero', 400)
     }
 
     const { prisma } = await import('@/lib/prisma')
@@ -126,12 +114,13 @@ export async function POST(request: NextRequest) {
       ...metadata,
     })
 
-    return NextResponse.json(service, { status: 201 })
+    return apiOk(service, 201)
   } catch (error: any) {
-    console.error('Create service error:', error)
-    return NextResponse.json(
-      { error: 'Erro ao criar servico', details: error.message },
-      { status: 500 }
-    )
+    logger.error({
+      scope: 'api.services.post',
+      message: 'Create service error',
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return apiError('Erro ao criar servico', 500, error.message)
   }
 }

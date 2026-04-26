@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react'
 import { useAuth } from './auth-context'
 import type { CashClosing } from '@/lib/types'
+import { apiFetch, readApiError } from '@/modules/core/http'
 
 const STALE_MS = 10 * 60 * 1000
 
@@ -33,11 +34,7 @@ export function CashClosingsProvider({ children }: { children: ReactNode }) {
     fetchingRef.current = true
     setIsFetching(true)
     try {
-      const response = await fetch('/api/cash-closings', {
-        headers: {
-          'x-user-id': user.id,
-        },
-      })
+      const response = await apiFetch('/api/cash-closings')
 
       if (response.ok) {
         lastFetchedAt.current = Date.now()
@@ -75,18 +72,13 @@ export function CashClosingsProvider({ children }: { children: ReactNode }) {
       throw new Error('Usuario nao autenticado')
     }
 
-    const response = await fetch('/api/cash-closings', {
+    const response = await apiFetch('/api/cash-closings', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-user-id': user.id,
-      },
       body: JSON.stringify(closingData),
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Erro ao criar fechamento')
+      throw new Error(await readApiError(response))
     }
 
     const newClosing = await response.json()

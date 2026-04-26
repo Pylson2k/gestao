@@ -1617,7 +1617,13 @@ function openHtmlForPrintFallback(html: string): void {
   }
 }
 
+let html2PdfFactoryPromise: Promise<() => unknown> | null = null
+
 async function loadHtml2PdfFactory(): Promise<() => unknown> {
+  if (html2PdfFactoryPromise) {
+    return html2PdfFactoryPromise
+  }
+  html2PdfFactoryPromise = (async () => {
   try {
     const bundle = await import('html2pdf.js/dist/html2pdf.bundle.min.js')
     const fn = (bundle as { default?: unknown }).default ?? bundle
@@ -1628,6 +1634,8 @@ async function loadHtml2PdfFactory(): Promise<() => unknown> {
   const mod = await import('html2pdf.js')
   const fn = (mod as { default?: unknown }).default ?? mod
   return fn as () => unknown
+  })()
+  return html2PdfFactoryPromise
 }
 
 /** Pré-carrega html2pdf (bundle com html2canvas/jspdf embutidos, mais confiável no Next). */

@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useCallback, useEffect, useRef, ty
 import type { Quote, Client, ServiceItem, MaterialItem, Payment } from '@/lib/types'
 import { resolveMaterialUnit } from '@/lib/material-units'
 import { useAuth } from './auth-context'
+import { apiFetch, readApiError } from '@/modules/core/http'
 
 const STALE_MS = 10 * 60 * 1000 // 10 min — refetch no focus só se passou mais que isso
 
@@ -50,11 +51,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     fetchingRef.current = true
     setIsFetching(true)
     try {
-      const response = await fetch('/api/quotes', {
-        headers: {
-          'x-user-id': user.id,
-        },
-      })
+      const response = await apiFetch('/api/quotes')
 
       if (response.ok) {
         lastFetchedAt.current = Date.now()
@@ -131,12 +128,8 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const response = await fetch('/api/quotes', {
+      const response = await apiFetch('/api/quotes', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': user.id,
-        },
         body: JSON.stringify({
           client: quoteData.client,
           services: quoteData.services,
@@ -150,10 +143,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        const errorMessage = errorData.error || errorData.details?.message || 'Erro ao criar orcamento'
-        console.error('API Error:', errorData)
-        throw new Error(errorMessage)
+        throw new Error(await readApiError(response))
       }
 
       const data = await response.json()
@@ -227,76 +217,13 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
         data: serializedData,
       })
 
-      const response = await fetch(`/api/quotes/${id}`, {
+      const response = await apiFetch(`/api/quotes/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': user.id,
-        },
         body: JSON.stringify(serializedData),
       })
 
       if (!response.ok) {
-        let errorMessage = 'Erro ao atualizar orcamento'
-        let errorDetails: any = null
-        
-        // Clonar a resposta para poder ler o corpo múltiplas vezes se necessário
-        const responseClone = response.clone()
-        
-        // Tentar ler o corpo da resposta como texto primeiro
-        let responseText = ''
-        try {
-          responseText = await response.text()
-        } catch (e) {
-          console.error('Error reading response text:', e)
-          try {
-            // Tentar ler do clone se a primeira tentativa falhou
-            responseText = await responseClone.text()
-          } catch (e2) {
-            console.error('Error reading response clone text:', e2)
-          }
-        }
-        
-        console.error('API Error - Raw response:', {
-          status: response.status,
-          statusText: response.statusText,
-          body: responseText,
-          bodyLength: responseText.length,
-          headers: Object.fromEntries(response.headers.entries()),
-        })
-        
-        try {
-          if (responseText && responseText.trim()) {
-            const error = JSON.parse(responseText)
-            errorMessage = error.error || error.details?.message || error.details || errorMessage
-            errorDetails = error.details || error
-            console.error('API Error - Parsed JSON:', error)
-          } else {
-            console.error('API Error - Empty or whitespace-only response body')
-            errorMessage = `Erro ${response.status}: ${response.statusText || 'Erro desconhecido'}`
-          }
-        } catch (e) {
-          console.error('Error parsing error response as JSON:', e, 'Response text:', responseText)
-          // Se não for JSON válido, usar o texto como mensagem de erro
-          if (responseText && responseText.trim()) {
-            errorMessage = responseText
-          } else {
-            errorMessage = `Erro ${response.status}: ${response.statusText || 'Erro desconhecido'}`
-          }
-        }
-        
-        // Se for erro 404, adicionar mais contexto
-        if (response.status === 404) {
-          console.error('Quote not found. Details:', {
-            quoteId: id,
-            userId: user.id,
-            errorDetails,
-            responseText,
-          })
-          errorMessage = 'Orcamento nao encontrado. Verifique se o orcamento existe e pertence ao usuario.'
-        }
-        
-        throw new Error(errorMessage)
+        throw new Error(await readApiError(response))
       }
 
       const data = await response.json()
@@ -358,16 +285,12 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const response = await fetch(`/api/quotes/${id}`, {
+      const response = await apiFetch(`/api/quotes/${id}`, {
         method: 'DELETE',
-        headers: {
-          'x-user-id': user.id,
-        },
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Erro ao excluir orcamento')
+        throw new Error(await readApiError(response))
       }
 
       setQuotes((prev) => prev.filter((quote) => quote.id !== id))

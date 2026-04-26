@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect, useRef } from 'react'
 import { useAuth } from './auth-context'
 import type { Expense, ExpenseCategory } from '@/lib/types'
+import { apiFetch, readApiError } from '@/modules/core/http'
 
 const STALE_MS = 10 * 60 * 1000
 
@@ -36,11 +37,7 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
     fetchingRef.current = true
     setIsFetching(true)
     try {
-      const response = await fetch('/api/expenses', {
-        headers: {
-          'x-user-id': user.id,
-        },
-      })
+      const response = await apiFetch('/api/expenses')
 
       if (response.ok) {
         lastFetchedAt.current = Date.now()
@@ -74,18 +71,13 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
       throw new Error('Usuario nao autenticado')
     }
 
-    const response = await fetch('/api/expenses', {
+    const response = await apiFetch('/api/expenses', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-user-id': user.id,
-      },
       body: JSON.stringify(expenseData),
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Erro ao criar despesa')
+      throw new Error(await readApiError(response))
     }
 
     const newExpense = await response.json()
@@ -110,18 +102,13 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
       serializedData.date = expenseData.date.toISOString()
     }
 
-    const response = await fetch(`/api/expenses/${id}`, {
+    const response = await apiFetch(`/api/expenses/${id}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-user-id': user.id,
-      },
       body: JSON.stringify(serializedData),
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Erro ao atualizar despesa')
+      throw new Error(await readApiError(response))
     }
 
     const updatedExpense = await response.json()
@@ -141,16 +128,12 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
       throw new Error('Usuario nao autenticado')
     }
 
-    const response = await fetch(`/api/expenses/${id}`, {
+    const response = await apiFetch(`/api/expenses/${id}`, {
       method: 'DELETE',
-      headers: {
-        'x-user-id': user.id,
-      },
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Erro ao excluir despesa')
+      throw new Error(await readApiError(response))
     }
 
     setExpenses((prev) => prev.filter((e) => e.id !== id))

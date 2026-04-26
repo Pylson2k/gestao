@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react'
 import { useAuth } from './auth-context'
 import type { Service } from '@/lib/types'
+import { apiFetch, readApiError } from '@/modules/core/http'
 
 const STALE_MS = 10 * 60 * 1000
 
@@ -33,11 +34,7 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
     fetchingRef.current = true
     setIsFetching(true)
     try {
-      const response = await fetch('/api/services?isActive=true', {
-        headers: {
-          'x-user-id': user.id,
-        },
-      })
+      const response = await apiFetch('/api/services?isActive=true')
 
       if (response.ok) {
         lastFetchedAt.current = Date.now()
@@ -70,18 +67,13 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       throw new Error('Usuario nao autenticado')
     }
 
-    const response = await fetch('/api/services', {
+    const response = await apiFetch('/api/services', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-user-id': user.id,
-      },
       body: JSON.stringify(serviceData),
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Erro ao criar servico')
+      throw new Error(await readApiError(response))
     }
 
     const newService = await response.json()
@@ -100,18 +92,13 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       throw new Error('Usuario nao autenticado')
     }
 
-    const response = await fetch(`/api/services/${id}`, {
+    const response = await apiFetch(`/api/services/${id}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-user-id': user.id,
-      },
       body: JSON.stringify(serviceData),
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Erro ao atualizar servico')
+      throw new Error(await readApiError(response))
     }
 
     const updatedService = await response.json()
@@ -133,16 +120,12 @@ export function ServicesProvider({ children }: { children: ReactNode }) {
       throw new Error('Usuario nao autenticado')
     }
 
-    const response = await fetch(`/api/services/${id}`, {
+    const response = await apiFetch(`/api/services/${id}`, {
       method: 'DELETE',
-      headers: {
-        'x-user-id': user.id,
-      },
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Erro ao excluir servico')
+      throw new Error(await readApiError(response))
     }
 
     setServices((prev) => prev.filter((service) => service.id !== id))

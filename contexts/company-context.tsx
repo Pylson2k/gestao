@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useCallback, useEffect, useRef, ty
 import { APP_DISPLAY_NAME } from '@/lib/app-constants'
 import type { CompanySettings } from '@/lib/types'
 import { useAuth } from './auth-context'
+import { apiFetch, readApiError } from '@/modules/core/http'
 
 const STALE_MS = 10 * 60 * 1000
 
@@ -40,11 +41,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     fetchingRef.current = true
     setIsFetching(true)
     try {
-      const response = await fetch('/api/bootstrap', {
-        headers: {
-          'x-user-id': user.id,
-        },
-      })
+      const response = await apiFetch('/api/bootstrap')
 
       if (response.ok) {
         lastFetchedAt.current = Date.now()
@@ -84,12 +81,8 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const response = await fetch('/api/company', {
+      const response = await apiFetch('/api/company', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': user.id,
-        },
         body: JSON.stringify({
           ...settings,
           ...newSettings,
@@ -97,8 +90,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Erro ao atualizar configuracoes')
+        throw new Error(await readApiError(response))
       }
 
       const data = await response.json()

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { compare } from 'bcryptjs'
 import { OWNER_SESSION_USER_ID, OWNER_USERNAME } from '@/lib/owner-user'
+import { logger } from '@/lib/logger'
 
 export async function POST(request: Request) {
   try {
@@ -55,7 +56,11 @@ export async function POST(request: Request) {
       },
     })
   } catch (e) {
-    console.error('Login API error:', e)
+    logger.error({
+      scope: 'api.auth.login',
+      message: 'Login API error',
+      error: e instanceof Error ? e.message : String(e),
+    })
     return NextResponse.json(
       { success: false, error: 'Erro ao entrar. Tente novamente.' },
       { status: 500 }

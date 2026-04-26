@@ -12,6 +12,7 @@ import {
 import type { MaterialList, MaterialListItem } from '@/lib/types'
 import { resolveMaterialUnit } from '@/lib/material-units'
 import { useAuth } from './auth-context'
+import { apiFetch, readApiError } from '@/modules/core/http'
 
 const STALE_MS = 10 * 60 * 1000
 
@@ -85,9 +86,7 @@ export function MaterialListsProvider({ children }: { children: ReactNode }) {
     fetchingRef.current = true
     setIsFetching(true)
     try {
-      const response = await fetch('/api/material-lists', {
-        headers: { 'x-user-id': user.id },
-      })
+      const response = await apiFetch('/api/material-lists')
       if (response.ok) {
         lastFetchedAt.current = Date.now()
         const data = await response.json()
@@ -117,17 +116,12 @@ export function MaterialListsProvider({ children }: { children: ReactNode }) {
       items: Omit<MaterialListItem, 'id'>[]
     }) => {
       if (!user?.id) throw new Error('Usuario nao autenticado')
-      const response = await fetch('/api/material-lists', {
+      const response = await apiFetch('/api/material-lists', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': user.id,
-        },
         body: JSON.stringify(payload),
       })
       if (!response.ok) {
-        const err = await response.json().catch(() => ({}))
-        throw new Error(err.error || 'Erro ao criar lista')
+        throw new Error(await readApiError(response))
       }
       const data = await response.json()
       const list = mapListFromApi(data)
@@ -149,17 +143,12 @@ export function MaterialListsProvider({ children }: { children: ReactNode }) {
       }
     ) => {
       if (!user?.id) throw new Error('Usuario nao autenticado')
-      const response = await fetch(`/api/material-lists/${id}`, {
+      const response = await apiFetch(`/api/material-lists/${id}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': user.id,
-        },
         body: JSON.stringify(payload),
       })
       if (!response.ok) {
-        const err = await response.json().catch(() => ({}))
-        throw new Error(err.error || 'Erro ao atualizar lista')
+        throw new Error(await readApiError(response))
       }
       const data = await response.json()
       const list = mapListFromApi(data)
@@ -171,13 +160,11 @@ export function MaterialListsProvider({ children }: { children: ReactNode }) {
   const deleteMaterialList = useCallback(
     async (id: string) => {
       if (!user?.id) throw new Error('Usuario nao autenticado')
-      const response = await fetch(`/api/material-lists/${id}`, {
+      const response = await apiFetch(`/api/material-lists/${id}`, {
         method: 'DELETE',
-        headers: { 'x-user-id': user.id },
       })
       if (!response.ok) {
-        const err = await response.json().catch(() => ({}))
-        throw new Error(err.error || 'Erro ao excluir lista')
+        throw new Error(await readApiError(response))
       }
       setMaterialLists((prev) => prev.filter((l) => l.id !== id))
     },

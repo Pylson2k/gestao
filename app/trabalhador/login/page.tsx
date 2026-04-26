@@ -88,7 +88,11 @@ export default function TrabalhadorLoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-            {error ? <p className="text-sm text-destructive">{error}</p> : null}
+            {error ? (
+              <p role="alert" aria-live="assertive" className="text-sm text-destructive">
+                {error}
+              </p>
+            ) : null}
             <Button type="submit" className="h-11 w-full" disabled={submitting || isLoading}>
               {submitting ? 'Entrando…' : 'Entrar'}
             </Button>
