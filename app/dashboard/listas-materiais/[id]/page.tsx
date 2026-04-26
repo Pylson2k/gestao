@@ -8,7 +8,7 @@ import { useCompany } from '@/contexts/company-context'
 import { useAuth } from '@/contexts/auth-context'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { generateStandaloneMaterialListPDF, downloadPDF, openViewWindow } from '@/lib/pdf-generator'
+import { generateStandaloneMaterialListPDF, downloadPDF, forceDownloadPDF, openViewWindow } from '@/lib/pdf-generator'
 import { formatQuantityWithUnitPdf, resolveMaterialUnit } from '@/lib/material-units'
 import type { MaterialList } from '@/lib/types'
 import {
@@ -128,7 +128,14 @@ export default function ListaMateriaisDetailPage({
       } catch {}
     } catch (e) {
       console.error(e)
-      alert('Erro ao gerar PDF. Tente visualizar e imprimir pelo navegador.')
+      const html = generateStandaloneMaterialListPDF(list, companySettings)
+      const filename = `${list.number.replace(/\s+/g, '-')}.pdf`
+      const shouldForce = window.confirm(
+        'Falha ao gerar o PDF da lista. Deseja tentar o Plano B (forcar download)?'
+      )
+      if (shouldForce) {
+        await forceDownloadPDF(html, filename)
+      }
     }
   }
 

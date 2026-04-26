@@ -10,7 +10,7 @@
     "vercel-build": "prisma db push --accept-data-loss && prisma generate && next build",
     "dev": "next dev",
     "lint": "tsc --noEmit",
-    "test": "tsx --test tests/**/*.test.ts",
+    "test": "tsx --test \"tests/**/*.test.ts\"",
     "quality": "npm run lint && npm run test && npm run build",
     "typecheck": "tsc --noEmit",
     "start": "next start",

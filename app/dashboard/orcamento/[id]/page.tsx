@@ -28,6 +28,7 @@ import {
   generatePaymentReceiptPDF,
   generatePaymentReceiptWhatsAppMessage,
   downloadPDF,
+  forceDownloadPDF,
   openViewWindow,
   preloadHtml2Pdf,
   openWhatsApp,
@@ -116,6 +117,14 @@ export default function QuoteDetailPage({
   const StatusIcon = status.icon
   const formattedDate = new Date(quote.createdAt).toLocaleDateString('pt-BR')
 
+  const askForceDownload = async (html: string, filename: string, docLabel: string) => {
+    const shouldForce = window.confirm(
+      `Falha no download de ${docLabel}. Deseja tentar o Plano B (forcar download)?`
+    )
+    if (!shouldForce) return
+    await forceDownloadPDF(html, filename)
+  }
+
   const handleDownloadPDF = async () => {
     try {
       const html = generateQuotePDF(quote, companySettings)
@@ -143,7 +152,9 @@ export default function QuoteDetailPage({
       } catch {}
     } catch (error) {
       console.error('Erro ao baixar PDF:', error)
-      alert('Erro ao baixar PDF. Tente visualizar o orçamento e usar a opção de impressão do navegador.')
+      const html = generateQuotePDF(quote, companySettings)
+      const filename = `orcamento-${quote.number.replace(/\s+/g, '-')}.pdf`
+      await askForceDownload(html, filename, 'o PDF do orçamento')
     }
   }
 
@@ -177,7 +188,9 @@ export default function QuoteDetailPage({
       } catch {}
     } catch (error) {
       console.error('Erro ao baixar lista de materiais:', error)
-      alert('Erro ao baixar PDF da lista de materiais. Tente novamente ou use impressão do navegador.')
+      const html = generateMaterialsListPDF(quote, companySettings)
+      const filename = `lista-materiais-${quote.number.replace(/\s+/g, '-')}.pdf`
+      await askForceDownload(html, filename, 'a lista de materiais')
     }
   }
 
@@ -284,7 +297,9 @@ export default function QuoteDetailPage({
       } catch {}
     } catch (error) {
       console.error('Erro ao baixar ordem de serviço:', error)
-      alert('Erro ao baixar PDF da ordem de serviço. Tente visualizar e usar impressão do navegador.')
+      const html = generateServiceOrderPDF(quote, companySettings, quotePayments)
+      const filename = `ordem-servico-${quote.number.replace(/\s+/g, '-')}.pdf`
+      await askForceDownload(html, filename, 'a ordem de serviço')
     }
   }
 
@@ -318,7 +333,11 @@ export default function QuoteDetailPage({
       }
     } catch (error) {
       console.error('Erro ao baixar recibo:', error)
-      alert('Erro ao gerar o recibo. Tente novamente ou use impressão do navegador.')
+      const html = generatePaymentReceiptPDF(payment, quote, companySettings, {
+        totalPaidOnQuote: getTotalPaidByQuoteId(quote.id),
+      })
+      const filename = `recibo-pagamento-${quote.number.replace(/\s+/g, '-')}-${payment.id.slice(0, 8)}.pdf`
+      await askForceDownload(html, filename, 'o recibo de pagamento')
     }
   }
 

@@ -9,6 +9,7 @@ import {
   generatePaymentReceiptPDF,
   generatePaymentReceiptWhatsAppMessage,
   downloadPDF,
+  forceDownloadPDF,
   preloadHtml2Pdf,
   openWhatsApp,
 } from '@/lib/pdf-generator'
@@ -294,7 +295,14 @@ function PagamentosInnerPage() {
       }
     } catch (e) {
       console.error(e)
-      toast.error('Erro ao gerar o recibo. Tente imprimir a partir da visualização ou use outro navegador.')
+      const shouldForce = window.confirm(
+        'Falha ao gerar o recibo em PDF. Deseja tentar o Plano B (forcar download)?'
+      )
+      if (shouldForce) {
+        await forceDownloadPDF(html, filename)
+      } else {
+        toast.error('Nao foi possivel gerar o recibo em PDF.')
+      }
     }
   }
 
