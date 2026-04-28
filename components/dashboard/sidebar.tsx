@@ -28,6 +28,7 @@ import {
   Package,
   HardHat,
   Building2,
+  Calculator,
 } from 'lucide-react'
 import { useState, useMemo, type ComponentType } from 'react'
 import { APP_DISPLAY_NAME } from '@/lib/app-constants'
@@ -82,6 +83,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     label: 'Visão geral',
     items: [
       { name: 'Painel', href: '/dashboard', icon: LayoutDashboard, showBadge: true },
+      { name: 'Calculadora', href: '/calculadora', icon: Calculator },
       { name: 'Novo orçamento', href: '/orcamentos/novo', icon: FileText },
       { name: 'Histórico', href: '/orcamentos/historico', icon: History },
     ],
