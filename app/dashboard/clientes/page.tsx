@@ -33,6 +33,7 @@ export default function ClientesPage() {
   const [editingClient, setEditingClient] = useState<Client | null>(null)
   const [formData, setFormData] = useState({
     name: '',
+    document: '',
     phone: '',
     address: '',
     email: '',
@@ -47,6 +48,7 @@ export default function ClientesPage() {
     const searchLower = searchTerm.toLowerCase()
     return clients.filter((client) =>
       client.name.toLowerCase().includes(searchLower) ||
+      (client.document && client.document.toLowerCase().includes(searchLower)) ||
       client.phone.toLowerCase().includes(searchLower) ||
       client.address.toLowerCase().includes(searchLower) ||
       (client.email && client.email.toLowerCase().includes(searchLower))
@@ -58,6 +60,7 @@ export default function ClientesPage() {
       setEditingClient(client)
       setFormData({
         name: client.name,
+        document: client.document || '',
         phone: client.phone,
         address: client.address,
         email: client.email || '',
@@ -66,6 +69,7 @@ export default function ClientesPage() {
       setEditingClient(null)
       setFormData({
         name: '',
+        document: '',
         phone: '',
         address: '',
         email: '',
@@ -85,6 +89,7 @@ export default function ClientesPage() {
     try {
       const clientData = {
         name: formData.name.trim(),
+        document: formData.document.trim() || undefined,
         phone: formData.phone.trim(),
         address: formData.address.trim(),
         email: formData.email.trim() || undefined,
@@ -174,6 +179,16 @@ export default function ClientesPage() {
                       />
                     </div>
                     <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="document" className="text-sm sm:text-base">CPF/CNPJ</Label>
+                      <Input
+                        id="document"
+                        value={formData.document}
+                        onChange={(e) => setFormData({ ...formData, document: e.target.value })}
+                        placeholder="CPF ou CNPJ do cliente"
+                        inputMode="numeric"
+                      />
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
                       <Label htmlFor="address" className="text-sm sm:text-base">Endereço *</Label>
                       <Input
                         id="address"
@@ -229,7 +244,7 @@ export default function ClientesPage() {
           <div className="space-y-2">
             <Label className="text-sm sm:text-base">Buscar Cliente</Label>
             <Input
-              placeholder="Nome, telefone, endereço ou email..."
+              placeholder="Nome, CPF/CNPJ, telefone, endereço ou email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="min-h-[48px] text-base sm:text-sm"
@@ -262,6 +277,12 @@ export default function ClientesPage() {
                     <Phone className="w-5 h-5 sm:w-4 sm:h-4 shrink-0" />
                     <span className="break-words">{client.phone}</span>
                   </div>
+                  {client.document && (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <FileText className="w-5 h-5 sm:w-4 sm:h-4 shrink-0" />
+                      <span className="break-words">CPF/CNPJ: {client.document}</span>
+                    </div>
+                  )}
                   <div className="flex items-start gap-2 text-muted-foreground">
                     <MapPin className="w-5 h-5 sm:w-4 sm:h-4 mt-0.5 shrink-0" />
                     <span className="flex-1 break-words">{client.address}</span>

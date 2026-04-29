@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             name: true,
+            document: true,
             phone: true,
             address: true,
             email: true,
@@ -157,6 +158,7 @@ export async function POST(request: NextRequest) {
         client: {
           id: memClientId,
           name: (client?.name ?? '').trim() || 'Cliente',
+          document: (client?.document ?? '').trim() || undefined,
           phone: (client?.phone ?? '').trim() || '',
           address: (client?.address ?? '').trim() || '',
           email: (client?.email ?? '').trim() || undefined,
@@ -217,6 +219,7 @@ export async function POST(request: NextRequest) {
     let number = `ORC-${year}-${String(maxNum + 1).padStart(3, '0')}`
 
     const clientName = (client?.name ?? '').trim() || 'Cliente'
+    const clientDocument = (client?.document ?? '').trim() || null
     const clientPhone = (client?.phone ?? '').trim() || ''
     const clientAddress = (client?.address ?? '').trim() || ''
     const clientEmail = (client?.email ?? '').trim() || null
@@ -234,6 +237,7 @@ export async function POST(request: NextRequest) {
           where: { id: existingClient.id },
           data: {
             name: clientName,
+            document: clientDocument,
             phone: clientPhone,
             address: clientAddress,
             email: clientEmail,
@@ -244,6 +248,7 @@ export async function POST(request: NextRequest) {
         clientRecord = await prisma.client.create({
           data: {
             name: clientName,
+            document: clientDocument,
             phone: clientPhone,
             address: clientAddress,
             email: clientEmail,
@@ -255,6 +260,7 @@ export async function POST(request: NextRequest) {
       clientRecord = await prisma.client.create({
         data: {
           name: clientName,
+          document: clientDocument,
           phone: clientPhone,
           address: clientAddress,
           email: clientEmail,

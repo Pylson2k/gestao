@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },
+        { document: { contains: search, mode: 'insensitive' } },
         { phone: { contains: search, mode: 'insensitive' } },
         { email: { contains: search, mode: 'insensitive' } },
       ]
@@ -36,6 +37,7 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         name: true,
+        document: true,
         phone: true,
         address: true,
         email: true,
@@ -78,7 +80,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, phone, address, email } = body
+    const { name, document, phone, address, email } = body
 
     // Validações
     if (!name || name.trim() === '') {
@@ -107,6 +109,7 @@ export async function POST(request: NextRequest) {
     const client = await prisma.client.create({
       data: {
         name: name.trim(),
+        document: document?.trim() || null,
         phone: phone.trim(),
         address: address.trim(),
         email: email?.trim() || null,
@@ -123,6 +126,7 @@ export async function POST(request: NextRequest) {
       description: `Cliente cadastrado - ${client.name} (${client.phone})`,
       newValue: {
         name: client.name,
+        document: client.document,
         phone: client.phone,
         address: client.address,
         email: client.email,

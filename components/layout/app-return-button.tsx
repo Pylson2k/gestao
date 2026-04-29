@@ -7,8 +7,8 @@ import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
-const LAST_ROUTE_KEY = 'sinai:last-route'
-const PREVIOUS_ROUTE_KEY = 'sinai:previous-route'
+const ROUTE_STACK_KEY = 'sinai:route-stack'
+const MAX_ROUTE_STACK = 20
 
 const hiddenRoutes = new Set([
   '/',
@@ -22,6 +22,20 @@ function getFallbackRoute(pathname: string): string {
   return '/dashboard'
 }
 
+function readRouteStack(): string[] {
+  try {
+    const raw = sessionStorage.getItem(ROUTE_STACK_KEY)
+    const parsed = raw ? JSON.parse(raw) : []
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : []
+  } catch {
+    return []
+  }
+}
+
+function writeRouteStack(stack: string[]) {
+  sessionStorage.setItem(ROUTE_STACK_KEY, JSON.stringify(stack.slice(-MAX_ROUTE_STACK)))
+}
+
 export function AppReturnButton() {
   const pathname = usePathname()
   const router = useRouter()
@@ -29,28 +43,34 @@ export function AppReturnButton() {
   useEffect(() => {
     if (!pathname || hiddenRoutes.has(pathname)) return
 
-    const lastRoute = sessionStorage.getItem(LAST_ROUTE_KEY)
-    if (lastRoute && lastRoute !== pathname) {
-      sessionStorage.setItem(PREVIOUS_ROUTE_KEY, lastRoute)
-    }
-    sessionStorage.setItem(LAST_ROUTE_KEY, pathname)
+    const stack = readRouteStack()
+    const lastRoute = stack.at(-1)
+
+    if (lastRoute === pathname) return
+
+    writeRouteStack([...stack, pathname])
   }, [pathname])
 
   if (hiddenRoutes.has(pathname)) return null
 
   const handleReturn = () => {
-    const previousRoute =
-      typeof window !== 'undefined' ? sessionStorage.getItem(PREVIOUS_ROUTE_KEY) : null
     const fallbackRoute = getFallbackRoute(pathname)
-    const targetRoute =
-      previousRoute && previousRoute !== pathname && !hiddenRoutes.has(previousRoute)
-        ? previousRoute
-        : fallbackRoute
+    const stack = readRouteStack()
 
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem(PREVIOUS_ROUTE_KEY, pathname)
-      sessionStorage.setItem(LAST_ROUTE_KEY, targetRoute)
+    while (stack.length > 0 && stack.at(-1) === pathname) {
+      stack.pop()
     }
+
+    let targetRoute = stack.pop()
+    while (targetRoute && (targetRoute === pathname || hiddenRoutes.has(targetRoute))) {
+      targetRoute = stack.pop()
+    }
+
+    if (!targetRoute) {
+      targetRoute = fallbackRoute
+    }
+
+    writeRouteStack(targetRoute === pathname ? stack : [...stack, targetRoute])
 
     if (targetRoute === pathname) {
       router.replace(fallbackRoute)

@@ -55,6 +55,7 @@ export default function ListaMateriaisDetailPage({
         client: {
           id: data.client.id,
           name: data.client.name,
+          document: data.client.document,
           phone: data.client.phone,
           address: data.client.address,
           email: data.client.email,
@@ -204,6 +205,9 @@ export default function ListaMateriaisDetailPage({
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="font-bold text-lg">{list.client.name}</p>
+            {list.client.document && (
+              <p className="text-sm text-muted-foreground">CPF/CNPJ: {list.client.document}</p>
+            )}
             <div className="flex items-center gap-2 text-muted-foreground text-sm">
               <Phone className="w-4 h-4 shrink-0" />
               {list.client.phone}

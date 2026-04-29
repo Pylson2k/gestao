@@ -9,6 +9,7 @@ export interface User {
 export interface Client {
   id: string
   name: string
+  document?: string | null
   phone: string
   address: string
   email?: string

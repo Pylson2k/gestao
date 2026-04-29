@@ -643,6 +643,12 @@ export default function QuoteDetailPage({
             <div>
               <h3 className="font-bold text-foreground text-2xl sm:text-xl mb-2">{quote.client.name}</h3>
             </div>
+            {quote.client.document && (
+              <div className="flex items-center gap-3 text-muted-foreground p-4 sm:p-3 rounded-lg bg-muted/30">
+                <FileText className="w-5 h-5 sm:w-4 sm:h-4 text-primary shrink-0" />
+                <span className="font-medium text-base sm:text-sm">CPF/CNPJ: {quote.client.document}</span>
+              </div>
+            )}
             <div className="flex items-center gap-3 text-muted-foreground p-4 sm:p-3 rounded-lg bg-muted/30">
               <Phone className="w-5 h-5 sm:w-4 sm:h-4 text-primary shrink-0" />
               <span className="font-medium text-base sm:text-sm">{quote.client.phone}</span>

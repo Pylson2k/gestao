@@ -568,6 +568,7 @@ export function generateStandaloneMaterialListPDF(
         <h2 class="pdf-section-title">Destinatário</h2>
         <div class="pdf-client">
           <p><strong>${pdfEscapeHtml(list.client.name)}</strong></p>
+          ${list.client.document ? `<p>CPF/CNPJ ${pdfEscapeHtml(list.client.document)}</p>` : ''}
           <p>${pdfEscapeHtml(list.client.phone)}</p>
           <p>${pdfEscapeHtml(list.client.address)}</p>
           ${list.client.email ? `<p>${pdfEscapeHtml(list.client.email)}</p>` : ''}
@@ -660,6 +661,7 @@ export function generateMaterialsListPDF(quote: Quote, companySettings: CompanyS
         <h2 class="pdf-section-title">Cliente</h2>
         <div class="pdf-client">
           <p><strong>${pdfEscapeHtml(quote.client.name)}</strong></p>
+          ${quote.client.document ? `<p>CPF/CNPJ ${pdfEscapeHtml(quote.client.document)}</p>` : ''}
           <p>${pdfEscapeHtml(quote.client.phone)}</p>
           <p>${pdfEscapeHtml(quote.client.address)}</p>
           ${quote.client.email ? `<p>${pdfEscapeHtml(quote.client.email)}</p>` : ''}
@@ -743,6 +745,7 @@ export function generateQuotePDF(quote: Quote, companySettings: CompanySettings)
         <h2 class="pdf-section-title">Cliente</h2>
         <div class="pdf-client">
           <p><strong>${pdfEscapeHtml(quote.client.name)}</strong></p>
+          ${quote.client.document ? `<p>CPF/CNPJ ${pdfEscapeHtml(quote.client.document)}</p>` : ''}
           <p>${pdfEscapeHtml(quote.client.phone)}</p>
           <p>${pdfEscapeHtml(quote.client.address)}</p>
         </div>
@@ -892,6 +895,7 @@ export function generateServiceOrderPDF(
         <h2 class="pdf-section-title">Cliente</h2>
         <div class="pdf-client">
           <p><strong>${pdfEscapeHtml(quote.client.name)}</strong></p>
+          ${quote.client.document ? `<p>CPF/CNPJ ${pdfEscapeHtml(quote.client.document)}</p>` : ''}
           <p>${pdfEscapeHtml(quote.client.phone)}</p>
           <p>${pdfEscapeHtml(quote.client.address)}</p>
         </div>
@@ -1076,6 +1080,7 @@ export function generatePaymentReceiptPDF(
         <h2 class="pdf-section-title">Pagador (cliente)</h2>
         <div class="pdf-client">
           <p><strong>${pdfEscapeHtml(quote.client.name)}</strong></p>
+          ${quote.client.document ? `<p>CPF/CNPJ ${pdfEscapeHtml(quote.client.document)}</p>` : ''}
           <p>${pdfEscapeHtml(quote.client.phone)}</p>
           <p>${pdfEscapeHtml(quote.client.address)}</p>
           ${quote.client.email ? `<p>${pdfEscapeHtml(quote.client.email)}</p>` : ''}

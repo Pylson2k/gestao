@@ -43,6 +43,7 @@ export default function EditListaMateriaisPage({
         client: {
           id: data.client.id,
           name: data.client.name,
+          document: data.client.document,
           phone: data.client.phone,
           address: data.client.address,
           email: data.client.email,

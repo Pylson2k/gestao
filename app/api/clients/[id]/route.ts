@@ -95,6 +95,7 @@ export async function PUT(
     // Update client
     const updateData: any = {}
     if (body.name !== undefined) updateData.name = body.name.trim()
+    if (body.document !== undefined) updateData.document = body.document?.trim() || null
     if (body.phone !== undefined) updateData.phone = body.phone.trim()
     if (body.address !== undefined) updateData.address = body.address.trim()
     if (body.email !== undefined) updateData.email = body.email?.trim() || null
@@ -114,6 +115,9 @@ export async function PUT(
     if (body.phone !== undefined && existingClient.phone !== client.phone) {
       changes.push(`Telefone alterado`)
     }
+    if (body.document !== undefined && existingClient.document !== client.document) {
+      changes.push(`CPF/CNPJ alterado`)
+    }
     if (body.address !== undefined && existingClient.address !== client.address) {
       changes.push(`Endereço alterado`)
     }
@@ -130,12 +134,14 @@ export async function PUT(
         description: `Cliente atualizado - ${changes.join(', ')}`,
         oldValue: {
           name: existingClient.name,
+          document: existingClient.document,
           phone: existingClient.phone,
           address: existingClient.address,
           email: existingClient.email,
         },
         newValue: {
           name: client.name,
+          document: client.document,
           phone: client.phone,
           address: client.address,
           email: client.email,
@@ -224,6 +230,7 @@ export async function DELETE(
       description: `⚠️ Cliente EXCLUÍDO - ${client.name} (${client.phone})`,
       oldValue: {
         name: client.name,
+        document: client.document,
         phone: client.phone,
         address: client.address,
         email: client.email,

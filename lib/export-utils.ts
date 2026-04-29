@@ -93,6 +93,7 @@ export function exportQuotesToCSV(quotes: any[]) {
 export function exportClientsToCSV(clients: any[]) {
   const data = clients.map(client => ({
     'Nome': client.name,
+    'CPF/CNPJ': client.document || '',
     'Telefone': client.phone,
     'Endereço': client.address,
     'Email': client.email || '',

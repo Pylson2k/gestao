@@ -48,6 +48,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
     initialData?.client || {
       id: '',
       name: '',
+      document: '',
       phone: '',
       address: '',
     }
@@ -56,7 +57,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
   const handleClientSelect = (clientId: string) => {
     if (clientId === 'new') {
       setSelectedClientId('')
-      setClient({ id: '', name: '', phone: '', address: '' })
+      setClient({ id: '', name: '', document: '', phone: '', address: '' })
       return
     }
 
@@ -66,6 +67,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
       setClient({
         id: selectedClient.id,
         name: selectedClient.name,
+        document: selectedClient.document,
         phone: selectedClient.phone,
         address: selectedClient.address,
         email: selectedClient.email,
@@ -258,10 +260,22 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="clientAddress">Endereco</Label>
+            <Label htmlFor="clientDocument">CPF/CNPJ</Label>
+            <Input
+              id="clientDocument"
+              placeholder="CPF ou CNPJ do cliente (opcional)"
+              value={client.document || ''}
+              onChange={(e) => setClient({ ...client, document: e.target.value })}
+              inputMode="numeric"
+              className="bg-background"
+              disabled={!!selectedClientId && selectedClientId !== 'new'}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="clientAddress">Endereço</Label>
             <Input
               id="clientAddress"
-              placeholder="Endereco (opcional)"
+              placeholder="Endereço (opcional)"
               value={client.address}
               onChange={(e) => setClient({ ...client, address: e.target.value })}
               className="bg-background"
