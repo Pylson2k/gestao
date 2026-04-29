@@ -791,6 +791,49 @@ export default function QuoteDetailPage({
         </Card>
       </div>
 
+      {(quote.paymentTerms || quote.conditions || quote.deadlines) && (
+        <Card className="border-y border-r border-border/80 border-l-4 border-l-primary">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl sm:text-2xl font-bold tracking-tight">Proposta Comercial</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            {quote.paymentTerms && (
+              <div className="rounded-lg border border-border/70 bg-muted/25 p-4">
+                <div className="mb-3 flex items-center gap-2 font-semibold text-foreground">
+                  <CreditCard className="h-4 w-4 text-primary" />
+                  Pagamentos
+                </div>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
+                  {quote.paymentTerms}
+                </p>
+              </div>
+            )}
+            {quote.conditions && (
+              <div className="rounded-lg border border-border/70 bg-muted/25 p-4">
+                <div className="mb-3 flex items-center gap-2 font-semibold text-foreground">
+                  <FileText className="h-4 w-4 text-primary" />
+                  Condições
+                </div>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
+                  {quote.conditions}
+                </p>
+              </div>
+            )}
+            {quote.deadlines && (
+              <div className="rounded-lg border border-border/70 bg-muted/25 p-4">
+                <div className="mb-3 flex items-center gap-2 font-semibold text-foreground">
+                  <Clock className="h-4 w-4 text-primary" />
+                  Prazos
+                </div>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
+                  {quote.deadlines}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Services */}
       {quote.services.length > 0 && (
         <Card>

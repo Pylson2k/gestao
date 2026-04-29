@@ -1,0 +1,4 @@
+ALTER TABLE "quotes"
+  ADD COLUMN IF NOT EXISTS "paymentTerms" TEXT,
+  ADD COLUMN IF NOT EXISTS "conditions" TEXT,
+  ADD COLUMN IF NOT EXISTS "deadlines" TEXT;

@@ -163,6 +163,49 @@
   .app-muted-surface {
     @apply rounded-xl border border-border/70 bg-muted/30;
   }
+
+  .app-page,
+  .app-surface,
+  [data-slot='card'],
+  [data-slot='card-content'],
+  [data-slot='dialog-content'],
+  [data-slot='sheet-content'],
+  [data-slot='drawer-content'],
+  form,
+  form > *,
+  form [class*='grid'] > *,
+  [data-slot='dialog-content'] > *,
+  [data-slot='sheet-content'] > *,
+  [data-slot='drawer-content'] > * {
+    min-width: 0;
+  }
+
+  form,
+  [data-slot='dialog-content'],
+  [data-slot='sheet-content'],
+  [data-slot='drawer-content'] {
+    box-sizing: border-box;
+    max-width: 100%;
+  }
+
+  form [class*='w-['],
+  form [class*='min-w-['],
+  [data-slot='dialog-content'] [class*='w-['],
+  [data-slot='dialog-content'] [class*='min-w-['],
+  [data-slot='sheet-content'] [class*='w-['],
+  [data-slot='sheet-content'] [class*='min-w-['],
+  [data-slot='drawer-content'] [class*='w-['],
+  [data-slot='drawer-content'] [class*='min-w-['] {
+    max-width: 100%;
+  }
+
+  input,
+  textarea,
+  select,
+  [data-slot='select-trigger'] {
+    box-sizing: border-box;
+    max-width: 100%;
+  }
 }
 
 /* Mobile: evita zoom em inputs; desktop mantém tamanho legível do shadcn */

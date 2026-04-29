@@ -63,6 +63,9 @@ export interface Quote {
   discount: number
   total: number
   observations?: string
+  paymentTerms?: string | null
+  conditions?: string | null
+  deadlines?: string | null
   createdAt: Date
   status: 'draft' | 'sent' | 'approved' | 'rejected' | 'in_progress' | 'completed' | 'cancelled'
   serviceStartedAt?: Date

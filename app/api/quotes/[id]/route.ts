@@ -139,6 +139,15 @@ export async function PUT(
     if (body.discount !== undefined) updateData.discount = body.discount
     if (body.total !== undefined) updateData.total = body.total
     if (body.observations !== undefined) updateData.observations = body.observations
+    if (body.paymentTerms !== undefined) {
+      updateData.paymentTerms = String(body.paymentTerms).trim() || null
+    }
+    if (body.conditions !== undefined) {
+      updateData.conditions = String(body.conditions).trim() || null
+    }
+    if (body.deadlines !== undefined) {
+      updateData.deadlines = String(body.deadlines).trim() || null
+    }
     if (body.serviceStartedAt !== undefined) {
       if (body.serviceStartedAt === null || body.serviceStartedAt === '') {
         updateData.serviceStartedAt = null
@@ -325,7 +334,16 @@ export async function PUT(
     }
 
     // Log genérico de atualização se houver outras mudanças
-    if (changes.length === 0 && (body.client || body.services || body.materials || body.observations !== undefined)) {
+    if (
+      changes.length === 0 &&
+      (body.client ||
+        body.services ||
+        body.materials ||
+        body.observations !== undefined ||
+        body.paymentTerms !== undefined ||
+        body.conditions !== undefined ||
+        body.deadlines !== undefined)
+    ) {
       await createAuditLog({
         userId,
         action: 'update_quote',

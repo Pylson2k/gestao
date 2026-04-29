@@ -127,6 +127,9 @@ model Quote {
   discount    Float    @default(0)
   total       Float
   observations String?
+  paymentTerms String? @db.Text
+  conditions   String? @db.Text
+  deadlines    String? @db.Text
   status      String   @default("draft") // draft, sent, approved, rejected, in_progress, completed, cancelled
   /// Incluído manualmente na tela Inadimplentes (não entra só por ter saldo devedor)
   inDelinquencyList Boolean @default(false)

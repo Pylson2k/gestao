@@ -28,7 +28,7 @@ import {
   QUANTITY_HELP_TEXT,
   resolveMaterialUnit,
 } from '@/lib/material-units'
-import { Plus, Save, ArrowLeft, UserCircle, Loader2 } from 'lucide-react'
+import { Plus, Save, ArrowLeft, UserCircle, Loader2, CreditCard, ClipboardCheck, Clock } from 'lucide-react'
 import { Link } from '@/components/app-link'
 
 interface QuoteFormProps {
@@ -90,6 +90,9 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
 
   const [discount, setDiscount] = useState(initialData?.discount || 0)
   const [observations, setObservations] = useState(initialData?.observations || '')
+  const [paymentTerms, setPaymentTerms] = useState(initialData?.paymentTerms || '')
+  const [conditions, setConditions] = useState(initialData?.conditions || '')
+  const [deadlines, setDeadlines] = useState(initialData?.deadlines || '')
   const [totalOverride, setTotalOverride] = useState<number | null>(null)
 
   const { subtotal, total: calculatedTotal } = useMemo(
@@ -156,6 +159,9 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
         discount,
         total,
         observations,
+        paymentTerms,
+        conditions,
+        deadlines,
         status: 'draft' as const,
       }
 
@@ -376,6 +382,60 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
               onRemove={() => removeMaterial(index)}
             />
           ))}
+        </CardContent>
+      </Card>
+
+      {/* Commercial Terms */}
+      <Card className="border-y border-r border-border/80 border-l-4 border-l-primary">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl font-bold tracking-tight">Proposta Comercial</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Formalize pagamentos, condições e prazos para entregar uma proposta clara e profissional ao cliente.
+          </p>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="space-y-2">
+            <Label htmlFor="paymentTerms" className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4 text-primary" />
+              Pagamentos
+            </Label>
+            <Textarea
+              id="paymentTerms"
+              placeholder="Ex.: 50% de entrada para mobilização e 50% na entrega. Aceitamos PIX, transferência ou cartão."
+              value={paymentTerms}
+              onChange={(e) => setPaymentTerms(e.target.value)}
+              rows={7}
+              className="min-h-36 bg-background rounded-xl border-2"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="conditions" className="flex items-center gap-2">
+              <ClipboardCheck className="h-4 w-4 text-primary" />
+              Condições
+            </Label>
+            <Textarea
+              id="conditions"
+              placeholder="Ex.: Valores sujeitos à validação técnica no local. Alterações de escopo serão orçadas separadamente."
+              value={conditions}
+              onChange={(e) => setConditions(e.target.value)}
+              rows={7}
+              className="min-h-36 bg-background rounded-xl border-2"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="deadlines" className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-primary" />
+              Prazos
+            </Label>
+            <Textarea
+              id="deadlines"
+              placeholder="Ex.: Início em até 5 dias úteis após aprovação e confirmação da entrada. Execução estimada em 10 dias úteis."
+              value={deadlines}
+              onChange={(e) => setDeadlines(e.target.value)}
+              rows={7}
+              className="min-h-36 bg-background rounded-xl border-2"
+            />
+          </div>
         </CardContent>
       </Card>
 

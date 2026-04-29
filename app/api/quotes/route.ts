@@ -122,6 +122,9 @@ export async function POST(request: NextRequest) {
       discount,
       total,
       observations,
+      paymentTerms,
+      conditions,
+      deadlines,
       status = 'draft',
     } = body
 
@@ -175,6 +178,9 @@ export async function POST(request: NextRequest) {
         discount: Number(discount) || 0,
         total: Number(total) || 0,
         observations: (observations ?? '').trim() || '',
+        paymentTerms: (paymentTerms ?? '').trim() || '',
+        conditions: (conditions ?? '').trim() || '',
+        deadlines: (deadlines ?? '').trim() || '',
         status,
         inDelinquencyList: false,
         createdAt: new Date().toISOString(),
@@ -266,6 +272,9 @@ export async function POST(request: NextRequest) {
         discount: Number(discount) || 0,
         total: Number(total) || 0,
         observations: (observations ?? '').trim() || null,
+        paymentTerms: (paymentTerms ?? '').trim() || null,
+        conditions: (conditions ?? '').trim() || null,
+        deadlines: (deadlines ?? '').trim() || null,
         status,
       }
       if (validServices.length > 0) {

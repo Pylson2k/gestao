@@ -195,6 +195,34 @@ const PDF_BASE_COMPACT_CSS = `
     color: #78350f;
     line-height: 1.35;
   }
+  .pdf-commercial-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .pdf-commercial-card {
+    border: 1px solid #cbd5e1;
+    border-top: 3px solid #1e3a5f;
+    border-radius: 4px;
+    padding: 7px 8px;
+    background: #ffffff;
+    page-break-inside: avoid;
+  }
+  .pdf-commercial-card h3 {
+    margin: 0 0 4px 0;
+    font-size: 8.5pt;
+    font-weight: 700;
+    color: #1e3a5f;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .pdf-commercial-card p {
+    margin: 0;
+    color: #334155;
+    font-size: 8.8pt;
+    line-height: 1.35;
+  }
   .pdf-empty {
     text-align: center;
     color: #94a3b8;
@@ -299,6 +327,36 @@ function paymentMethodLabelPt(method: string): string {
 
 function pdfFormatCurrency(value: number): string {
   return value > 0 ? value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'
+}
+
+function pdfMultilineText(value?: string | null): string {
+  return value ? pdfEscapeHtml(value).replace(/\n/g, '<br/>') : ''
+}
+
+function pdfQuoteCommercialTermsSection(quote: Quote): string {
+  const cards = [
+    { title: 'Pagamentos', value: quote.paymentTerms },
+    { title: 'Condições comerciais', value: quote.conditions },
+    { title: 'Prazos', value: quote.deadlines },
+  ].filter((item) => item.value && item.value.trim())
+
+  if (cards.length === 0) return ''
+
+  return `
+      <section class="pdf-section">
+        <h2 class="pdf-section-title">Proposta comercial</h2>
+        <div class="pdf-commercial-grid">
+          ${cards
+            .map(
+              (item) => `
+          <div class="pdf-commercial-card">
+            <h3>${item.title}</h3>
+            <p>${pdfMultilineText(item.value)}</p>
+          </div>`
+            )
+            .join('')}
+        </div>
+      </section>`
 }
 
 /** Blocos HTML de tabelas de serviços e materiais do orçamento (reutilizado em PDF de orçamento e ordem de serviço). */
@@ -651,9 +709,7 @@ export function generateMaterialsListPDF(quote: Quote, companySettings: CompanyS
 export function generateQuotePDF(quote: Quote, companySettings: CompanySettings) {
   const formattedDate = new Date(quote.createdAt).toLocaleDateString('pt-BR')
 
-  const observationsHtml = quote.observations
-    ? pdfEscapeHtml(quote.observations).replace(/\n/g, '<br/>')
-    : ''
+  const observationsHtml = pdfMultilineText(quote.observations)
 
   const html = `
     <!DOCTYPE html>
@@ -693,6 +749,7 @@ export function generateQuotePDF(quote: Quote, companySettings: CompanySettings)
       </section>
 
       ${pdfQuoteLineItemsSections(quote)}
+      ${pdfQuoteCommercialTermsSection(quote)}
 
       ${
         quote.total > 0
@@ -1781,6 +1838,9 @@ Detalhes:
 ${quote.discount > 0 ? `- Desconto aplicado: ${quote.discount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}` : ''}
 
 ${quote.observations ? `Obs: ${quote.observations}` : ''}
+${quote.paymentTerms ? `\nPagamentos: ${quote.paymentTerms}` : ''}
+${quote.conditions ? `\nCondições: ${quote.conditions}` : ''}
+${quote.deadlines ? `\nPrazos: ${quote.deadlines}` : ''}
 
 Aguardo sua confirmacao!`
 
