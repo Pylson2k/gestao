@@ -150,7 +150,7 @@ export function QuoteCard({ quote }: QuoteCardProps) {
   const previewTotal = calculatePreviewTotal()
 
   const handleCancelService = () => {
-    if (confirm('Tem certeza que deseja cancelar este servico? Esta acao nao pode ser desfeita.')) {
+    if (confirm('Tem certeza de que deseja cancelar este serviço? Esta ação não pode ser desfeita.')) {
       void updateQuote(quote.id, { status: 'cancelled' }).then(() => {
         toast.success('Serviço cancelado.')
       }).catch(() => {
@@ -160,7 +160,7 @@ export function QuoteCard({ quote }: QuoteCardProps) {
   }
 
   const handleCompleteService = () => {
-    if (confirm('Deseja finalizar este servico?')) {
+    if (confirm('Deseja finalizar este serviço?')) {
       void updateQuote(quote.id, {
         status: 'completed',
         serviceCompletedAt: new Date()
@@ -281,9 +281,9 @@ export function QuoteCard({ quote }: QuoteCardProps) {
           <Dialog open={showDiscountDialog} onOpenChange={setShowDiscountDialog}>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
-                <DialogTitle>Iniciar Servico</DialogTitle>
+                <DialogTitle>Iniciar serviço</DialogTitle>
                 <DialogDescription>
-                  Houve algum desconto negociado para este servico?
+                  Houve algum desconto negociado para este serviço?
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">

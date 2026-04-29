@@ -176,7 +176,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
       }
     } catch (err: any) {
       console.error('Error creating quote:', err)
-      setError(err.message || 'Erro ao criar orcamento. Tente novamente.')
+      setError(err.message || 'Erro ao criar orçamento. Tente novamente.')
       setIsSubmitting(false)
     }
   }
@@ -323,7 +323,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
             </Button>
             {catalogServices.length === 0 && (
               <Button variant="outline" size="sm" asChild>
-                <Link href="/dashboard/servicos">Cadastrar Serviços</Link>
+                <Link href="/operacao/servicos">Cadastrar serviços</Link>
               </Button>
             )}
           </div>
@@ -539,7 +539,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
           ) : (
             <>
               <Save className="w-4 h-4 mr-2" />
-              {initialData ? 'Salvar Alterações' : 'Criar Orçamento'}
+            {initialData ? 'Salvar alterações' : 'Criar orçamento'}
             </>
           )}
         </Button>

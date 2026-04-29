@@ -35,7 +35,7 @@ const statusConfig = {
   sent: { label: 'Enviado', className: 'bg-primary/10 text-primary' },
   approved: { label: 'Aprovado', className: 'bg-accent/10 text-accent' },
   rejected: { label: 'Rejeitado', className: 'bg-destructive/10 text-destructive' },
-  in_progress: { label: 'Em Servico', className: 'bg-blue-500/10 text-blue-500' },
+  in_progress: { label: 'Em serviço', className: 'bg-blue-500/10 text-blue-500' },
   completed: { label: 'Finalizado', className: 'bg-green-500/10 text-green-500' },
   cancelled: { label: 'Cancelado', className: 'bg-orange-500/10 text-orange-500' },
 }
@@ -212,12 +212,12 @@ function HistoryInnerPage() {
               <div className="text-center">
                 <FileText className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
                 <h3 className="text-lg font-semibold text-foreground mb-2">
-                  Nenhum orcamento encontrado
+                  Nenhum orçamento encontrado
                 </h3>
                 <p className="text-muted-foreground mb-4">
                   {hasActiveFilters
                     ? 'Tente ajustar os filtros para encontrar mais resultados.'
-                    : 'Comece criando seu primeiro orcamento.'}
+                    : 'Comece criando seu primeiro orçamento.'}
                 </p>
                 {hasActiveFilters ? (
                   <Button variant="outline" onClick={clearFilters}>
@@ -225,7 +225,7 @@ function HistoryInnerPage() {
                   </Button>
                 ) : (
                   <Button asChild>
-                    <Link href="/orcamentos/novo">Criar Orcamento</Link>
+                    <Link href="/orcamentos/novo">Criar orçamento</Link>
                   </Button>
                 )}
               </div>

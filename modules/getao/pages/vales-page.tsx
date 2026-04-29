@@ -130,7 +130,7 @@ export function GetaoValesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="GETAO — Vales"
+        title="Gestão de equipe — Vales"
         description="Lançamentos (pendente/pago). Ordenado por data desc. Somente ativos no cadastro."
       />
       <GetaoNav />
@@ -252,4 +252,3 @@ export function GetaoValesPage() {
     </div>
   )
 }
-

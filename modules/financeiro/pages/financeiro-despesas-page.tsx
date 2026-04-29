@@ -31,9 +31,9 @@ const categoryLabels: Record<ExpenseCategory, string> = {
   material: 'Material',
   combustivel: 'Combustível',
   almoco: 'Almoço',
-  almoco_funcionario: 'Almoço para Funcionário',
-  vale_funcionario: 'Vale para Funcionários',
-  pagamento_funcionario: 'Pagamento de Funcionários',
+  almoco_funcionario: 'Almoço de funcionário',
+  vale_funcionario: 'Vale de funcionário',
+  pagamento_funcionario: 'Pagamento de funcionário',
   vale_gustavo: 'Vale (proprietário)',
 }
 
@@ -212,7 +212,7 @@ export function FinanceiroDespesasPage() {
             className="h-11 w-full touch-manipulation gap-2 text-base sm:w-auto sm:text-sm"
           >
             <Plus className="h-5 w-5 sm:h-4 sm:w-4" />
-            Nova Despesa
+            Nova despesa
           </Button>
 
           <Dialog
@@ -226,10 +226,10 @@ export function FinanceiroDespesasPage() {
             <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto sm:max-w-lg">
               <DialogHeader>
                 <DialogTitle className="text-xl font-bold tracking-tight sm:text-2xl">
-                  {editingExpense ? 'Editar Despesa' : 'Nova Despesa'}
+                  {editingExpense ? 'Editar despesa' : 'Nova despesa'}
                 </DialogTitle>
                 <DialogDescription className="text-sm sm:text-base">
-                  {editingExpense ? 'Atualize os dados da despesa' : 'Adicione uma nova despesa ao sistema'}
+                  {editingExpense ? 'Atualize os dados da despesa.' : 'Adicione uma nova despesa ao sistema.'}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -336,7 +336,7 @@ export function FinanceiroDespesasPage() {
         <CardContent className="p-4 pt-4 sm:p-6 sm:pt-6">
           <div className="flex items-center justify-between">
             <div className="min-w-0 flex-1">
-              <p className="mb-2 text-sm font-medium text-muted-foreground sm:text-base">Total de Despesas</p>
+              <p className="mb-2 text-sm font-medium text-muted-foreground sm:text-base">Total de despesas</p>
               <p className="text-2xl font-bold tracking-tight text-red-600 sm:text-3xl">
                 {totalExpenses.toLocaleString('pt-BR', {
                   style: 'currency',
@@ -375,7 +375,7 @@ export function FinanceiroDespesasPage() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm sm:text-base">Data Inicial</Label>
+              <Label className="text-sm sm:text-base">Data inicial</Label>
               <Input
                 type="date"
                 value={filterStartDate}
@@ -385,7 +385,7 @@ export function FinanceiroDespesasPage() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm sm:text-base">Data Final</Label>
+              <Label className="text-sm sm:text-base">Data final</Label>
               <Input
                 type="date"
                 value={filterEndDate}
@@ -401,7 +401,7 @@ export function FinanceiroDespesasPage() {
                   onClick={clearFilters}
                   className="min-h-[48px] w-full touch-manipulation text-base sm:text-sm"
                 >
-                  Limpar Filtros
+                  Limpar filtros
                 </Button>
               )}
             </div>
@@ -412,7 +412,7 @@ export function FinanceiroDespesasPage() {
       {isLoading ? (
         <Card>
           <CardContent className="py-12">
-            <div className="text-center text-muted-foreground">Carregando...</div>
+            <div className="text-center text-muted-foreground">Carregando…</div>
           </CardContent>
         </Card>
       ) : filteredExpenses.length > 0 ? (

@@ -21,10 +21,10 @@ export default function EditQuotePage({
     return (
       <div className="text-center py-12">
         <FileText className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-        <h2 className="text-xl font-semibold text-foreground mb-2">Orcamento nao encontrado</h2>
-        <p className="text-muted-foreground mb-4">O orcamento solicitado nao existe.</p>
+        <h2 className="text-xl font-semibold text-foreground mb-2">Orçamento não encontrado</h2>
+        <p className="text-muted-foreground mb-4">O orçamento solicitado não existe.</p>
         <Button asChild>
-          <Link href="/dashboard">Voltar ao Dashboard</Link>
+          <Link href="/dashboard">Voltar ao painel</Link>
         </Button>
       </div>
     )

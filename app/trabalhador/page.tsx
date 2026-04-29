@@ -31,7 +31,7 @@ export default function TrabalhadorHomePage() {
         return
       }
       if (!res.ok) {
-        setLoadError('Nao foi possivel carregar obras')
+        setLoadError('Não foi possível carregar as obras')
         return
       }
       setAssignments(await res.json())

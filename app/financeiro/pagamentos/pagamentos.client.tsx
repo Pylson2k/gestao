@@ -308,12 +308,12 @@ export default function PagamentosClientPage() {
     } catch (e) {
       console.error(e)
       const shouldForce = window.confirm(
-        'Falha ao gerar o recibo em PDF. Deseja tentar o Plano B (forcar download)?'
+        'Falha ao gerar o recibo em PDF. Deseja tentar o download alternativo?'
       )
       if (shouldForce) {
         await forceDownloadPDF(html, filename)
       } else {
-        alert('Nao foi possivel gerar o recibo em PDF.')
+        alert('Não foi possível gerar o recibo em PDF.')
       }
     }
   }
@@ -373,7 +373,7 @@ export default function PagamentosClientPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-pulse text-muted-foreground">Carregando pagamentos...</div>
+        <div className="animate-pulse text-muted-foreground">Carregando pagamentos…</div>
       </div>
     )
   }
@@ -383,14 +383,14 @@ export default function PagamentosClientPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Pagamentos</h1>
-          <p className="text-muted-foreground mt-1">Gerencie entradas e pagamentos de clientes</p>
+          <p className="text-muted-foreground mt-1">Registre recebimentos e acompanhe os pagamentos dos clientes.</p>
         </div>
         <Button
           onClick={handleOpenDialogForNew}
           className="bg-primary hover:bg-primary/90 min-h-[48px] text-base sm:text-sm px-6 py-3 sm:py-2"
         >
           <Plus className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
-          Novo Pagamento
+          Novo pagamento
         </Button>
       </div>
 
@@ -434,7 +434,7 @@ export default function PagamentosClientPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="filterStartDate">Data Inicial</Label>
+              <Label htmlFor="filterStartDate">Data inicial</Label>
               <Input
                 id="filterStartDate"
                 type="date"
@@ -444,7 +444,7 @@ export default function PagamentosClientPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="filterEndDate">Data Final</Label>
+              <Label htmlFor="filterEndDate">Data final</Label>
               <Input
                 id="filterEndDate"
                 type="date"
@@ -463,7 +463,7 @@ export default function PagamentosClientPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Recebido</p>
+                <p className="text-sm font-medium text-muted-foreground">Total recebido</p>
                 <p className="text-2xl font-bold text-primary mt-1">
                   {totalPayments.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </p>
@@ -476,7 +476,7 @@ export default function PagamentosClientPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total de Pagamentos</p>
+                <p className="text-sm font-medium text-muted-foreground">Total de pagamentos</p>
                 <p className="text-2xl font-bold text-foreground mt-1">{filteredPayments.length}</p>
               </div>
               <FileText className="w-8 h-8 text-muted-foreground/50" />
@@ -487,7 +487,7 @@ export default function PagamentosClientPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Média por Pagamento</p>
+                <p className="text-sm font-medium text-muted-foreground">Média por pagamento</p>
                 <p className="text-2xl font-bold text-foreground mt-1">
                   {filteredPayments.length > 0
                     ? (totalPayments / filteredPayments.length).toLocaleString('pt-BR', {
@@ -506,7 +506,7 @@ export default function PagamentosClientPage() {
       {/* Lista de Pagamentos */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">Lista de Pagamentos</CardTitle>
+          <CardTitle className="text-xl">Lista de pagamentos</CardTitle>
         </CardHeader>
         <CardContent>
           {filteredPayments.length === 0 ? (
@@ -613,13 +613,13 @@ export default function PagamentosClientPage() {
         </CardContent>
       </Card>
 
-      {/* Dialog de Formulário */}
+      {/* Formulário de pagamento */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editingPayment ? 'Editar Pagamento' : 'Novo Pagamento'}</DialogTitle>
+            <DialogTitle>{editingPayment ? 'Editar pagamento' : 'Novo pagamento'}</DialogTitle>
             <DialogDescription>
-              {editingPayment ? 'Atualize as informações do pagamento' : 'Registre uma nova entrada de pagamento'}
+              {editingPayment ? 'Atualize as informações do pagamento.' : 'Registre uma nova entrada de pagamento.'}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
@@ -691,7 +691,7 @@ export default function PagamentosClientPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="paymentDate">Data do Pagamento *</Label>
+                <Label htmlFor="paymentDate">Data do pagamento *</Label>
                 <Input
                   id="paymentDate"
                   type="date"
@@ -703,7 +703,7 @@ export default function PagamentosClientPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="paymentMethod">Método de Pagamento *</Label>
+                <Label htmlFor="paymentMethod">Método de pagamento *</Label>
                 <Select
                   value={formData.paymentMethod}
                   onValueChange={(value) =>
@@ -749,4 +749,3 @@ export default function PagamentosClientPage() {
     </div>
   )
 }
-

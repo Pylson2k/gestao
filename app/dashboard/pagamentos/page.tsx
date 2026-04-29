@@ -301,7 +301,7 @@ function PagamentosInnerPage() {
       if (shouldForce) {
         await forceDownloadPDF(html, filename)
       } else {
-        toast.error('Nao foi possivel gerar o recibo em PDF.')
+        toast.error('Não foi possível gerar o recibo em PDF.')
       }
     }
   }

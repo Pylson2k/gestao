@@ -268,30 +268,30 @@ export default function ServicosPage() {
             <DialogTrigger asChild>
               <Button onClick={() => handleOpenDialog()} className="min-h-[48px] text-base sm:text-sm touch-manipulation w-full sm:w-auto">
                 <Plus className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
-                Novo Serviço
+                Novo serviço
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="text-xl sm:text-2xl">
-                  {editingService ? 'Editar Serviço' : 'Novo Serviço'}
+                  {editingService ? 'Editar serviço' : 'Novo serviço'}
                 </DialogTitle>
                 <DialogDescription className="text-sm sm:text-base">
                   {editingService
-                    ? 'Atualize as informações do serviço'
-                    : 'Preencha os dados do novo serviço'}
+                    ? 'Atualize as informações do serviço.'
+                    : 'Preencha os dados do novo serviço.'}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="name" className="text-sm sm:text-base">Nome do Serviço *</Label>
+                    <Label htmlFor="name" className="text-sm sm:text-base">Nome do serviço *</Label>
                     <Input
                       id="name"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       required
-                      placeholder="Ex: Instalação elétrica, Pintura, etc"
+                      placeholder="Ex.: instalação elétrica, pintura"
                       className="min-h-[48px] text-base sm:text-sm"
                     />
                   </div>
@@ -371,7 +371,7 @@ export default function ServicosPage() {
           <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0">
-                <p className="text-sm sm:text-base text-muted-foreground">Total de Serviços</p>
+                <p className="text-sm sm:text-base text-muted-foreground">Total de serviços</p>
                 <p className="text-2xl sm:text-3xl font-bold">{(allServices.length > 0 ? allServices : services).length}</p>
               </div>
               <Wrench className="w-8 h-8 sm:w-7 sm:h-7 text-muted-foreground shrink-0 ml-3" />
@@ -382,7 +382,7 @@ export default function ServicosPage() {
           <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0">
-                <p className="text-sm sm:text-base text-muted-foreground">Serviços Ativos</p>
+                <p className="text-sm sm:text-base text-muted-foreground">Serviços ativos</p>
                 <p className="text-2xl sm:text-3xl font-bold text-green-500">{activeServices}</p>
               </div>
               <CheckCircle className="w-8 h-8 sm:w-7 sm:h-7 text-green-500 shrink-0 ml-3" />
@@ -393,7 +393,7 @@ export default function ServicosPage() {
           <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0">
-                <p className="text-sm sm:text-base text-muted-foreground">Serviços Inativos</p>
+                <p className="text-sm sm:text-base text-muted-foreground">Serviços inativos</p>
                 <p className="text-2xl sm:text-3xl font-bold text-red-500">
                   {(allServices.length > 0 ? allServices : services).length - activeServices}
                 </p>
@@ -511,13 +511,13 @@ export default function ServicosPage() {
               </h3>
               <p className="text-muted-foreground mb-4">
                 {(allServices.length > 0 ? allServices : services).length === 0
-                  ? 'Comece cadastrando seu primeiro serviço'
-                  : 'Nenhum serviço corresponde aos filtros selecionados'}
+                  ? 'Comece cadastrando o primeiro serviço.'
+                  : 'Nenhum serviço corresponde aos filtros selecionados.'}
               </p>
               {(allServices.length > 0 ? allServices : services).length === 0 && (
                 <Button onClick={() => handleOpenDialog()} className="min-h-[48px] text-base sm:text-sm touch-manipulation">
                   <Plus className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
-                  Cadastrar Serviço
+                  Cadastrar serviço
                 </Button>
               )}
             </div>

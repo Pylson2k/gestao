@@ -39,7 +39,7 @@ export default function TrabalhadorLoginPage() {
       })
       const data = await res.json()
       if (!res.ok) {
-        setError(data.error || 'Nao foi possivel entrar')
+        setError(data.error || 'Não foi possível entrar')
         return
       }
       login(data.token, data.employeeName)

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { QuoteCard } from '@/components/dashboard/quote-card'
-import { FileText, DollarSign, Calendar, CheckCircle } from 'lucide-react'
+import { FileText, DollarSign, Calendar } from 'lucide-react'
 import type { Quote } from '@/lib/types'
 
 const statusConfig = {
@@ -19,28 +19,27 @@ export default function FaturamentoPage() {
   const { quotes } = useQuotes()
   const { getTotalPaidByQuoteId } = usePayments()
 
-  // Filtrar apenas orçamentos com status 'completed' e totalmente pagos
+  // Filtrar apenas orçamentos finalizados e totalmente pagos.
   const completedQuotes = useMemo(() => {
     return quotes.filter((quote) => {
       if (quote.status !== 'completed') return false
       
-      // Verificar se o orçamento foi totalmente pago
       const totalPaid = getTotalPaidByQuoteId(quote.id)
       return totalPaid >= quote.total
     })
   }, [quotes, getTotalPaidByQuoteId])
 
-  // Calcular total do faturamento
+  // Calcular total do faturamento.
   const totalRevenue = useMemo(() => {
     return completedQuotes.reduce((sum, quote) => sum + quote.total, 0)
   }, [completedQuotes])
 
-  // Agrupar por mês
+  // Agrupar por mês.
   const quotesByMonth = useMemo(() => {
     const grouped: { [key: string]: Quote[] } = {}
     
     completedQuotes.forEach((quote) => {
-      // Usar serviceCompletedAt se disponível, senão usar createdAt
+      // Usar a data de conclusão quando disponível.
       const date = quote.serviceCompletedAt 
         ? new Date(quote.serviceCompletedAt) 
         : new Date(quote.createdAt)
@@ -52,7 +51,7 @@ export default function FaturamentoPage() {
       grouped[monthKey].push(quote)
     })
 
-    // Ordenar por mês (mais recente primeiro) e dentro de cada mês, ordenar por data de conclusão
+    // Ordenar por mês e por data de conclusão, sempre do mais recente para o mais antigo.
     const entries = Object.entries(grouped).map(([key, quotes]) => {
       const sortedQuotes = quotes.sort((a, b) => {
         const dateA = a.serviceCompletedAt ? new Date(a.serviceCompletedAt) : new Date(a.createdAt)
@@ -85,9 +84,9 @@ export default function FaturamentoPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Faturamento</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Faturamento</h1>
           <p className="text-muted-foreground">
-            Servicos finalizados prontos para faturamento
+            Serviços finalizados e totalmente pagos.
           </p>
         </div>
       </div>
@@ -97,7 +96,7 @@ export default function FaturamentoPage() {
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground mb-1">Total Faturado</p>
+              <p className="text-sm text-muted-foreground mb-1">Total faturado</p>
               <p className="text-3xl font-bold text-foreground">{formattedTotal}</p>
             </div>
             <div className="p-3 rounded-lg bg-green-500/10">
@@ -151,13 +150,13 @@ export default function FaturamentoPage() {
             <div className="text-center">
               <FileText className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
               <h3 className="text-lg font-semibold text-foreground mb-2">
-                Nenhum servico finalizado
+                Nenhum serviço finalizado
               </h3>
               <p className="text-muted-foreground mb-4">
-                Servicos finalizados aparecerao aqui automaticamente para faturamento.
+                Serviços finalizados aparecerão aqui automaticamente.
               </p>
               <Button variant="outline" asChild>
-                <Link href="/dashboard">Voltar ao Dashboard</Link>
+                <Link href="/dashboard">Voltar ao painel</Link>
               </Button>
             </div>
           </CardContent>

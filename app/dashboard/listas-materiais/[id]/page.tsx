@@ -91,7 +91,7 @@ export default function ListaMateriaisDetailPage({
 
   if (!list && isLoading) {
     return (
-      <div className="text-center py-12 text-muted-foreground">Carregando...</div>
+      <div className="text-center py-12 text-muted-foreground">Carregando…</div>
     )
   }
 

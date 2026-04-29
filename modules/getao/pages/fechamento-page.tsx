@@ -106,7 +106,7 @@ export function GetaoFechamentoPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="GETAO — Fechamento"
+        title="Gestão de equipe — Fechamento"
         description="Total de diárias (presente=1, meia=0,5) menos vales pendentes no período."
       />
       <GetaoNav />
@@ -189,4 +189,3 @@ export function GetaoFechamentoPage() {
     </div>
   )
 }
-

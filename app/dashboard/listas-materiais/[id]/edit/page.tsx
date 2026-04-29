@@ -78,7 +78,7 @@ export default function EditListaMateriaisPage({
   }, [isLoading, fromCtx, user?.id, refreshMaterialLists])
 
   if (!list && isLoading) {
-    return <div className="text-center py-12 text-muted-foreground">Carregando...</div>
+    return <div className="text-center py-12 text-muted-foreground">Carregando…</div>
   }
 
   if (!list) {

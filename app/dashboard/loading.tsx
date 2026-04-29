@@ -6,7 +6,7 @@ export default function DashboardLoading() {
           className="size-10 rounded-full border-2 border-primary border-t-transparent animate-spin"
           aria-label="Carregando"
         />
-        <p className="text-sm text-muted-foreground font-medium">Carregando...</p>
+        <p className="text-sm text-muted-foreground font-medium">Carregando…</p>
       </div>
     </div>
   )

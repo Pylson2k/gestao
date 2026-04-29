@@ -14,7 +14,7 @@ const items = [
 export function GetaoNav() {
   const pathname = usePathname()
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex min-w-0 flex-wrap gap-2">
       {items.map((it) => {
         const active = pathname === it.href || pathname.startsWith(`${it.href}/`)
         return (
@@ -22,7 +22,7 @@ export function GetaoNav() {
             key={it.href}
             href={it.href}
             className={cn(
-              'rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
+              'rounded-xl border px-3 py-2 text-sm font-medium transition-colors',
               active
                 ? 'border-primary/40 bg-primary/10 text-primary'
                 : 'border-border/70 bg-background text-muted-foreground hover:text-foreground hover:bg-muted/30'
@@ -35,4 +35,3 @@ export function GetaoNav() {
     </div>
   )
 }
-

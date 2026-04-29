@@ -101,7 +101,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
       { name: 'Listas de materiais', href: '/operacao/listas-materiais', icon: Package },
       { name: 'Clientes', href: '/operacao/clientes', icon: UserCircle },
       { name: 'Serviços', href: '/operacao/servicos', icon: Wrench },
-      { name: 'GETAO', href: '/getao/cadastro', icon: Users },
+      { name: 'Gestão de equipe', href: '/getao/cadastro', icon: Users },
       { name: 'Fechamento de caixa', href: '/operacao/fechamento-caixa', icon: Wallet },
       { name: 'Relatórios de fechamentos', href: '/operacao/relatorios-fechamentos', icon: Calendar },
     ],
@@ -109,7 +109,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
   {
     label: 'Sistema',
     items: [
-      { name: 'Preview v2', href: '/v2', icon: Building2 },
+      { name: 'Nova experiência', href: '/v2', icon: Building2 },
       { name: 'Auditoria', href: '/dashboard/auditoria', icon: Shield },
       { name: 'Configurações', href: '/dashboard/configuracoes', icon: Settings },
       { name: 'Perfil', href: '/dashboard/perfil', icon: User },

@@ -58,7 +58,7 @@ export function ServiceItemRow({
       <div className="col-span-12 sm:col-span-5">
         <Input
           ref={nameRef}
-          placeholder="Descricao do servico (opcional)"
+          placeholder="Descrição do serviço (opcional)"
           value={item.name}
           onChange={(e) => onChange({ ...item, name: e.target.value })}
           onKeyDown={handleNameEnter}

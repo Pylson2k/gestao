@@ -68,7 +68,7 @@ const statusConfig = {
   sent: { label: 'Enviado', className: 'bg-primary/10 text-primary', icon: Clock },
   approved: { label: 'Aprovado', className: 'bg-accent/10 text-accent', icon: CheckCircle },
   rejected: { label: 'Rejeitado', className: 'bg-destructive/10 text-destructive', icon: XCircle },
-  in_progress: { label: 'Em Servico', className: 'bg-blue-500/10 text-blue-500', icon: Play },
+  in_progress: { label: 'Em serviço', className: 'bg-blue-500/10 text-blue-500', icon: Play },
   completed: { label: 'Finalizado', className: 'bg-green-500/10 text-green-500', icon: CheckCircle2 },
   cancelled: { label: 'Cancelado', className: 'bg-orange-500/10 text-orange-500', icon: XCircle },
 }
@@ -102,10 +102,10 @@ export default function QuoteDetailPage({
     return (
       <div className="text-center py-12">
         <FileText className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-        <h2 className="text-xl font-semibold text-foreground mb-2">Orcamento nao encontrado</h2>
-        <p className="text-muted-foreground mb-4">O orcamento solicitado nao existe.</p>
+        <h2 className="text-xl font-semibold text-foreground mb-2">Orçamento não encontrado</h2>
+        <p className="text-muted-foreground mb-4">O orçamento solicitado não existe.</p>
         <Button asChild>
-          <Link href="/dashboard">Voltar ao Dashboard</Link>
+          <Link href="/dashboard">Voltar ao painel</Link>
         </Button>
       </div>
     )
@@ -437,7 +437,7 @@ export default function QuoteDetailPage({
   }
 
   const handleDelete = () => {
-    if (confirm('Tem certeza que deseja excluir este orcamento?')) {
+    if (confirm('Tem certeza de que deseja excluir este orçamento?')) {
       deleteQuote(quote.id)
       router.push('/dashboard')
     }
@@ -508,7 +508,7 @@ export default function QuoteDetailPage({
       setShowDiscountDialog(false)
     } catch (error) {
       console.error('Erro ao iniciar serviço:', error)
-      alert('Erro ao iniciar servico. Tente novamente.')
+      alert('Erro ao iniciar serviço. Tente novamente.')
     } finally {
       setIsProcessing(false)
     }
@@ -535,13 +535,13 @@ export default function QuoteDetailPage({
   const previewTotal = calculatePreviewTotal()
 
   const handleCancelService = () => {
-    if (confirm('Tem certeza que deseja cancelar este servico? Esta acao nao pode ser desfeita.')) {
+    if (confirm('Tem certeza de que deseja cancelar este serviço? Esta ação não pode ser desfeita.')) {
       updateQuote(quote.id, { status: 'cancelled' })
     }
   }
 
   const handleCompleteService = () => {
-    if (confirm('Deseja finalizar este servico?')) {
+    if (confirm('Deseja finalizar este serviço?')) {
       updateQuote(quote.id, { 
         status: 'completed',
         serviceCompletedAt: new Date()
@@ -1062,7 +1062,7 @@ export default function QuoteDetailPage({
             <Button className="bg-primary hover:bg-primary/90 min-h-[48px] text-base sm:text-sm px-6 py-3 sm:py-2 touch-manipulation" asChild>
               <Link href="/dashboard">
                 <ArrowLeft className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
-                Voltar ao Dashboard
+                Voltar ao painel
               </Link>
             </Button>
             {/* Botões de status básicos (apenas para rascunho/enviado) */}
@@ -1096,7 +1096,7 @@ export default function QuoteDetailPage({
                   className="text-blue-600 border-blue-600 hover:bg-blue-50 min-h-[48px] text-base sm:text-sm px-6 py-3 sm:py-2 touch-manipulation"
                 >
                   <Play className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
-                  Iniciar Servico
+                  Iniciar serviço
                 </Button>
                 <Button
                   variant="outline"
@@ -1104,7 +1104,7 @@ export default function QuoteDetailPage({
                   className="text-orange-600 border-orange-600 hover:bg-orange-50 min-h-[48px] text-base sm:text-sm px-6 py-3 sm:py-2 touch-manipulation"
                 >
                   <XCircle className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
-                  Cancelar Servico
+                  Cancelar serviço
                 </Button>
               </>
             )}
@@ -1117,7 +1117,7 @@ export default function QuoteDetailPage({
                 className="text-green-600 border-green-600 hover:bg-green-50 min-h-[48px] text-base sm:text-sm px-6 py-3 sm:py-2 touch-manipulation"
               >
                 <CheckCircle2 className="w-5 h-5 sm:w-4 sm:h-4 mr-2" />
-                Finalizar Servico
+                Finalizar serviço
               </Button>
             )}
 
@@ -1146,9 +1146,9 @@ export default function QuoteDetailPage({
       <Dialog open={showDiscountDialog} onOpenChange={setShowDiscountDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Iniciar Servico</DialogTitle>
+            <DialogTitle>Iniciar serviço</DialogTitle>
             <DialogDescription>
-              Houve algum desconto negociado para este servico?
+              Houve algum desconto negociado para este serviço?
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">

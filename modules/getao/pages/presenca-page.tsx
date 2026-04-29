@@ -160,7 +160,7 @@ export function GetaoPresencaPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="GETAO — Presença"
+        title="Gestão de equipe — Presença"
         description="Selecione um funcionário ativo e marque o dia como diária, meia ou falta. Remover apaga o registro."
       />
       <GetaoNav />
@@ -296,4 +296,3 @@ export function GetaoPresencaPage() {
     </div>
   )
 }
-

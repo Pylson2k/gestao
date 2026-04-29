@@ -1172,7 +1172,7 @@ export function generatePaymentReceiptWhatsAppMessage(quote: Quote, payment: Pay
   const ref = payment.id.slice(-10).toUpperCase()
   const message = `Ola ${quote.client.name}!
 
-Confirmamos o recebimento de *${amountStr}* referente ao servico vinculado ao orcamento *${quote.number}*, em *${dateStr}*, via *${method}*.
+Confirmamos o recebimento de *${amountStr}* referente ao serviço vinculado ao orçamento *${quote.number}*, em *${dateStr}*, via *${method}*.
 
 Recibo ref. *${ref}*.
 
@@ -1200,7 +1200,7 @@ export function generateServiceOrderWhatsAppMessage(quote: Quote, totalPaid: num
 
   const message = `Ola ${quote.client.name}!
 
-Servico concluido — ordem de servico *${quote.number}*.
+Serviço concluído — ordem de serviço *${quote.number}*.
 
 Total: *${totalStr}*
 Pagamentos registrados: *${paidStr}*${balanceLine}
@@ -1266,7 +1266,7 @@ export function openViewWindow(html: string) {
     // Desktop: comportamento normal
     const viewWindow = window.open('', '_blank', 'width=900,height=700,scrollbars=yes,resizable=yes')
     if (!viewWindow) {
-      alert('Por favor, permita pop-ups para visualizar o orcamento')
+      alert('Por favor, permita pop-ups para visualizar o orçamento.')
       return
     }
 
@@ -1284,7 +1284,7 @@ export function openViewWindow(html: string) {
     } catch (error) {
       console.error('Erro ao abrir janela de visualização:', error)
       viewWindow.close()
-      alert('Erro ao visualizar o orcamento. Tente novamente.')
+      alert('Erro ao visualizar o orçamento. Tente novamente.')
     }
   }
 }
@@ -1788,7 +1788,7 @@ export async function downloadPDF(html: string, filename: string = 'orcamento.pd
     if (mobile) {
       console.warn('PDF blob não gerado no mobile; usando impressão / visualização')
       openHtmlForPrintFallback(html)
-      throw new Error('Nao foi possivel gerar PDF automaticamente no mobile.')
+      throw new Error('Não foi possível gerar o PDF automaticamente no celular.')
     }
 
     try {
@@ -1797,7 +1797,7 @@ export async function downloadPDF(html: string, filename: string = 'orcamento.pd
     } catch (e) {
       console.warn('html2pdf .save() falhou', e)
       openHtmlForPrintFallback(html)
-      throw new Error('Nao foi possivel finalizar o download do PDF.')
+      throw new Error('Não foi possível finalizar o download do PDF.')
     }
   } catch (error) {
     console.error('Erro ao gerar PDF:', error)
@@ -1828,12 +1828,12 @@ export function generateWhatsAppMessage(quote: Quote): string {
 
   const message = `Ola ${quote.client.name}!
 
-Segue o orcamento *${quote.number}*:
+Segue o orçamento *${quote.number}*:
 
 ${quote.total > 0 ? `*Total: ${formattedTotal}*` : '*Valores a definir*'}
 
 Detalhes:
-- Servicos: ${quote.services.length} item(s)
+- Serviços: ${quote.services.length} item(s)
 - Materiais: ${quote.materials.length} item(s)
 ${quote.discount > 0 ? `- Desconto aplicado: ${quote.discount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}` : ''}
 

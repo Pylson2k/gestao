@@ -148,7 +148,7 @@ export function GetaoCadastroPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="GETAO — Cadastro"
+        title="Gestão de equipe — Cadastro"
         description="Funcionários, diária, função e status. Apenas ativos aparecem em Presença e Vales."
         actions={
           <Dialog open={open} onOpenChange={setOpen}>
@@ -271,4 +271,3 @@ export function GetaoCadastroPage() {
     </div>
   )
 }
-

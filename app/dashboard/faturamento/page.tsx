@@ -87,7 +87,7 @@ export default function FaturamentoPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Faturamento</h1>
           <p className="text-muted-foreground">
-            Servicos finalizados prontos para faturamento
+            Serviços finalizados e totalmente pagos.
           </p>
         </div>
       </div>
@@ -151,13 +151,13 @@ export default function FaturamentoPage() {
             <div className="text-center">
               <FileText className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
               <h3 className="text-lg font-semibold text-foreground mb-2">
-                Nenhum servico finalizado
+                Nenhum serviço finalizado
               </h3>
               <p className="text-muted-foreground mb-4">
-                Servicos finalizados aparecerao aqui automaticamente para faturamento.
+                Serviços finalizados aparecerão aqui automaticamente.
               </p>
               <Button variant="outline" asChild>
-                <Link href="/dashboard">Voltar ao Dashboard</Link>
+                <Link href="/dashboard">Voltar ao painel</Link>
               </Button>
             </div>
           </CardContent>

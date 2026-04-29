@@ -278,13 +278,13 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <Settings className="w-6 h-6 text-foreground" />
-        <h1 className="text-2xl font-bold text-foreground">Configuracoes da Empresa</h1>
+        <h1 className="text-2xl font-bold text-foreground">Configurações da empresa</h1>
       </div>
 
       {success && (
         <div className="flex items-center gap-2 p-4 rounded-lg bg-accent/10 text-accent border border-accent/20">
           <CheckCircle2 className="w-5 h-5" />
-          <span>Configuracoes salvas com sucesso!</span>
+          <span>Configurações salvas com sucesso.</span>
         </div>
       )}
 
@@ -397,8 +397,8 @@ export default function SettingsPage() {
           {/* Company Info */}
           <Card className="border-border">
             <CardHeader>
-              <CardTitle className="text-lg">Informacoes da Empresa</CardTitle>
-              <CardDescription>Dados que aparecerao nos orcamentos</CardDescription>
+              <CardTitle className="text-lg">Informações da empresa</CardTitle>
+              <CardDescription>Dados exibidos nos orçamentos</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -452,8 +452,8 @@ export default function SettingsPage() {
           {/* Additional Info */}
           <Card className="border-border">
             <CardHeader>
-              <CardTitle className="text-lg">Informacoes Adicionais</CardTitle>
-              <CardDescription>Dados opcionais para os orcamentos</CardDescription>
+              <CardTitle className="text-lg">Informações adicionais</CardTitle>
+              <CardDescription>Dados opcionais para os orçamentos</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -478,12 +478,12 @@ export default function SettingsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="additionalInfo">Informacoes Adicionais</Label>
+                <Label htmlFor="additionalInfo">Informações adicionais</Label>
                 <Textarea
                   id="additionalInfo"
                   value={formData.additionalInfo || ''}
                   onChange={(e) => handleInputChange('additionalInfo', e.target.value)}
-                  placeholder="Informacoes extras que aparecerao no rodape do orcamento"
+                  placeholder="Informações extras exibidas no rodapé do orçamento"
                   rows={4}
                 />
               </div>
@@ -493,8 +493,8 @@ export default function SettingsPage() {
           {/* Configurações Financeiras */}
           <Card className="border-border">
             <CardHeader>
-              <CardTitle className="text-lg">Configuracoes Financeiras</CardTitle>
-              <CardDescription>Configuracoes relacionadas ao fechamento de caixa</CardDescription>
+              <CardTitle className="text-lg">Configurações financeiras</CardTitle>
+              <CardDescription>Configurações relacionadas ao fechamento de caixa</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -610,7 +610,7 @@ export default function SettingsPage() {
             ) : (
               <>
                 <CheckCircle2 className="w-4 h-4 mr-2" />
-                Salvar Configuracoes
+                Salvar configurações
               </>
             )}
           </Button>

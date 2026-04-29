@@ -139,7 +139,6 @@
     overscroll-behavior-y: contain;
     min-width: 320px;
     background:
-      radial-gradient(circle at 20% -10%, color-mix(in oklch, var(--accent) 28%, transparent), transparent 28rem),
       linear-gradient(180deg, color-mix(in oklch, var(--background) 88%, white), var(--background) 22rem);
   }
 
@@ -164,6 +163,10 @@
 
   .app-page {
     @apply mx-auto w-full max-w-[var(--content-max-width)] space-y-5 sm:space-y-6;
+  }
+
+  .app-page > * {
+    min-width: 0;
   }
 
   .app-surface {
@@ -206,7 +209,7 @@
   }
 
   [data-slot='table-container'] {
-    @apply rounded-xl border border-border/70 bg-card/70;
+    @apply max-w-full overflow-x-auto rounded-xl border border-border/70 bg-card/70;
   }
 
   [data-slot='card'] [data-slot='table-container'] {
@@ -217,6 +220,7 @@
   [data-slot='sheet-content'],
   [data-slot='drawer-content'] {
     box-shadow: var(--shadow-panel);
+    overscroll-behavior: contain;
   }
 
   .app-page,
@@ -243,6 +247,20 @@
     max-width: 100%;
   }
 
+  form .grid,
+  [data-slot='dialog-content'] .grid,
+  [data-slot='sheet-content'] .grid,
+  [data-slot='drawer-content'] .grid {
+    min-width: 0;
+  }
+
+  form label,
+  [data-slot='dialog-content'] label,
+  [data-slot='sheet-content'] label,
+  [data-slot='drawer-content'] label {
+    line-height: 1.35;
+  }
+
   form [class*='w-['],
   form [class*='min-w-['],
   [data-slot='dialog-content'] [class*='w-['],
@@ -260,6 +278,26 @@
   [data-slot='select-trigger'] {
     box-sizing: border-box;
     max-width: 100%;
+  }
+
+  [data-slot='dialog-footer'] > *,
+  [data-slot='sheet-footer'] > *,
+  [data-slot='drawer-footer'] > * {
+    min-width: 0;
+  }
+
+  @media (max-width: 640px) {
+    [data-slot='dialog-footer'] [data-slot='button'],
+    [data-slot='sheet-footer'] [data-slot='button'],
+    [data-slot='drawer-footer'] [data-slot='button'],
+    form [data-slot='button'] {
+      width: 100%;
+    }
+
+    [data-slot='card-header']:has([data-slot='badge']),
+    [data-slot='card-header']:has([data-slot='button']) {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 
   img,

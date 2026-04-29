@@ -70,7 +70,7 @@ export default function ListasMateriaisPage() {
       </Card>
 
       {isLoading ? (
-        <p className="text-muted-foreground text-center py-12">Carregando...</p>
+        <p className="text-muted-foreground text-center py-12">Carregando…</p>
       ) : filtered.length === 0 ? (
         <Card className="border-dashed border-2">
           <CardContent className="py-16 text-center">

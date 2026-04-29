@@ -76,7 +76,7 @@ export default function PerfilPage() {
     }
 
     if (newPassword !== confirmPassword) {
-      setMessage({ type: 'error', text: 'As senhas nao coincidem' })
+      setMessage({ type: 'error', text: 'As senhas não coincidem' })
       return
     }
 
@@ -116,7 +116,7 @@ export default function PerfilPage() {
       {/* Informações do Usuário */}
       <Card className="border-border">
         <CardHeader>
-          <CardTitle>Informacoes do Usuario</CardTitle>
+          <CardTitle>Informações do usuário</CardTitle>
           <CardDescription>Suas informacoes de conta</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

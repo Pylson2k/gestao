@@ -98,7 +98,7 @@ export default function TrabalhadorObraPage() {
         return
       }
       if (!aRes.ok) {
-        setErr('Obra nao encontrada ou inativa')
+        setErr('Obra não encontrada ou inativa')
         setAssignment(null)
         return
       }
@@ -203,7 +203,7 @@ export default function TrabalhadorObraPage() {
 
   if (isLoading || !isAuthenticated) {
     return (
-      <div className="flex min-h-dvh items-center justify-center text-muted-foreground">Carregando...</div>
+      <div className="flex min-h-dvh items-center justify-center text-muted-foreground">Carregando…</div>
     )
   }
 
@@ -214,7 +214,7 @@ export default function TrabalhadorObraPage() {
           <ArrowLeft className="w-4 h-4" />
           Voltar
         </Link>
-        <p className="text-foreground">{err || 'Carregando...'}</p>
+        <p className="text-foreground">{err || 'Carregando…'}</p>
       </div>
     )
   }
