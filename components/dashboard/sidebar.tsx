@@ -26,9 +26,7 @@ import {
   CreditCard,
   AlertTriangle,
   Package,
-  HardHat,
   Building2,
-  Calculator,
 } from 'lucide-react'
 import { useState, useMemo, type ComponentType } from 'react'
 import { APP_DISPLAY_NAME } from '@/lib/app-constants'
@@ -83,7 +81,6 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     label: 'Visão geral',
     items: [
       { name: 'Painel', href: '/dashboard', icon: LayoutDashboard, showBadge: true },
-      { name: 'Calculadora', href: '/calculadora', icon: Calculator },
       { name: 'Novo orçamento', href: '/orcamentos/novo', icon: FileText },
       { name: 'Histórico', href: '/orcamentos/historico', icon: History },
     ],
@@ -137,10 +134,10 @@ export function Sidebar() {
       <button
         type="button"
         className={cn(
-          'fixed z-50 flex touch-target items-center justify-center rounded-xl border border-sidebar-border bg-sidebar text-sidebar-foreground shadow-sm transition-colors',
+          'fixed z-50 flex touch-target items-center justify-center rounded-xl border border-border/70 bg-card/95 text-foreground shadow-[var(--shadow-soft)] backdrop-blur transition-colors',
           'left-[max(0.75rem,env(safe-area-inset-left))] top-[max(0.75rem,env(safe-area-inset-top))]',
           'lg:hidden',
-          'hover:bg-sidebar-accent'
+          'hover:bg-accent'
         )}
         onClick={() => setMobileOpen(!mobileOpen)}
         aria-expanded={mobileOpen}
@@ -162,19 +159,20 @@ export function Sidebar() {
         aria-label="Navegação principal"
         className={cn(
           'fixed left-0 top-0 z-40 flex h-full w-[min(86vw,var(--sidebar-width))] flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-transform duration-200 ease-out lg:w-[var(--sidebar-width)]',
+          'shadow-2xl shadow-slate-950/15 lg:shadow-none',
           'lg:translate-x-0',
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <div className="flex items-center gap-3 border-b border-sidebar-border px-4 py-4 lg:py-5">
+        <div className="flex items-center gap-3 border-b border-sidebar-border/80 px-4 py-4 lg:py-5">
           {companySettings.logo ? (
             <img
               src={companySettings.logo}
               alt=""
-              className="h-10 w-10 shrink-0 rounded-md border border-sidebar-border bg-card object-contain p-1"
+              className="h-10 w-10 shrink-0 rounded-lg border border-sidebar-border bg-white object-contain p-1"
             />
           ) : (
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground shadow-sm">
               <Building2 className="h-5 w-5" />
             </div>
           )}
@@ -182,17 +180,17 @@ export function Sidebar() {
             <p className="truncate text-sm font-semibold leading-tight tracking-tight">
               {companySettings.name || APP_DISPLAY_NAME}
             </p>
-            <p className="truncate text-xs text-sidebar-foreground/50">Gestão</p>
+            <p className="truncate text-xs text-sidebar-foreground/55">Gestão operacional</p>
           </div>
         </div>
 
-        <nav className="compact-scrollbar flex-1 overflow-y-auto overflow-x-hidden px-2 py-3" aria-label="Principal">
+        <nav className="compact-scrollbar flex-1 overflow-y-auto overflow-x-hidden px-3 py-4" aria-label="Principal">
           {navGroups.map((group) => (
-            <div key={group.label} className="mb-4 last:mb-0">
-              <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/45">
+            <div key={group.label} className="mb-5 last:mb-0">
+              <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/45">
                 {group.label}
               </p>
-              <ul className="space-y-1">
+              <ul className="space-y-1.5">
                 {group.items.map((item) => {
                   const active = navActive(pathname, item.href)
                   return (
@@ -201,14 +199,14 @@ export function Sidebar() {
                         href={item.href}
                         onClick={() => setMobileOpen(false)}
                         className={cn(
-                          'flex touch-target items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors',
+                          'group flex touch-target items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all',
                           active
                             ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm'
-                            : 'text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                            : 'text-sidebar-foreground/82 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                         )}
                       >
                         <item.icon
-                          className={cn('h-4 w-4 shrink-0 opacity-90', active && 'opacity-100')}
+                          className={cn('h-4 w-4 shrink-0 opacity-80 transition-opacity group-hover:opacity-100', active && 'opacity-100')}
                         />
                         <span className="min-w-0 flex-1 truncate">{item.name}</span>
                         {item.showBadge ? <PendingCountBadge /> : null}
@@ -221,8 +219,8 @@ export function Sidebar() {
           ))}
         </nav>
 
-        <div className="border-t border-sidebar-border bg-sidebar/95 p-3">
-          <div className="mb-3 flex items-center gap-3 rounded-md border border-sidebar-border/80 bg-card/50 px-2.5 py-2">
+        <div className="border-t border-sidebar-border/80 bg-sidebar/95 p-3">
+          <div className="mb-3 flex items-center gap-3 rounded-xl border border-sidebar-border/80 bg-white/5 px-2.5 py-2">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sidebar-primary text-xs font-semibold text-sidebar-primary-foreground">
               {user?.name?.charAt(0).toUpperCase() || 'U'}
             </div>

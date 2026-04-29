@@ -41,7 +41,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       <Sidebar />
       <main className="min-h-dvh lg:pl-[var(--sidebar-width)]">
         <div
-          className="app-shell-pad app-page py-5 pt-[calc(4.25rem+env(safe-area-inset-top))] sm:py-6 sm:pt-[calc(4.5rem+env(safe-area-inset-top))] lg:py-8 lg:pt-8"
+          className="app-shell-pad app-page py-4 pt-[calc(4.75rem+env(safe-area-inset-top))] sm:py-6 sm:pt-[calc(5rem+env(safe-area-inset-top))] lg:py-8 lg:pt-8"
         >
           {children}
         </div>

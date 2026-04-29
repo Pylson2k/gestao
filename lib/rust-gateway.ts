@@ -8,7 +8,6 @@ const DOMAIN_BY_PATH: Array<{ startsWith: string; domain: DomainKey }> = [
   { startsWith: '/api/v2/quotes', domain: 'quotes' },
   { startsWith: '/api/v2/payments', domain: 'payments' },
   { startsWith: '/api/v2/material-lists', domain: 'materials' },
-  { startsWith: '/api/v2/calculator', domain: 'calculator' },
 ]
 
 export function resolveDomain(pathname: string): DomainKey | null {

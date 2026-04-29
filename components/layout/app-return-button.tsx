@@ -2,9 +2,13 @@
 
 import { ArrowLeft } from 'lucide-react'
 import { usePathname, useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+
+const LAST_ROUTE_KEY = 'sinai:last-route'
+const PREVIOUS_ROUTE_KEY = 'sinai:previous-route'
 
 const hiddenRoutes = new Set([
   '/',
@@ -13,19 +17,47 @@ const hiddenRoutes = new Set([
   '/trabalhador/login',
 ])
 
+function getFallbackRoute(pathname: string): string {
+  if (pathname.startsWith('/trabalhador')) return '/trabalhador'
+  return '/dashboard'
+}
+
 export function AppReturnButton() {
   const pathname = usePathname()
   const router = useRouter()
 
+  useEffect(() => {
+    if (!pathname || hiddenRoutes.has(pathname)) return
+
+    const lastRoute = sessionStorage.getItem(LAST_ROUTE_KEY)
+    if (lastRoute && lastRoute !== pathname) {
+      sessionStorage.setItem(PREVIOUS_ROUTE_KEY, lastRoute)
+    }
+    sessionStorage.setItem(LAST_ROUTE_KEY, pathname)
+  }, [pathname])
+
   if (hiddenRoutes.has(pathname)) return null
 
   const handleReturn = () => {
-    if (typeof window !== 'undefined' && window.history.length > 1) {
-      router.back()
+    const previousRoute =
+      typeof window !== 'undefined' ? sessionStorage.getItem(PREVIOUS_ROUTE_KEY) : null
+    const fallbackRoute = getFallbackRoute(pathname)
+    const targetRoute =
+      previousRoute && previousRoute !== pathname && !hiddenRoutes.has(previousRoute)
+        ? previousRoute
+        : fallbackRoute
+
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(PREVIOUS_ROUTE_KEY, pathname)
+      sessionStorage.setItem(LAST_ROUTE_KEY, targetRoute)
+    }
+
+    if (targetRoute === pathname) {
+      router.replace(fallbackRoute)
       return
     }
 
-    router.push('/dashboard')
+    router.push(targetRoute)
   }
 
   return (

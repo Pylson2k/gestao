@@ -5,7 +5,6 @@ export type DomainKey =
   | 'quotes'
   | 'payments'
   | 'materials'
-  | 'calculator'
 
 function normalizePercent(value: string | undefined, fallback: number): number {
   const parsed = Number(value)

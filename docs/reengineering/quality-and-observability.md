@@ -10,7 +10,7 @@
 - Unit: engine de cálculo, regras de domínio, adapters.
 - Integração: API v1/v2 com banco e contratos.
 - E2E: fluxos críticos no frontend legado e v2.
-- Regressão visual: telas de orçamento, pagamentos e calculadora.
+- Regressão visual: telas de orçamento e pagamentos.
 
 ## Gates obrigatórios de pipeline
 - `npm run lint`
