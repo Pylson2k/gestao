@@ -1,0 +1,31 @@
+name: rust-quality
+
+on:
+  pull_request:
+    paths:
+      - 'backend-rust/**'
+      - '.github/workflows/rust-quality.yml'
+  push:
+    branches: [main, master]
+    paths:
+      - 'backend-rust/**'
+
+jobs:
+  rust-check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend-rust
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: backend-rust
+      - name: Cargo fmt check
+        run: cargo fmt --all --check
+      - name: Cargo clippy
+        run: cargo clippy -- -D warnings
+      - name: Cargo test
+        run: cargo test

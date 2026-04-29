@@ -112,6 +112,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
   {
     label: 'Sistema',
     items: [
+      { name: 'Preview v2', href: '/v2', icon: Building2 },
       { name: 'Auditoria', href: '/dashboard/auditoria', icon: Shield },
       { name: 'Configurações', href: '/dashboard/configuracoes', icon: Settings },
       { name: 'Perfil', href: '/dashboard/perfil', icon: User },
