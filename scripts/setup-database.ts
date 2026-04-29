@@ -4,11 +4,9 @@
  */
 
 import 'dotenv/config'
-import { PrismaClient } from '@prisma/client'
 import { hash } from 'bcryptjs'
 import { consolidateDataToSingleOwner } from '../lib/single-owner-migration'
-
-const prisma = new PrismaClient()
+import { prisma } from '../lib/prisma'
 
 async function main() {
   console.log('🚀 Iniciando setup do banco de dados...\n')

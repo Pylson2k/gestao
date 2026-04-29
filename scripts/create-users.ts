@@ -3,9 +3,9 @@
  */
 
 import 'dotenv/config'
-import { PrismaClient } from '@prisma/client'
 import { hash } from 'bcryptjs'
 import { consolidateDataToSingleOwner } from '../lib/single-owner-migration'
+import { prisma } from '../lib/prisma'
 
 async function createUsers() {
   console.log('👥 Configurando usuario unico...\n')
@@ -14,8 +14,6 @@ async function createUsers() {
     console.error('❌ Erro: DATABASE_URL não está configurada!')
     process.exit(1)
   }
-
-  const prisma = new PrismaClient()
 
   try {
     await prisma.$connect()
