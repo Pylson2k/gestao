@@ -1679,24 +1679,6 @@ function openHtmlForPrintFallback(html: string): void {
   }
 }
 
-function forceDownloadHtmlSnapshot(html: string, filename: string): void {
-  const safeHtmlName = filename.replace(/\.pdf$/i, '.html')
-  const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = safeHtmlName
-  a.rel = 'noopener'
-  a.style.cssText =
-    'position:fixed;left:0;top:0;width:1px;height:1px;opacity:0.01;pointer-events:none;z-index:-1'
-  document.body.appendChild(a)
-  a.click()
-  setTimeout(() => {
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }, 45_000)
-}
-
 let html2PdfFactoryPromise: Promise<() => unknown> | null = null
 
 async function loadHtml2PdfFactory(): Promise<() => unknown> {
@@ -1727,6 +1709,7 @@ export function preloadHtml2Pdf(): void {
 export async function downloadPDF(html: string, filename: string = 'orcamento.pdf') {
   const safeFilename = filename.replace(/[<>:"/\\|?*\u0000-\u001f]+/g, '-').trim() || 'documento.pdf'
   const mobile = isTouchMobileDevice()
+  let openedPrintFallback = false
   const pdfWidth =
     typeof window !== 'undefined'
       ? mobile
@@ -1792,6 +1775,7 @@ export async function downloadPDF(html: string, filename: string = 'orcamento.pd
 
     if (mobile) {
       console.warn('PDF blob não gerado no mobile; usando impressão / visualização')
+      openedPrintFallback = true
       openHtmlForPrintFallback(html)
       throw new Error('Não foi possível gerar o PDF automaticamente no celular.')
     }
@@ -1801,13 +1785,15 @@ export async function downloadPDF(html: string, filename: string = 'orcamento.pd
       return
     } catch (e) {
       console.warn('html2pdf .save() falhou', e)
+      openedPrintFallback = true
       openHtmlForPrintFallback(html)
       throw new Error('Não foi possível finalizar o download do PDF.')
     }
   } catch (error) {
     console.error('Erro ao gerar PDF:', error)
-    forceDownloadHtmlSnapshot(html, safeFilename)
-    openHtmlForPrintFallback(html)
+    if (!openedPrintFallback) {
+      openHtmlForPrintFallback(html)
+    }
     throw error instanceof Error ? error : new Error('Erro ao gerar PDF')
   } finally {
     if (container.parentNode) {
@@ -1821,8 +1807,7 @@ export async function forceDownloadPDF(html: string, filename: string = 'documen
   try {
     await downloadPDF(html, safeFilename)
   } catch {
-    forceDownloadHtmlSnapshot(html, safeFilename)
-    openHtmlForPrintFallback(html)
+    /* downloadPDF ja aciona a alternativa de impressao/salvar como PDF. */
   }
 }
 
