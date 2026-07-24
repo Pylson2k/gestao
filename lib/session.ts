@@ -15,7 +15,9 @@ function getSessionSecret(): string {
   const secret = process.env.SESSION_SECRET || process.env.ADMIN_OPERATIONS_SECRET
   if (secret && secret.length >= 16) return secret
   if (process.env.NODE_ENV === 'production') {
-    throw new Error('SESSION_SECRET (ou ADMIN_OPERATIONS_SECRET) deve ter pelo menos 16 caracteres')
+    throw new Error(
+      'SESSION_SECRET_MISSING: defina SESSION_SECRET (ou ADMIN_OPERATIONS_SECRET) com pelo menos 16 caracteres nas Environment Variables da Vercel'
+    )
   }
   return 'dev-only-insecure-session-secret'
 }

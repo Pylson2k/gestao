@@ -93,11 +93,22 @@ export async function POST(request: Request) {
 
     return response
   } catch (e) {
+    const message = e instanceof Error ? e.message : String(e)
     logger.error({
       scope: 'api.auth.login',
       message: 'Login API error',
-      error: e instanceof Error ? e.message : String(e),
+      error: message,
     })
+    if (message.includes('SESSION_SECRET_MISSING')) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            'Sessao nao configurada no servidor. Defina SESSION_SECRET na Vercel (min. 16 caracteres) e faca redeploy.',
+        },
+        { status: 503 }
+      )
+    }
     return NextResponse.json(
       { success: false, error: 'Erro ao entrar. Tente novamente.' },
       { status: 500 }
