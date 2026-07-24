@@ -14,6 +14,7 @@ import { Link } from '@/components/app-link'
 
 type HealthChecks = {
   ok?: boolean
+  hint?: string
   checks?: {
     databaseUrl?: boolean
     sessionSecret?: boolean
@@ -129,12 +130,16 @@ export default function LoginPage() {
                         : 'nao testado'}
                   </li>
                 </ul>
+                {health?.hint ? <p className="mt-2 font-medium">{health.hint}</p> : null}
                 <p className="mt-2">
-                  Corrija na Vercel → Settings → Environment Variables → Redeploy. Depois use{' '}
+                  1) Neon → Connect → Copy URI
+                  <br />
+                  2) Vercel → Environment Variables → edite DATABASE_URL → cole sem aspas
+                  <br />
+                  3) Redeploy → depois{' '}
                   <Link href="/reset" className="underline">
                     /reset
                   </Link>
-                  .
                 </p>
               </div>
             )}

@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { Pool } from 'pg'
-import { ensureSanitizedDatabaseUrl, isPostgresUrl } from '@/lib/database-url'
+import { ensureSanitizedDatabaseUrl, isPostgresUrl, isPlaceholderDatabaseUrl } from '@/lib/database-url'
 
 if (typeof window === 'undefined') {
   try {
@@ -32,6 +32,11 @@ function createPrismaClient(): PrismaClient {
   if (!isPostgresUrl(url)) {
     throw new Error(
       'DATABASE_URL_INVALID: deve comecar com postgresql:// (sem aspas). Copie a URI no botao Connect do Neon.'
+    )
+  }
+  if (isPlaceholderDatabaseUrl(url)) {
+    throw new Error(
+      'DATABASE_URL_INVALID: ainda esta com usuario/senha de exemplo. Cole a URI REAL do Neon (Connect → Copy).'
     )
   }
 
