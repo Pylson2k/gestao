@@ -1,5 +1,6 @@
 import { createHmac, randomBytes, timingSafeEqual } from 'crypto'
 import { OWNER_SESSION_USER_ID, OWNER_USERNAME } from '@/lib/owner-user'
+import { ensureSanitizedDatabaseUrl } from '@/lib/database-url'
 
 export const SESSION_COOKIE_NAME = 'sinai_session'
 export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7 // 7 days
@@ -11,12 +12,29 @@ export type SessionPayload = {
   mustChangePassword: boolean
 }
 
+/**
+ * Segredo da sessão. Em produção:
+ * 1) SESSION_SECRET
+ * 2) ADMIN_OPERATIONS_SECRET
+ * 3) derivado estável da DATABASE_URL (fallback para deploys só com Neon)
+ */
 function getSessionSecret(): string {
-  const secret = process.env.SESSION_SECRET || process.env.ADMIN_OPERATIONS_SECRET
-  if (secret && secret.length >= 16) return secret
+  const explicit = (process.env.SESSION_SECRET || process.env.ADMIN_OPERATIONS_SECRET || '').trim()
+  if (explicit.length >= 16) return explicit
+  if (explicit.length > 0) {
+    return createHmac('sha256', 'sinai-session-pad')
+      .update(explicit)
+      .digest('hex')
+  }
+
+  const dbUrl = ensureSanitizedDatabaseUrl()
+  if (dbUrl.length >= 12) {
+    return createHmac('sha256', 'sinai-engenharia-session-v1').update(dbUrl).digest('hex')
+  }
+
   if (process.env.NODE_ENV === 'production') {
     throw new Error(
-      'SESSION_SECRET_MISSING: defina SESSION_SECRET (ou ADMIN_OPERATIONS_SECRET) com pelo menos 16 caracteres nas Environment Variables da Vercel'
+      'SESSION_SECRET_MISSING: defina SESSION_SECRET (min. 16) ou DATABASE_URL valida na Vercel'
     )
   }
   return 'dev-only-insecure-session-secret'
@@ -43,7 +61,12 @@ export function verifySessionToken(token: string | undefined | null): SessionPay
   const [body, sig] = parts
   if (!body || !sig) return null
 
-  const expected = createHmac('sha256', getSessionSecret()).update(body).digest('base64url')
+  let expected: string
+  try {
+    expected = createHmac('sha256', getSessionSecret()).update(body).digest('base64url')
+  } catch {
+    return null
+  }
   const sigBuf = Buffer.from(sig)
   const expectedBuf = Buffer.from(expected)
   if (sigBuf.length !== expectedBuf.length || !timingSafeEqual(sigBuf, expectedBuf)) {
@@ -92,7 +115,6 @@ export function timingSafeStringEqual(a: string, b: string): boolean {
   const aBuf = Buffer.from(a)
   const bBuf = Buffer.from(b)
   if (aBuf.length !== bBuf.length) {
-    // Still compare to reduce timing leak on length
     timingSafeEqual(aBuf, aBuf)
     return false
   }

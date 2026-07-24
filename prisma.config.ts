@@ -2,32 +2,9 @@
 // npm install --save-dev prisma dotenv
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
+import { ensureSanitizedDatabaseUrl } from "./lib/database-url";
 
-function sanitizeDatabaseUrl(raw: string | undefined): string | undefined {
-  if (!raw) return undefined
-  let url = raw.trim()
-  if (
-    (url.startsWith('"') && url.endsWith('"')) ||
-    (url.startsWith("'") && url.endsWith("'"))
-  ) {
-    url = url.slice(1, -1).trim()
-  }
-  if (/^DATABASE_URL\s*=\s*/i.test(url)) {
-    url = url.replace(/^DATABASE_URL\s*=\s*/i, "").trim()
-    if (
-      (url.startsWith('"') && url.endsWith('"')) ||
-      (url.startsWith("'") && url.endsWith("'"))
-    ) {
-      url = url.slice(1, -1).trim()
-    }
-  }
-  return url || undefined
-}
-
-const databaseUrl = sanitizeDatabaseUrl(process.env["DATABASE_URL"])
-if (databaseUrl) {
-  process.env.DATABASE_URL = databaseUrl
-}
+const databaseUrl = ensureSanitizedDatabaseUrl() || undefined;
 
 export default defineConfig({
   schema: "prisma/schema.prisma",

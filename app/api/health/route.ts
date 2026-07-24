@@ -1,28 +1,50 @@
 import { NextResponse } from 'next/server'
-import { getEnvHealth } from '@/lib/env'
+import { ensureSanitizedDatabaseUrl, isPostgresUrl } from '@/lib/database-url'
 import { logger } from '@/lib/logger'
 
-/** Rota leve para monitoramento; não revela nomes de variáveis em produção. */
+/** Diagnóstico seguro — não revela segredos nem a URL completa. */
 export async function GET() {
-  const env = getEnvHealth()
-  if (!env.ok) {
-    logger.warn({
-      scope: 'health',
-      message: 'Required environment variables are missing',
-      missing: env.missing,
-    })
+  const databaseUrl = ensureSanitizedDatabaseUrl()
+  const hasDatabaseUrl = Boolean(databaseUrl)
+  const databaseUrlOk = hasDatabaseUrl && isPostgresUrl(databaseUrl)
+  const hasSessionSecret = Boolean(
+    (process.env.SESSION_SECRET && process.env.SESSION_SECRET.length >= 16) ||
+      (process.env.ADMIN_OPERATIONS_SECRET && process.env.ADMIN_OPERATIONS_SECRET.length >= 16) ||
+      databaseUrlOk
+  )
+
+  let databaseReachable: boolean | null = null
+  if (databaseUrlOk) {
+    try {
+      const { prisma } = await import('@/lib/prisma')
+      await prisma.$queryRaw`SELECT 1`
+      databaseReachable = true
+    } catch (e) {
+      databaseReachable = false
+      logger.warn({
+        scope: 'health',
+        message: 'Database ping failed',
+        error: e instanceof Error ? e.message : String(e),
+      })
+    }
   }
+
+  const ok = databaseUrlOk && hasSessionSecret && databaseReachable !== false
+
   return NextResponse.json(
     {
-      ok: env.ok,
+      ok,
       service: 'sinai-engenharia',
       ts: new Date().toISOString(),
+      checks: {
+        databaseUrl: databaseUrlOk,
+        sessionSecret: hasSessionSecret,
+        databaseReachable,
+      },
     },
     {
-      status: env.ok ? 200 : 503,
-      headers: {
-        'Cache-Control': 'no-store',
-      },
+      status: ok ? 200 : 503,
+      headers: { 'Cache-Control': 'no-store' },
     }
   )
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { compare } from 'bcryptjs'
+import { compare, hash } from 'bcryptjs'
 import { OWNER_SESSION_USER_ID, OWNER_USERNAME } from '@/lib/owner-user'
 import { logger } from '@/lib/logger'
 import {
@@ -9,6 +9,7 @@ import {
 } from '@/lib/session'
 import { clientIpFromRequest, rateLimit } from '@/lib/rate-limit'
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log'
+import { ensureSanitizedDatabaseUrl, isPostgresUrl } from '@/lib/database-url'
 
 export async function POST(request: Request) {
   try {
@@ -27,18 +28,49 @@ export async function POST(request: Request) {
       .toLowerCase()
     const password = String(body.password ?? '')
 
-    // Sempre percorre bcrypt quando possível para reduzir timing oracle
-    if (!process.env.DATABASE_URL) {
+    const databaseUrl = ensureSanitizedDatabaseUrl()
+    if (!databaseUrl) {
       return NextResponse.json(
-        { success: false, error: 'Banco de dados nao configurado' },
+        { success: false, error: 'Banco de dados nao configurado (DATABASE_URL).' },
+        { status: 503 }
+      )
+    }
+    if (!isPostgresUrl(databaseUrl)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            'DATABASE_URL invalida. Cole a URI do Neon comecando com postgresql:// (sem aspas) e faca redeploy.',
+        },
         { status: 503 }
       )
     }
 
     const { prisma } = await import('@/lib/prisma')
-    const user = await prisma.user.findUnique({
+    let user = await prisma.user.findUnique({
       where: { username: OWNER_USERNAME },
     })
+
+    // Bootstrap: se o banco nao tem nenhum usuario, cria o dono no primeiro login
+    if (!user && username === OWNER_USERNAME && password.length >= 8) {
+      const userCount = await prisma.user.count()
+      if (userCount === 0) {
+        const hashedPassword = await hash(password, 10)
+        user = await prisma.user.create({
+          data: {
+            username: OWNER_USERNAME,
+            name: 'Gustavo',
+            email: 'gustavo@sinaiengenharia.com',
+            password: hashedPassword,
+            mustChangePassword: true,
+          },
+        })
+        logger.info({
+          scope: 'api.auth.login',
+          message: 'Usuario dono criado no primeiro login (banco vazio)',
+        })
+      }
+    }
 
     const dummyHash =
       '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'
@@ -104,7 +136,36 @@ export async function POST(request: Request) {
         {
           success: false,
           error:
-            'Sessao nao configurada no servidor. Defina SESSION_SECRET na Vercel (min. 16 caracteres) e faca redeploy.',
+            'Sessao nao configurada. Defina SESSION_SECRET na Vercel (min. 16 caracteres) e faca redeploy.',
+        },
+        { status: 503 }
+      )
+    }
+    if (
+      message.includes('DATABASE_URL_INVALID') ||
+      message.includes('DATABASE_URL_MISSING') ||
+      message.includes('P1013') ||
+      message.includes('scheme is not recognized')
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            'DATABASE_URL invalida no servidor. Edite na Vercel: URI postgresql:// do Neon, sem aspas.',
+        },
+        { status: 503 }
+      )
+    }
+    if (
+      message.includes('P1001') ||
+      message.includes('ECONNREFUSED') ||
+      message.includes('timeout') ||
+      message.includes('Connection terminated')
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Nao foi possivel conectar ao banco. Verifique DATABASE_URL / Neon.',
         },
         { status: 503 }
       )

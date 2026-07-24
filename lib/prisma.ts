@@ -1,8 +1,8 @@
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { Pool } from 'pg'
+import { ensureSanitizedDatabaseUrl, isPostgresUrl } from '@/lib/database-url'
 
-// Garantir que o .env seja carregado ANTES de criar o Prisma Client
 if (typeof window === 'undefined') {
   try {
     require('dotenv').config()
@@ -11,11 +11,12 @@ if (typeof window === 'undefined') {
   }
 }
 
-const databaseUrl = process.env.DATABASE_URL
+ensureSanitizedDatabaseUrl()
+
+const databaseUrl = process.env.DATABASE_URL || ''
 
 if (!databaseUrl && typeof window === 'undefined') {
-  console.warn('⚠️ DATABASE_URL não encontrada. O Prisma Client pode não funcionar corretamente.')
-  console.warn('   Certifique-se de que o arquivo .env existe e contém DATABASE_URL')
+  console.warn('DATABASE_URL nao encontrada.')
 }
 
 const globalForPrisma = globalThis as unknown as {
@@ -24,17 +25,25 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 function createPrismaClient(): PrismaClient {
-  if (!databaseUrl) {
-    throw new Error('DATABASE_URL não está configurada. Verifique o arquivo .env')
+  const url = ensureSanitizedDatabaseUrl()
+  if (!url) {
+    throw new Error('DATABASE_URL_MISSING')
+  }
+  if (!isPostgresUrl(url)) {
+    throw new Error(
+      'DATABASE_URL_INVALID: deve comecar com postgresql:// (sem aspas). Copie a URI no botao Connect do Neon.'
+    )
   }
 
   if (!globalForPrisma.pool) {
     globalForPrisma.pool = new Pool({
-      connectionString: databaseUrl,
-      // Serverless (Vercel + Neon): poucas conexões por instância; cold start precisa de timeout maior
+      connectionString: url,
       max: Number(process.env.PG_POOL_MAX) || 5,
       idleTimeoutMillis: 20000,
       connectionTimeoutMillis: Number(process.env.PG_CONNECTION_TIMEOUT_MS) || 15000,
+      ssl: url.includes('sslmode=require') || url.includes('neon.tech')
+        ? { rejectUnauthorized: false }
+        : undefined,
     })
   }
 
@@ -53,10 +62,6 @@ function getPrismaClient(): PrismaClient {
   return globalForPrisma.prisma
 }
 
-/**
- * Proxy com inicialização preguiçosa: o módulo pode ser importado sem DATABASE_URL;
- * o erro só ocorre na primeira operação real no banco.
- */
 export const prisma = new Proxy({} as PrismaClient, {
   get(_target, prop: string | symbol) {
     const client = getPrismaClient()
