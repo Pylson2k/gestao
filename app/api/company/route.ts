@@ -67,9 +67,25 @@ export async function PUT(request: NextRequest) {
 
     const body = await request.json()
 
+    const logo =
+      body.logo === null || body.logo === ''
+        ? null
+        : typeof body.logo === 'string'
+          ? body.logo
+          : undefined
+    if (logo !== undefined && logo !== null) {
+      const { isSafeImageUrl } = await import('@/lib/safe-url')
+      if (!isSafeImageUrl(logo)) {
+        return NextResponse.json(
+          { error: 'Logo invalida. Use URL http(s) ou imagem data:image/*' },
+          { status: 400 }
+        )
+      }
+    }
+
     // Se não tem DATABASE_URL, usa modo de emergência
     if (!process.env.DATABASE_URL) {
-      const updated = updateCompanySettings(body)
+      const updated = updateCompanySettings({ ...body, ...(logo !== undefined ? { logo } : {}) })
       return NextResponse.json(updated)
     }
 
@@ -90,7 +106,7 @@ export async function PUT(request: NextRequest) {
       where: { userId: targetUserId },
       update: {
         name: body.name,
-        logo: body.logo,
+        logo: logo !== undefined ? logo : body.logo,
         phone: body.phone,
         email: body.email,
         address: body.address,
@@ -102,7 +118,7 @@ export async function PUT(request: NextRequest) {
       create: {
         userId: targetUserId,
         name: body.name || APP_DISPLAY_NAME,
-        logo: body.logo,
+        logo: logo !== undefined ? logo : body.logo,
         phone: body.phone || '',
         email: body.email || '',
         address: body.address || '',

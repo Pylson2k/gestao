@@ -1,28 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createAuditLog, getRequestMetadata } from '@/lib/audit-log'
+import { createAuditLog, getRequestMetadata, type AuditAction, type EntityType } from '@/lib/audit-log'
+import { requireOwnerOr401 } from '@/lib/require-auth'
+import { OWNER_SESSION_USER_ID } from '@/lib/owner-user'
 
-// POST - Log custom action
+// POST - Log custom action (sempre atribui ao dono autenticado)
 export async function POST(request: NextRequest) {
+  const denied = requireOwnerOr401(request)
+  if (denied) return denied
+
   try {
-    const userId = request.headers.get('x-user-id')
     const body = await request.json()
     const { action, entityType, entityId, description, oldValue, newValue } = body
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Usuario nao autenticado' },
-        { status: 401 }
-      )
+    if (!action || typeof action !== 'string') {
+      return NextResponse.json({ error: 'Acao obrigatoria' }, { status: 400 })
     }
 
     const metadata = getRequestMetadata(request)
-    
+
     await createAuditLog({
-      userId,
-      action: action as any,
-      entityType: entityType as any,
-      entityId: entityId || 'unknown',
-      description: description || `Ação: ${action}`,
+      userId: OWNER_SESSION_USER_ID,
+      action: action as AuditAction,
+      entityType: (entityType || 'export') as EntityType,
+      entityId: typeof entityId === 'string' ? entityId : 'unknown',
+      description: typeof description === 'string' ? description : `Ação: ${action}`,
       oldValue,
       newValue,
       ...metadata,
@@ -31,9 +32,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Log action error:', error)
-    return NextResponse.json(
-      { error: 'Erro ao registrar ação' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Erro ao registrar ação' }, { status: 500 })
   }
 }

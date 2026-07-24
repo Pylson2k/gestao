@@ -312,6 +312,25 @@ function pdfEscapeHtml(s: string): string {
     .replace(/"/g, '&quot;')
 }
 
+function safeLogoImg(logo: string | null | undefined): string {
+  if (!logo) return ''
+  // Importação lazy via require-style evita ciclo; validação espelha lib/safe-url
+  const trimmed = logo.trim()
+  const lower = trimmed.toLowerCase()
+  const isData =
+    /^data:image\/(png|jpeg|jpg|gif|webp);base64,/i.test(trimmed)
+  let isHttp = false
+  try {
+    const url = new URL(trimmed)
+    isHttp = url.protocol === 'http:' || url.protocol === 'https:'
+  } catch {
+    isHttp = false
+  }
+  if (lower.startsWith('javascript:') || lower.startsWith('vbscript:')) return ''
+  if (!isData && !isHttp) return ''
+  return `<img src="${pdfEscapeHtml(trimmed)}" alt="" />`
+}
+
 const PAYMENT_METHOD_LABELS_PT: Record<string, string> = {
   dinheiro: 'Dinheiro',
   pix: 'PIX',
@@ -542,7 +561,7 @@ export function generateStandaloneMaterialListPDF(
     <body>
       <header class="pdf-header">
         <div class="pdf-header-left">
-          ${companySettings.logo ? `<img src="${companySettings.logo}" alt="" />` : ''}
+          ${safeLogoImg(companySettings.logo)}
           <div>
             <p class="pdf-company-name">${pdfEscapeHtml(companySettings.name || APP_DISPLAY_NAME)}</p>
             ${companySettings.phone ? `<p class="pdf-company-line">${pdfEscapeHtml(companySettings.phone)}</p>` : ''}
@@ -640,7 +659,7 @@ export function generateMaterialsListPDF(quote: Quote, companySettings: CompanyS
     <body>
       <header class="pdf-header">
         <div class="pdf-header-left">
-          ${companySettings.logo ? `<img src="${companySettings.logo}" alt="" />` : ''}
+          ${safeLogoImg(companySettings.logo)}
           <div>
             <p class="pdf-company-name">${pdfEscapeHtml(companySettings.name || APP_DISPLAY_NAME)}</p>
             ${companySettings.phone ? `<p class="pdf-company-line">${pdfEscapeHtml(companySettings.phone)}</p>` : ''}
@@ -724,7 +743,7 @@ export function generateQuotePDF(quote: Quote, companySettings: CompanySettings)
     <body>
       <header class="pdf-header">
         <div class="pdf-header-left">
-          ${companySettings.logo ? `<img src="${companySettings.logo}" alt="" />` : ''}
+          ${safeLogoImg(companySettings.logo)}
           <div>
             <p class="pdf-company-name">${pdfEscapeHtml(companySettings.name || APP_DISPLAY_NAME)}</p>
             ${companySettings.phone ? `<p class="pdf-company-line">${pdfEscapeHtml(companySettings.phone)}</p>` : ''}
@@ -871,7 +890,7 @@ export function generateServiceOrderPDF(
     <body>
       <header class="pdf-header">
         <div class="pdf-header-left">
-          ${companySettings.logo ? `<img src="${companySettings.logo}" alt="" />` : ''}
+          ${safeLogoImg(companySettings.logo)}
           <div>
             <p class="pdf-company-name">${pdfEscapeHtml(companySettings.name || APP_DISPLAY_NAME)}</p>
             ${companySettings.phone ? `<p class="pdf-company-line">${pdfEscapeHtml(companySettings.phone)}</p>` : ''}
@@ -1055,7 +1074,7 @@ export function generatePaymentReceiptPDF(
     <body>
       <header class="pdf-header">
         <div class="pdf-header-left">
-          ${companySettings.logo ? `<img src="${companySettings.logo}" alt="" />` : ''}
+          ${safeLogoImg(companySettings.logo)}
           <div>
             <p class="pdf-company-name">${pdfEscapeHtml(companySettings.name || APP_DISPLAY_NAME)}</p>
             ${companySettings.phone ? `<p class="pdf-company-line">${pdfEscapeHtml(companySettings.phone)}</p>` : ''}

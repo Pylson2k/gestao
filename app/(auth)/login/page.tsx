@@ -13,18 +13,21 @@ import { Building2, Loader2, ShieldAlert } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
-  const { login, isLoading, isAuthenticated } = useAuth()
+  const { login, isLoading, isAuthenticated, user } = useAuth()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [companyLogo, setCompanyLogo] = useState<string | null>(null)
   const [companyName, setCompanyName] = useState(APP_DISPLAY_NAME)
 
+  const postLoginPath = (mustChange?: boolean) =>
+    mustChange ? '/dashboard/perfil?force=1' : '/dashboard'
+
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.push('/dashboard')
+      router.push(postLoginPath(user?.mustChangePassword))
     }
-  }, [isAuthenticated, isLoading, router])
+  }, [isAuthenticated, isLoading, router, user?.mustChangePassword])
 
   useEffect(() => {
     const fetchCompanyInfo = async () => {
@@ -56,6 +59,7 @@ export default function LoginPage() {
 
     const result = await login(username, password)
     if (result.success) {
+      // mustChangePassword: o AuthProvider já atualizou o user; proxy/shell reforçam
       router.push('/dashboard')
     } else {
       setError(result.error || 'Usuario ou senha invalidos')

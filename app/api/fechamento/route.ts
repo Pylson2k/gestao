@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireOwnerOr401 } from '@/lib/require-auth'
 
 function isIsoDate(v: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(v)
 }
 
 export async function GET(request: Request) {
+  const denied = requireOwnerOr401(request)
+  if (denied) return denied
+
   const { searchParams } = new URL(request.url)
   const inicio = String(searchParams.get('inicio') || '')
   const fim = String(searchParams.get('fim') || '')

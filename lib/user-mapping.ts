@@ -55,10 +55,10 @@ export async function getDbUserId(authUserId: string): Promise<string> {
     return user.id
   } catch (error: unknown) {
     const err = error as Error
-    if (err.message?.includes('nao encontrado')) {
+    if (err.message?.includes('nao encontrado') || err.message === 'UNAUTHORIZED_USER') {
       throw err
     }
     console.error('Error mapping user ID:', error)
-    return authUserId
+    throw new Error('Falha ao mapear usuario autenticado')
   }
 }

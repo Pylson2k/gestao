@@ -1,47 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDbUserId } from '@/lib/user-mapping'
+import { getOwnerDbUserIds } from '@/lib/user-mapping'
+import { requireOwnerOr401 } from '@/lib/require-auth'
 
-// GET - List audit logs
+// GET - List audit logs (apenas do proprietário)
 export async function GET(request: NextRequest) {
+  const denied = requireOwnerOr401(request)
+  if (denied) return denied
+
   try {
-    const userId = request.headers.get('x-user-id')
     const searchParams = request.nextUrl.searchParams
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
     const action = searchParams.get('action')
     const entityType = searchParams.get('entityType')
-    const limit = parseInt(searchParams.get('limit') || '200')
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Usuario nao autenticado' },
-        { status: 401 }
-      )
-    }
+    const rawLimit = parseInt(searchParams.get('limit') || '200', 10)
+    const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 1), 500) : 200
 
     if (!process.env.DATABASE_URL) {
       return NextResponse.json([])
     }
 
     const { prisma } = await import('@/lib/prisma')
-    const dbUserId = await getDbUserId(userId)
-
-    const where: any = {}
-    
-    if (startDate || endDate) {
-      where.createdAt = {}
-      if (startDate) {
-        where.createdAt.gte = new Date(startDate)
-      }
-      if (endDate) {
-        where.createdAt.lte = new Date(endDate + 'T23:59:59')
-      }
+    const ownerIds = await getOwnerDbUserIds()
+    if (ownerIds.length === 0) {
+      return NextResponse.json([])
     }
-    
+
+    const where: Record<string, unknown> = {
+      userId: { in: ownerIds },
+    }
+
+    if (startDate || endDate) {
+      const createdAt: Record<string, Date> = {}
+      if (startDate) createdAt.gte = new Date(startDate)
+      if (endDate) createdAt.lte = new Date(endDate + 'T23:59:59')
+      where.createdAt = createdAt
+    }
+
     if (action && action !== 'all') {
       where.action = action
     }
-    
+
     if (entityType && entityType !== 'all') {
       where.entityType = entityType
     }
@@ -66,9 +65,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(logs)
   } catch (error) {
     console.error('Get audit logs error:', error)
-    return NextResponse.json(
-      { error: 'Erro ao buscar logs de auditoria' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Erro ao buscar logs de auditoria' }, { status: 500 })
   }
 }

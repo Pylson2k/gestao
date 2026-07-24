@@ -1,4 +1,4 @@
-export default function DashboardLayout({
+export default function V2Layout({
   children,
 }: {
   children: React.ReactNode

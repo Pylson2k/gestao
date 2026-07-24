@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireOwnerOr401 } from '@/lib/require-auth'
 
 function isIsoDate(v: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(v)
 }
 
 export async function GET(request: Request) {
+  const denied = requireOwnerOr401(request)
+  if (denied) return denied
+
   const { searchParams } = new URL(request.url)
   const funcionarioIdRaw = searchParams.get('funcionario_id')
   const funcionarioId = funcionarioIdRaw ? Number(funcionarioIdRaw) : null
@@ -33,6 +37,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const denied = requireOwnerOr401(request)
+  if (denied) return denied
+
   const body = (await request.json().catch(() => null)) as any
   const funcionarioId = Number(body?.funcionario_id)
   const valorRaw = body?.valor

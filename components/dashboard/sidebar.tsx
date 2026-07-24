@@ -109,7 +109,6 @@ const navGroups: { label: string; items: NavItem[] }[] = [
   {
     label: 'Sistema',
     items: [
-      { name: 'Nova experiência', href: '/v2', icon: Building2 },
       { name: 'Auditoria', href: '/dashboard/auditoria', icon: Shield },
       { name: 'Configurações', href: '/dashboard/configuracoes', icon: Settings },
       { name: 'Perfil', href: '/dashboard/perfil', icon: User },
@@ -124,8 +123,8 @@ export function Sidebar() {
   const { settings: companySettings } = useCompany()
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  const handleLogout = () => {
-    logout()
+  const handleLogout = async () => {
+    await logout()
     router.push('/login')
   }
 

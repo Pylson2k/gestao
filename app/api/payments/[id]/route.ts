@@ -132,27 +132,14 @@ export async function PUT(
 
     // Se o valor foi alterado, validar se não excede o total
     if (amount !== undefined && amount !== existingPayment.amount) {
-      const totalPaid = existingPayment.quote.payments
-        .filter(p => p.id !== id)
-        .reduce((sum, p) => sum + p.amount, 0)
-      const newTotalPaid = totalPaid + parseFloat(amount)
-
-      if (newTotalPaid > existingPayment.quote.total) {
+      const amountNumber = parseFloat(amount)
+      if (!Number.isFinite(amountNumber) || amountNumber <= 0) {
         return NextResponse.json(
-          { 
-            error: `Valor excede o total do orcamento. Total: R$ ${existingPayment.quote.total.toFixed(2)}, Ja pago (outros): R$ ${totalPaid.toFixed(2)}, Restante: R$ ${(existingPayment.quote.total - totalPaid).toFixed(2)}`,
-          },
+          { error: 'Valor do pagamento deve ser maior que zero' },
           { status: 400 }
         )
       }
     }
-
-    // Preparar dados para atualização
-    const updateData: any = {}
-    if (amount !== undefined) updateData.amount = parseFloat(amount)
-    if (paymentDate !== undefined) updateData.paymentDate = new Date(paymentDate)
-    if (paymentMethod !== undefined) updateData.paymentMethod = paymentMethod
-    if (observations !== undefined) updateData.observations = observations?.trim() || null
 
     const oldValue = {
       amount: existingPayment.amount,
@@ -161,17 +148,46 @@ export async function PUT(
       observations: existingPayment.observations,
     }
 
-    // Atualizar pagamento
-    const payment = await prisma.payment.update({
-      where: { id },
-      data: updateData,
-      include: {
-        quote: {
-          include: {
-            client: true,
+    const payment = await prisma.$transaction(async (tx) => {
+      if (amount !== undefined && amount !== existingPayment.amount) {
+        const amountNumber = parseFloat(amount)
+        const lockedQuote = await tx.quote.findFirst({
+          where: { id: existingPayment.quoteId, userId: { in: ownerIds } },
+          include: { payments: true },
+        })
+        if (!lockedQuote) {
+          throw Object.assign(new Error('Orcamento nao encontrado'), { status: 404 })
+        }
+        const totalPaid = lockedQuote.payments
+          .filter((p) => p.id !== id)
+          .reduce((sum, p) => sum + p.amount, 0)
+        if (totalPaid + amountNumber > lockedQuote.total) {
+          throw Object.assign(
+            new Error(
+              `Valor excede o total do orcamento. Total: R$ ${lockedQuote.total.toFixed(2)}, Ja pago (outros): R$ ${totalPaid.toFixed(2)}, Restante: R$ ${(lockedQuote.total - totalPaid).toFixed(2)}`
+            ),
+            { status: 400 }
+          )
+        }
+      }
+
+      const updateData: Record<string, unknown> = {}
+      if (amount !== undefined) updateData.amount = parseFloat(amount)
+      if (paymentDate !== undefined) updateData.paymentDate = new Date(paymentDate)
+      if (paymentMethod !== undefined) updateData.paymentMethod = paymentMethod
+      if (observations !== undefined) updateData.observations = observations?.trim() || null
+
+      return tx.payment.update({
+        where: { id },
+        data: updateData,
+        include: {
+          quote: {
+            include: {
+              client: true,
+            },
           },
         },
-      },
+      })
     })
 
     // Log de auditoria
@@ -198,8 +214,11 @@ export async function PUT(
     return NextResponse.json(payment)
   } catch (error: any) {
     console.error('Update payment error:', error)
+    if (error?.status === 404 || error?.status === 400) {
+      return NextResponse.json({ error: error.message }, { status: error.status })
+    }
     return NextResponse.json(
-      { error: error.message || 'Erro ao atualizar pagamento' },
+      { error: 'Erro ao atualizar pagamento' },
       { status: 500 }
     )
   }
@@ -281,9 +300,6 @@ export async function DELETE(
     return NextResponse.json({ success: true })
   } catch (error: any) {
     console.error('Delete payment error:', error)
-    return NextResponse.json(
-      { error: error.message || 'Erro ao excluir pagamento' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Erro ao excluir pagamento' }, { status: 500 })
   }
 }

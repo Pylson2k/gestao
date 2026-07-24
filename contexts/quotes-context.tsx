@@ -26,6 +26,7 @@ function mapPaymentsFromApi(payments: any[] | undefined): Payment[] | undefined 
 interface QuotesContextType {
   quotes: Quote[]
   isLoading: boolean
+  error: string | null
   addQuote: (quote: Omit<Quote, 'id' | 'number' | 'createdAt' | 'userId'>) => Promise<Quote>
   updateQuote: (id: string, quote: Partial<Quote>) => Promise<void>
   deleteQuote: (id: string) => Promise<void>
@@ -39,6 +40,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const [quotes, setQuotes] = useState<Quote[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [isFetching, setIsFetching] = useState(false)
   const lastFetchedAt = useRef<number>(0)
   const fetchingRef = useRef(false)
@@ -55,6 +57,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
 
       if (response.ok) {
         lastFetchedAt.current = Date.now()
+        setError(null)
         const data = await response.json()
         // Transform Prisma data to Quote format
         const transformedQuotes: Quote[] = data.map((q: any) => ({
@@ -106,9 +109,12 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
           })) : [],
         }))
         setQuotes(transformedQuotes)
+      } else {
+        setError(await readApiError(response))
       }
-    } catch (error) {
-      console.error('Fetch quotes error:', error)
+    } catch (err) {
+      console.error('Fetch quotes error:', err)
+      setError('Erro ao carregar orçamentos')
     } finally {
       setIsLoading(false)
       setIsFetching(false)
@@ -322,6 +328,7 @@ export function QuotesProvider({ children }: { children: ReactNode }) {
       value={{
         quotes,
         isLoading,
+        error,
         addQuote,
         updateQuote,
         deleteQuote,

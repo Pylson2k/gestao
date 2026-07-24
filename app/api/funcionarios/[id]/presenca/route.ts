@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireOwnerOr401 } from '@/lib/require-auth'
 
 function pad2(n: number) {
   return String(n).padStart(2, '0')
@@ -13,6 +14,9 @@ function monthRange(year: number, month1to12: number) {
 }
 
 export async function GET(request: Request, ctx: { params: Promise<{ id: string }> }) {
+  const denied = requireOwnerOr401(request)
+  if (denied) return denied
+
   const { searchParams } = new URL(request.url)
   const year = Number(searchParams.get('year'))
   const month = Number(searchParams.get('month')) // 1-12

@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { AuthProvider } from '@/contexts/auth-context'
+import { AppFrame } from '@/components/auth/app-frame'
 import { DynamicFavicon } from '@/components/dynamic-favicon'
 import { DynamicTitle } from '@/components/dynamic-title'
 import { PWARegister } from '@/components/pwa-register'
@@ -82,7 +83,7 @@ export default function RootLayout({
         <DynamicFavicon />
         <DynamicTitle />
         <AuthProvider>
-          {children}
+          <AppFrame>{children}</AppFrame>
         </AuthProvider>
         <AppReturnButton />
         <Toaster position="top-right" richColors closeButton />

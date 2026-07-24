@@ -2,18 +2,9 @@ import { NextResponse } from 'next/server'
 import { getEnvHealth } from '@/lib/env'
 import { logger } from '@/lib/logger'
 
-/** Rota leve para monitoramento (Vercel, uptime); pública no middleware. */
+/** Rota leve para monitoramento; não revela nomes de variáveis em produção. */
 export async function GET() {
   const env = getEnvHealth()
-  const payload = {
-    ok: true,
-    service: 'sinai-engenharia',
-    ts: new Date().toISOString(),
-    env: {
-      ok: env.ok,
-      missing: env.missing,
-    },
-  }
   if (!env.ok) {
     logger.warn({
       scope: 'health',
@@ -22,9 +13,13 @@ export async function GET() {
     })
   }
   return NextResponse.json(
-    payload,
     {
-      status: 200,
+      ok: env.ok,
+      service: 'sinai-engenharia',
+      ts: new Date().toISOString(),
+    },
+    {
+      status: env.ok ? 200 : 503,
       headers: {
         'Cache-Control': 'no-store',
       },

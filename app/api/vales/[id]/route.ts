@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireOwnerOr401 } from '@/lib/require-auth'
 
 export async function PATCH(request: Request, ctx: { params: Promise<{ id: string }> }) {
+  const denied = requireOwnerOr401(request)
+  if (denied) return denied
+
   const params = await ctx.params
   const id = Number(params.id)
   if (!Number.isFinite(id)) return NextResponse.json({ error: 'ID inválido' }, { status: 400 })
@@ -27,6 +31,9 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
 }
 
 export async function DELETE(_request: Request, ctx: { params: Promise<{ id: string }> }) {
+  const denied = requireOwnerOr401(_request)
+  if (denied) return denied
+
   const params = await ctx.params
   const id = Number(params.id)
   if (!Number.isFinite(id)) return NextResponse.json({ error: 'ID inválido' }, { status: 400 })

@@ -1,21 +1,24 @@
-import { OWNER_SESSION_USER_ID } from '@/lib/owner-user'
-
 /**
  * Cliente HTTP mínimo para chamadas às rotas `/api/*`.
- * Centraliza headers comuns (ex.: `x-user-id`) para migrar contexts gradualmente.
+ * Autenticação via cookie HttpOnly (`credentials: 'include'`).
+ * Não envia `x-user-id` — o proxy injeta identidade só após validar a sessão.
  */
 export type ApiFetchInit = RequestInit & {
+  /** @deprecated Ignorado — auth é por cookie de sessão */
   userId?: string
 }
 
 export function apiFetch(input: string | URL, init: ApiFetchInit = {}): Promise<Response> {
-  const { userId, headers: initHeaders, ...rest } = init
+  const { userId: _userId, headers: initHeaders, credentials, ...rest } = init
   const headers = new Headers(initHeaders)
-  headers.set('x-user-id', userId ?? OWNER_SESSION_USER_ID)
   if (rest.body && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json')
   }
-  return fetch(input, { ...rest, headers })
+  return fetch(input, {
+    ...rest,
+    headers,
+    credentials: credentials ?? 'include',
+  })
 }
 
 export async function readApiError(res: Response): Promise<string> {

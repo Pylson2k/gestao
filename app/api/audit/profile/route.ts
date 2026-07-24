@@ -1,41 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAuditLog, getRequestMetadata } from '@/lib/audit-log'
+import { requireOwnerOr401 } from '@/lib/require-auth'
+import { OWNER_SESSION_USER_ID } from '@/lib/owner-user'
 
-// POST - Log profile changes
 export async function POST(request: NextRequest) {
+  const denied = requireOwnerOr401(request)
+  if (denied) return denied
+
   try {
-    const userId = request.headers.get('x-user-id')
-    const body = await request.json()
-    const { action, username, oldValue, newValue } = body
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Usuario nao autenticado' },
-        { status: 401 }
-      )
-    }
-
+    const body = await request.json().catch(() => ({}))
     const metadata = getRequestMetadata(request)
-    
+
     await createAuditLog({
-      userId,
-      action: action as any, // 'change_password' | 'change_email'
+      userId: OWNER_SESSION_USER_ID,
+      action: 'update_profile',
       entityType: 'user',
-      entityId: userId,
-      description: action === 'change_password' 
-        ? `Usuário ${username} alterou a senha`
-        : `Usuário ${username} alterou o email de "${oldValue}" para "${newValue}"`,
-      oldValue: action === 'change_password' ? undefined : { email: oldValue },
-      newValue: action === 'change_password' ? { changed: true } : { email: newValue },
+      entityId: OWNER_SESSION_USER_ID,
+      description:
+        typeof body.description === 'string'
+          ? body.description
+          : 'Perfil atualizado',
+      oldValue: body.oldValue,
+      newValue: body.newValue,
       ...metadata,
     })
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Log profile change error:', error)
-    return NextResponse.json(
-      { error: 'Erro ao registrar mudança de perfil' },
-      { status: 500 }
-    )
+    console.error('Log profile error:', error)
+    return NextResponse.json({ error: 'Erro ao registrar auditoria de perfil' }, { status: 500 })
   }
 }

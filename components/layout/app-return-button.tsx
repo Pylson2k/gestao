@@ -17,6 +17,18 @@ const hiddenRoutes = new Set([
   '/trabalhador/login',
 ])
 
+/** Shell do gestor já tem sidebar — botão flutuante só atrapalha. */
+function isAuthenticatedShellPath(pathname: string): boolean {
+  return (
+    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/financeiro') ||
+    pathname.startsWith('/operacao') ||
+    pathname.startsWith('/orcamentos') ||
+    pathname.startsWith('/getao') ||
+    pathname.startsWith('/v2')
+  )
+}
+
 function getFallbackRoute(pathname: string): string {
   if (pathname.startsWith('/trabalhador')) return '/trabalhador'
   return '/dashboard'
@@ -41,7 +53,7 @@ export function AppReturnButton() {
   const router = useRouter()
 
   useEffect(() => {
-    if (!pathname || hiddenRoutes.has(pathname)) return
+    if (!pathname || hiddenRoutes.has(pathname) || isAuthenticatedShellPath(pathname)) return
 
     const stack = readRouteStack()
     const lastRoute = stack.at(-1)
@@ -51,7 +63,7 @@ export function AppReturnButton() {
     writeRouteStack([...stack, pathname])
   }, [pathname])
 
-  if (hiddenRoutes.has(pathname)) return null
+  if (hiddenRoutes.has(pathname) || isAuthenticatedShellPath(pathname)) return null
 
   const handleReturn = () => {
     const fallbackRoute = getFallbackRoute(pathname)

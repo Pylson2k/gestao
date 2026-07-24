@@ -110,58 +110,59 @@ export async function POST(request: NextRequest) {
 
     const { prisma } = await import('@/lib/prisma')
     const dbUserId = await getDbUserId(userId)
+    const amountNumber = parseFloat(amount)
 
-    // Verificar se o orçamento existe e pertence ao usuário
-    const quote = await prisma.quote.findFirst({
-      where: {
-        id: quoteId,
-        userId: dbUserId,
-      },
-      include: {
-        payments: true,
-      },
-    })
-
-    if (!quote) {
+    if (!Number.isFinite(amountNumber) || amountNumber <= 0) {
       return NextResponse.json(
-        { error: 'Orcamento nao encontrado' },
-        { status: 404 }
-      )
-    }
-
-    // Calcular total já pago
-    const totalPaid = quote.payments.reduce((sum, p) => sum + p.amount, 0)
-    const newTotalPaid = totalPaid + parseFloat(amount)
-
-    // Validar se o pagamento não excede o total do orçamento
-    if (newTotalPaid > quote.total) {
-      return NextResponse.json(
-        { 
-          error: `Valor excede o total do orcamento. Total: R$ ${quote.total.toFixed(2)}, Ja pago: R$ ${totalPaid.toFixed(2)}, Restante: R$ ${(quote.total - totalPaid).toFixed(2)}`,
-          totalPaid,
-          remaining: quote.total - totalPaid,
-        },
+        { error: 'Valor do pagamento deve ser maior que zero' },
         { status: 400 }
       )
     }
 
-    // Criar pagamento
-    const payment = await prisma.payment.create({
-      data: {
-        quoteId,
-        userId: dbUserId,
-        amount: parseFloat(amount),
-        paymentDate: new Date(paymentDate),
-        paymentMethod,
-        observations: observations?.trim() || null,
-      },
-      include: {
-        quote: {
-          include: {
-            client: true,
+    const payment = await prisma.$transaction(async (tx) => {
+      const quote = await tx.quote.findFirst({
+        where: {
+          id: quoteId,
+          userId: dbUserId,
+        },
+        include: {
+          payments: true,
+        },
+      })
+
+      if (!quote) {
+        throw Object.assign(new Error('Orcamento nao encontrado'), { status: 404 })
+      }
+
+      const totalPaid = quote.payments.reduce((sum, p) => sum + p.amount, 0)
+      const newTotalPaid = totalPaid + amountNumber
+
+      if (newTotalPaid > quote.total) {
+        throw Object.assign(
+          new Error(
+            `Valor excede o total do orcamento. Total: R$ ${quote.total.toFixed(2)}, Ja pago: R$ ${totalPaid.toFixed(2)}, Restante: R$ ${(quote.total - totalPaid).toFixed(2)}`
+          ),
+          { status: 400, totalPaid, remaining: quote.total - totalPaid }
+        )
+      }
+
+      return tx.payment.create({
+        data: {
+          quoteId,
+          userId: dbUserId,
+          amount: amountNumber,
+          paymentDate: new Date(paymentDate),
+          paymentMethod,
+          observations: observations?.trim() || null,
+        },
+        include: {
+          quote: {
+            include: {
+              client: true,
+            },
           },
         },
-      },
+      })
     })
 
     // Log de auditoria
@@ -171,7 +172,7 @@ export async function POST(request: NextRequest) {
       action: 'create_payment',
       entityType: 'payment',
       entityId: payment.id,
-      description: `Pagamento registrado - Orçamento ${quote.number} - Valor: R$ ${payment.amount.toFixed(2)} - Método: ${paymentMethod}`,
+      description: `Pagamento registrado - Orçamento ${payment.quote.number} - Valor: R$ ${payment.amount.toFixed(2)} - Método: ${paymentMethod}`,
       newValue: {
         quoteId: payment.quoteId,
         amount: payment.amount,
@@ -187,8 +188,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(payment, { status: 201 })
   } catch (error: any) {
     console.error('Create payment error:', error)
+    if (error?.status === 404) {
+      return NextResponse.json({ error: error.message }, { status: 404 })
+    }
+    if (error?.status === 400) {
+      return NextResponse.json(
+        {
+          error: error.message,
+          totalPaid: error.totalPaid,
+          remaining: error.remaining,
+        },
+        { status: 400 }
+      )
+    }
     return NextResponse.json(
-      { error: error.message || 'Erro ao criar pagamento' },
+      { error: 'Erro ao criar pagamento' },
       { status: 500 }
     )
   }

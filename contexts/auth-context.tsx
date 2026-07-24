@@ -17,17 +17,28 @@ interface AuthContextType {
   isAuthenticated: boolean
   isLoading: boolean
   login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>
-  logout: () => void
+  logout: () => Promise<void>
   changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>
   updateEmail: (newEmail: string) => Promise<{ success: boolean; error?: string }>
+  refreshUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-function authHeaders(): HeadersInit {
-  return {
-    'Content-Type': 'application/json',
-    'x-user-id': OWNER_SESSION_USER_ID,
+function clearClientSessionCache() {
+  try {
+    sessionStorage.removeItem(AUTH_SESSION_STORAGE_KEY)
+    sessionStorage.removeItem(LEGACY_AUTH_SESSION_KEY)
+  } catch {
+    // ignore
+  }
+}
+
+function cacheUser(user: User) {
+  try {
+    sessionStorage.setItem(AUTH_SESSION_STORAGE_KEY, JSON.stringify(user))
+  } catch {
+    // ignore
   }
 }
 
@@ -35,32 +46,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    const checkSession = () => {
-      let storedUser = sessionStorage.getItem(AUTH_SESSION_STORAGE_KEY)
-      if (!storedUser) {
-        const legacy = sessionStorage.getItem(LEGACY_AUTH_SESSION_KEY)
-        if (legacy) {
-          sessionStorage.setItem(AUTH_SESSION_STORAGE_KEY, legacy)
-          sessionStorage.removeItem(LEGACY_AUTH_SESSION_KEY)
-          storedUser = legacy
-        }
+  const refreshUser = useCallback(async () => {
+    try {
+      const res = await fetch('/api/auth/me', { credentials: 'include' })
+      if (!res.ok) {
+        setUser(null)
+        clearClientSessionCache()
+        return
       }
-      if (storedUser) {
-        try {
-          const parsed = JSON.parse(storedUser) as User
-          if (parsed.id === OWNER_SESSION_USER_ID) {
-            setUser(parsed)
-          } else {
-            sessionStorage.removeItem(AUTH_SESSION_STORAGE_KEY)
-          }
-        } catch {
-          sessionStorage.removeItem(AUTH_SESSION_STORAGE_KEY)
-        }
+      const data = (await res.json()) as User
+      const nextUser: User = {
+        id: OWNER_SESSION_USER_ID,
+        username: data.username,
+        name: data.name,
+        email: data.email,
+        mustChangePassword: data.mustChangePassword,
       }
-      setIsLoading(false)
+      setUser(nextUser)
+      cacheUser(nextUser)
+    } catch {
+      setUser(null)
+      clearClientSessionCache()
     }
-    checkSession()
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch('/api/auth/me', { credentials: 'include' })
+        if (cancelled) return
+        if (!res.ok) {
+          setUser(null)
+          clearClientSessionCache()
+        } else {
+          const data = (await res.json()) as User
+          const nextUser: User = {
+            id: OWNER_SESSION_USER_ID,
+            username: data.username,
+            name: data.name,
+            email: data.email,
+            mustChangePassword: data.mustChangePassword,
+          }
+          setUser(nextUser)
+          cacheUser(nextUser)
+        }
+      } catch {
+        if (!cancelled) {
+          setUser(null)
+          clearClientSessionCache()
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const login = useCallback(async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
@@ -69,27 +111,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ username, password }),
       })
       const data = await res.json()
 
       if (!res.ok || !data.success) {
-        void fetch('/api/audit/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: 'unknown',
-            username,
-            success: false,
-            error: data.error || 'Falha na API',
-          }),
-        }).catch(() => {})
         setIsLoading(false)
         return { success: false, error: data.error || 'Usuario ou senha invalidos' }
       }
 
       const userData: User = {
-        id: data.user.id,
+        id: OWNER_SESSION_USER_ID,
         username: data.user.username,
         name: data.user.name,
         email: data.user.email,
@@ -97,18 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       setUser(userData)
-      sessionStorage.setItem(AUTH_SESSION_STORAGE_KEY, JSON.stringify(userData))
-
-      void fetch('/api/audit/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: userData.id,
-          username,
-          success: true,
-        }),
-      }).catch(() => {})
-
+      cacheUser(userData)
       setIsLoading(false)
       return { success: true }
     } catch {
@@ -117,20 +139,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const logout = useCallback(() => {
-    if (user) {
-      fetch('/api/audit/logout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user.id,
-          username: user.username,
-        }),
-      }).catch(() => {})
+  const logout = useCallback(async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+    } catch {
+      // ignore
     }
     setUser(null)
-    sessionStorage.removeItem(AUTH_SESSION_STORAGE_KEY)
-  }, [user])
+    clearClientSessionCache()
+  }, [])
 
   const changePassword = useCallback(
     async (currentPassword: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
@@ -141,7 +158,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const res = await fetch('/api/auth/change-password', {
           method: 'POST',
-          headers: authHeaders(),
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ currentPassword, newPassword }),
         })
         const data = await res.json()
@@ -149,27 +167,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return { success: false, error: data.error || 'Erro ao alterar senha' }
         }
 
-        const updated = { ...user, mustChangePassword: false }
-        setUser(updated)
-        sessionStorage.setItem(AUTH_SESSION_STORAGE_KEY, JSON.stringify(updated))
-
-        try {
-          await fetch('/api/audit/profile', {
-            method: 'POST',
-            headers: authHeaders(),
-            body: JSON.stringify({
-              action: 'change_password',
-              username: user.username,
-            }),
-          })
-        } catch {}
-
+        await refreshUser()
         return { success: true }
       } catch {
         return { success: false, error: 'Erro de conexao' }
       }
     },
-    [user]
+    [user, refreshUser]
   )
 
   const updateEmail = useCallback(
@@ -186,7 +190,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const res = await fetch('/api/auth/profile', {
           method: 'PATCH',
-          headers: authHeaders(),
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ email: newEmail }),
         })
         const data = await res.json()
@@ -196,21 +201,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const updated = { ...user, email: data.email }
         setUser(updated)
-        sessionStorage.setItem(AUTH_SESSION_STORAGE_KEY, JSON.stringify(updated))
-
-        try {
-          await fetch('/api/audit/profile', {
-            method: 'POST',
-            headers: authHeaders(),
-            body: JSON.stringify({
-              action: 'change_email',
-              username: user.username,
-              oldValue: user.email,
-              newValue: data.email,
-            }),
-          })
-        } catch {}
-
+        cacheUser(updated)
         return { success: true }
       } catch {
         return { success: false, error: 'Erro de conexao' }
@@ -229,6 +220,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout,
         changePassword,
         updateEmail,
+        refreshUser,
       }}
     >
       {children}

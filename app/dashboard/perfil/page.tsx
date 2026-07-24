@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,7 +10,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Loader2, CheckCircle, AlertCircle, Lock } from 'lucide-react'
 
 export default function PerfilPage() {
+  const router = useRouter()
   const { user, changePassword, updateEmail } = useAuth()
+  const forceChange = Boolean(user?.mustChangePassword)
   const [email, setEmail] = useState(user?.email || '')
   const [isEmailLoading, setIsEmailLoading] = useState(false)
   const [emailMessage, setEmailMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -70,8 +73,8 @@ export default function PerfilPage() {
       return
     }
 
-    if (newPassword.length < 6) {
-      setMessage({ type: 'error', text: 'A nova senha deve ter pelo menos 6 caracteres' })
+    if (newPassword.length < 8) {
+      setMessage({ type: 'error', text: 'A nova senha deve ter pelo menos 8 caracteres' })
       return
     }
 
@@ -95,6 +98,9 @@ export default function PerfilPage() {
         setCurrentPassword('')
         setNewPassword('')
         setConfirmPassword('')
+        if (forceChange) {
+          router.replace('/dashboard')
+        }
       } else {
         setMessage({ type: 'error', text: result.error || 'Erro ao alterar senha' })
       }
@@ -112,6 +118,21 @@ export default function PerfilPage() {
         <h1 className="text-2xl font-bold text-foreground">Perfil</h1>
         <p className="text-muted-foreground">Gerencie suas informacoes pessoais e seguranca</p>
       </div>
+
+      {forceChange ? (
+        <div
+          className="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+          role="alert"
+        >
+          <Lock className="mt-0.5 h-4 w-4 shrink-0" />
+          <div>
+            <p className="font-medium">Troca de senha obrigatória</p>
+            <p className="text-amber-900/80">
+              Por segurança, altere a senha temporária antes de continuar usando o sistema.
+            </p>
+          </div>
+        </div>
+      ) : null}
 
       {/* Informações do Usuário */}
       <Card className="border-border">

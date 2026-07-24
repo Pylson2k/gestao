@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireOwnerOr401 } from '@/lib/require-auth'
 
 function isIsoDate(v: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(v)
 }
 
 export async function PUT(request: Request, ctx: { params: Promise<{ id: string; data: string }> }) {
+  const denied = requireOwnerOr401(request)
+  if (denied) return denied
+
   const params = await ctx.params
   const funcionarioId = Number(params.id)
   const data = params.data
@@ -34,6 +38,9 @@ export async function PUT(request: Request, ctx: { params: Promise<{ id: string;
 }
 
 export async function DELETE(_request: Request, ctx: { params: Promise<{ id: string; data: string }> }) {
+  const denied = requireOwnerOr401(_request)
+  if (denied) return denied
+
   const params = await ctx.params
   const funcionarioId = Number(params.id)
   const data = params.data

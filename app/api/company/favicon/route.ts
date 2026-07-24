@@ -38,8 +38,16 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Se for URL, redirecionar
-    return NextResponse.redirect(settings.logo)
+    // Se for URL http(s) segura, redirecionar; caso contrário, favicon padrão
+    try {
+      const { isSafeImageUrl } = await import('@/lib/safe-url')
+      if (isSafeImageUrl(settings.logo) && /^https?:\/\//i.test(settings.logo)) {
+        return NextResponse.redirect(settings.logo)
+      }
+    } catch {
+      // fall through
+    }
+    return NextResponse.redirect(new URL('/icon-192x192.png', request.url))
   } catch (error) {
     console.error('Get favicon error:', error)
     return NextResponse.redirect(new URL('/icon-192x192.png', request.url))

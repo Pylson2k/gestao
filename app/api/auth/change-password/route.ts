@@ -1,15 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { compare, hash } from 'bcryptjs'
 import { getDbUserId } from '@/lib/user-mapping'
 import { OWNER_SESSION_USER_ID } from '@/lib/owner-user'
 import { apiError, apiOk } from '@/lib/api-response'
+import {
+  createSessionToken,
+  sessionCookieOptions,
+  SESSION_COOKIE_NAME,
+} from '@/lib/session'
+import { requireOwnerOr401 } from '@/lib/require-auth'
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = request.headers.get('x-user-id')
-    if (userId !== OWNER_SESSION_USER_ID) {
-      return apiError('Nao autorizado', 403)
-    }
+    const denied = requireOwnerOr401(request)
+    if (denied) return denied
+
+    const userId = request.headers.get('x-user-id') || OWNER_SESSION_USER_ID
 
     if (!process.env.DATABASE_URL) {
       return apiError('Banco nao configurado', 503)
@@ -23,8 +29,8 @@ export async function POST(request: NextRequest) {
       return apiError('Preencha os campos', 400)
     }
 
-    if (newPassword.length < 6) {
-      return apiError('A nova senha deve ter pelo menos 6 caracteres', 400)
+    if (newPassword.length < 8) {
+      return apiError('A nova senha deve ter pelo menos 8 caracteres', 400)
     }
 
     const { prisma } = await import('@/lib/prisma')
@@ -45,7 +51,13 @@ export async function POST(request: NextRequest) {
       data: { password: hashed, mustChangePassword: false },
     })
 
-    return apiOk({ success: true })
+    const response = apiOk({ success: true })
+    response.cookies.set(
+      SESSION_COOKIE_NAME,
+      createSessionToken({ mustChangePassword: false }),
+      sessionCookieOptions()
+    )
+    return response
   } catch (e) {
     console.error('change-password:', e)
     return apiError('Erro ao alterar senha', 500)

@@ -80,7 +80,7 @@ export default function QuoteDetailPage({
 }) {
   const { id } = use(params)
   const router = useRouter()
-  const { getQuoteById, updateQuote, deleteQuote } = useQuotes()
+  const { getQuoteById, updateQuote, deleteQuote, isLoading, error, refreshQuotes } = useQuotes()
   const { settings: companySettings } = useCompany()
   const { getPaymentsByQuoteId, getTotalPaidByQuoteId } = usePayments()
 
@@ -98,6 +98,28 @@ export default function QuoteDetailPage({
 
   const quote = getQuoteById(id)
 
+  if (isLoading && !quote) {
+    return (
+      <div className="text-center py-12">
+        <div className="animate-pulse text-sm text-muted-foreground">Carregando orçamento…</div>
+      </div>
+    )
+  }
+
+  if (error && !quote) {
+    return (
+      <div className="text-center py-12 space-y-3">
+        <h2 className="text-xl font-semibold text-foreground">Não foi possível carregar</h2>
+        <p className="text-muted-foreground" role="alert">
+          {error}
+        </p>
+        <Button type="button" variant="outline" onClick={() => refreshQuotes()}>
+          Tentar novamente
+        </Button>
+      </div>
+    )
+  }
+
   if (!quote) {
     return (
       <div className="text-center py-12">
@@ -105,7 +127,7 @@ export default function QuoteDetailPage({
         <h2 className="text-xl font-semibold text-foreground mb-2">Orçamento não encontrado</h2>
         <p className="text-muted-foreground mb-4">O orçamento solicitado não existe.</p>
         <Button asChild>
-          <Link href="/dashboard">Voltar ao painel</Link>
+          <Link href="/orcamentos/historico">Voltar ao Histórico</Link>
         </Button>
       </div>
     )

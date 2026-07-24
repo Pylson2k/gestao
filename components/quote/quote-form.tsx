@@ -170,7 +170,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
       if (initialData) {
         await updateQuote(initialData.id, quoteData)
         setIsSubmitting(false)
-        router.replace(`/dashboard/orcamento/${initialData.id}`)
+        router.replace(`/orcamentos/${initialData.id}`)
       } else {
         const newQuote = await addQuote(quoteData)
         setIsSubmitting(false)

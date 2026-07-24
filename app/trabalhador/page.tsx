@@ -6,7 +6,7 @@ import { Link } from '@/components/app-link'
 import { useWorkerAuth } from '@/contexts/worker-auth-context'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { LogOut, ChevronRight } from 'lucide-react'
+import { Construction, LogOut } from 'lucide-react'
 import { useState, useCallback } from 'react'
 
 type Assignment = {
@@ -21,6 +21,7 @@ export default function TrabalhadorHomePage() {
   const { isAuthenticated, isLoading, logout, authHeaders, employeeName } = useWorkerAuth()
   const [assignments, setAssignments] = useState<Assignment[]>([])
   const [loadError, setLoadError] = useState('')
+  const [notImplemented, setNotImplemented] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -30,12 +31,18 @@ export default function TrabalhadorHomePage() {
         router.replace('/trabalhador/login')
         return
       }
+      if (res.status === 501) {
+        setNotImplemented(true)
+        setLoadError('')
+        return
+      }
       if (!res.ok) {
         setLoadError('Não foi possível carregar as obras')
         return
       }
       setAssignments(await res.json())
       setLoadError('')
+      setNotImplemented(false)
     } catch {
       setLoadError('Erro de rede')
     }
@@ -58,57 +65,65 @@ export default function TrabalhadorHomePage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg space-y-6 py-6">
-      <header className="flex items-start justify-between gap-3">
+    <div className="mx-auto max-w-lg space-y-4 p-4">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm text-muted-foreground">Olá,</p>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">{employeeName}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Obras ativas para registrar ponto ou empreita.</p>
+          <p className="text-sm text-muted-foreground">Olá</p>
+          <h1 className="text-xl font-semibold">{employeeName || 'Trabalhador'}</h1>
         </div>
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="shrink-0"
           onClick={() => {
             logout()
             router.replace('/trabalhador/login')
           }}
         >
-          <LogOut className="w-4 h-4 mr-1" />
+          <LogOut className="mr-1 h-4 w-4" />
           Sair
         </Button>
-      </header>
+      </div>
 
-      {loadError ? <p className="text-sm text-amber-700 dark:text-amber-500">{loadError}</p> : null}
+      {notImplemented ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Construction className="h-5 w-5" />
+              Em desenvolvimento
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-muted-foreground">
+            <p>O portal do trabalhador ainda não está disponível no servidor.</p>
+            <p>As APIs `/api/worker/*` retornam 501 até a implementação completa.</p>
+            <Button asChild variant="secondary" className="mt-2">
+              <Link href="/login">Voltar ao sistema principal</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
 
-      <div className="space-y-3">
-        {assignments.length === 0 ? (
-          <Card>
-            <CardContent className="py-8 text-center text-sm text-muted-foreground">
-              Nenhuma obra ativa no momento. O gestor precisa criar e ativar sua atribuicao.
+      {loadError ? (
+        <p className="text-sm text-destructive" role="alert">
+          {loadError}
+        </p>
+      ) : null}
+
+      {!notImplemented &&
+        assignments.map((a) => (
+          <Card key={a.id}>
+            <CardHeader className="py-3">
+              <CardTitle className="text-base">
+                <Link href={`/trabalhador/obras/${a.id}`} className="hover:underline">
+                  {a.title}
+                </Link>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              {a.mode} · {a.status}
             </CardContent>
           </Card>
-        ) : (
-          assignments.map((a) => (
-            <Link key={a.id} href={`/trabalhador/obras/${a.id}`}>
-              <Card className="transition-shadow hover:shadow-md">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 py-4">
-                  <CardTitle className="pr-2 text-base font-medium text-foreground">{a.title}</CardTitle>
-                  <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
-                </CardHeader>
-                <CardContent className="pb-4 pt-0">
-                  <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    {a.mode === 'DAILY' && 'Diaria'}
-                    {a.mode === 'CONTRACT_PERCENT' && 'Empreita %'}
-                    {a.mode === 'CONTRACT_STEPS' && 'Empreita etapas'}
-                  </span>
-                </CardContent>
-              </Card>
-            </Link>
-          ))
-        )}
-      </div>
+        ))}
     </div>
   )
 }

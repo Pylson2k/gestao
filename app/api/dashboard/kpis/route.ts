@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireOwnerOr401 } from '@/lib/require-auth'
 
 function todayIso(): string {
   const d = new Date()
@@ -9,7 +10,10 @@ function todayIso(): string {
   return `${yyyy}-${mm}-${dd}`
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const denied = requireOwnerOr401(request)
+  if (denied) return denied
+
   const hoje = todayIso()
 
   const [funcionariosAtivos, presencasHoje, valesPendentes] = await Promise.all([

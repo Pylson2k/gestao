@@ -1,14 +1,38 @@
 import { NextResponse } from 'next/server'
 import { hash } from 'bcryptjs'
-import { consolidateDataToSingleOwner } from '@/lib/single-owner-migration'
+import {
+  generateTemporaryPassword,
+  timingSafeStringEqual,
+} from '@/lib/session'
+import { clientIpFromRequest, rateLimit } from '@/lib/rate-limit'
+import { OWNER_USERNAME } from '@/lib/owner-user'
+
+function readAdminSecret(request: Request): string | null {
+  const header = request.headers.get('x-admin-secret')
+  if (header) return header
+  // Compat legado: query ?key= (desencorajado)
+  try {
+    const { searchParams } = new URL(request.url)
+    return searchParams.get('key')
+  } catch {
+    return null
+  }
+}
 
 export async function POST(request: Request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const secretKey = searchParams.get('key')
+    const ip = clientIpFromRequest(request)
+    const limited = rateLimit(`admin-reset:${ip}`, { limit: 5, windowMs: 15 * 60 * 1000 })
+    if (!limited.ok) {
+      return NextResponse.json(
+        { error: `Muitas tentativas. Aguarde ${limited.retryAfterSec}s.` },
+        { status: 429 }
+      )
+    }
 
     const expected = process.env.ADMIN_OPERATIONS_SECRET
-    if (!expected || secretKey !== expected) {
+    const provided = readAdminSecret(request)
+    if (!expected || !provided || !timingSafeStringEqual(provided, expected)) {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 401 })
     }
 
@@ -17,23 +41,24 @@ export async function POST(request: Request) {
         {
           error:
             'DATABASE_URL não configurada. Configure a variável com a URL do PostgreSQL.',
-          hasDbUrl: false,
         },
         { status: 500 }
       )
     }
 
+    const temporaryPassword = generateTemporaryPassword(16)
+    const hashedPassword = await hash(temporaryPassword, 10)
+
     const { prisma } = await import('@/lib/prisma')
-    const hashedPassword = await hash('gustavo123', 10)
 
     await prisma.user.upsert({
-      where: { username: 'gustavo' },
+      where: { username: OWNER_USERNAME },
       update: {
         password: hashedPassword,
         mustChangePassword: true,
       },
       create: {
-        username: 'gustavo',
+        username: OWNER_USERNAME,
         name: 'Gustavo',
         email: 'gustavo@sinaiengenharia.com',
         password: hashedPassword,
@@ -41,22 +66,17 @@ export async function POST(request: Request) {
       },
     })
 
-    await consolidateDataToSingleOwner(prisma)
-
+    // Senha temporária retornada UMA vez — nunca use senha fixa conhecida.
     return NextResponse.json({
       success: true,
-      message: 'Senha resetada e contas extras removidas.',
-      users: [{ username: 'gustavo', password: 'gustavo123' }],
+      message:
+        'Senha redefinida. Guarde a senha temporária e altere-a no primeiro login. Ela não será mostrada novamente.',
+      username: OWNER_USERNAME,
+      temporaryPassword,
+      mustChangePassword: true,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Reset error:', error)
-    return NextResponse.json(
-      {
-        error: 'Erro ao resetar senhas',
-        details: error?.message || String(error),
-        code: error?.code,
-      },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Erro ao resetar senhas' }, { status: 500 })
   }
 }

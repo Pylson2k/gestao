@@ -252,7 +252,7 @@ export default function DashboardPage() {
         type: 'remind',
         label: 'Lembrar clientes',
         sublabel: `${sentLongAgo.length} orçamento(s) enviado(s) há mais de 3 dias sem resposta`,
-        href: '/dashboard/historico?status=sent',
+        href: '/orcamentos/historico?status=sent',
         count: sentLongAgo.length,
       })
     }
@@ -265,7 +265,7 @@ export default function DashboardPage() {
         type: 'start_service',
         label: 'Iniciar serviços',
         sublabel: `${approvedNotStarted.length} orçamento(s) aprovado(s) aguardando início`,
-        href: '/dashboard/historico?status=approved',
+        href: '/orcamentos/historico?status=approved',
         count: approvedNotStarted.length,
       })
     }
@@ -474,7 +474,7 @@ export default function DashboardPage() {
                 className="w-full border-orange-200 hover:bg-orange-50/80 sm:w-auto dark:border-orange-900/50 dark:hover:bg-orange-950/30"
                 asChild
               >
-                <Link href="/dashboard/historico?status=sent">Ver Pendentes</Link>
+                <Link href="/orcamentos/historico?status=sent">Ver Pendentes</Link>
               </Button>
             </div>
           </CardContent>
@@ -482,7 +482,7 @@ export default function DashboardPage() {
       )}
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3 sm:gap-4">
-        <Link href="/dashboard/novo-orcamento" className="block h-full">
+        <Link href="/orcamentos/novo" className="block h-full">
           <Card className="h-full cursor-pointer transition-shadow hover:shadow-md">
             <CardContent className="flex min-h-[132px] flex-col items-center justify-center px-5 py-6 text-center sm:min-h-[148px]">
               <div className="mb-3 rounded-lg bg-primary/10 p-3">
@@ -494,7 +494,7 @@ export default function DashboardPage() {
           </Card>
         </Link>
 
-        <Link href="/dashboard/despesas" className="block h-full">
+        <Link href="/financeiro/despesas" className="block h-full">
           <Card className="h-full cursor-pointer transition-shadow hover:shadow-md">
             <CardContent className="flex min-h-[132px] flex-col items-center justify-center px-5 py-6 text-center sm:min-h-[148px]">
               <div className="mb-3 rounded-lg bg-destructive/10 p-3">
@@ -654,7 +654,7 @@ export default function DashboardPage() {
           <div className="mb-4 flex flex-col items-start justify-between gap-3 sm:mb-6 sm:flex-row sm:items-center">
             <h2 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">Orçamentos recentes</h2>
             <Button variant="outline" size="sm" asChild>
-              <Link href="/dashboard/historico">Ver todos</Link>
+              <Link href="/orcamentos/historico">Ver todos</Link>
             </Button>
           </div>
           <div className="space-y-3">
@@ -667,7 +667,7 @@ export default function DashboardPage() {
                 </div>
                 <p className="mb-4 font-medium text-muted-foreground">Nenhum orçamento criado ainda</p>
                 <Button variant="outline" asChild>
-                  <Link href="/dashboard/novo-orcamento">Criar primeiro orçamento</Link>
+                  <Link href="/orcamentos/novo">Criar primeiro orçamento</Link>
                 </Button>
               </div>
             )}
