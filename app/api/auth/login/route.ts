@@ -160,18 +160,31 @@ export async function POST(request: Request) {
       message.includes('P1001') ||
       message.includes('ECONNREFUSED') ||
       message.includes('timeout') ||
-      message.includes('Connection terminated')
+      message.includes('Connection terminated') ||
+      message.includes('ENOTFOUND') ||
+      message.includes('password authentication failed') ||
+      message.includes('FATAL') ||
+      message.includes('SSL') ||
+      message.includes('P2021') ||
+      message.includes('does not exist')
     ) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Nao foi possivel conectar ao banco. Verifique DATABASE_URL / Neon.',
+          error:
+            'Falha de banco: ' +
+            message.slice(0, 180) +
+            ' — confira DATABASE_URL no Vercel (Neon Connect) e use /reset depois.',
         },
         { status: 503 }
       )
     }
+    // Nunca esconder o erro real — precisa aparecer na tela de login
     return NextResponse.json(
-      { success: false, error: 'Erro ao entrar. Tente novamente.' },
+      {
+        success: false,
+        error: `Erro no servidor: ${message.slice(0, 220)}`,
+      },
       { status: 500 }
     )
   }

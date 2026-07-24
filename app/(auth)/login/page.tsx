@@ -10,15 +10,26 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Building2, Loader2, ShieldAlert } from 'lucide-react'
+import { Link } from '@/components/app-link'
+
+type HealthChecks = {
+  ok?: boolean
+  checks?: {
+    databaseUrl?: boolean
+    sessionSecret?: boolean
+    databaseReachable?: boolean | null
+  }
+}
 
 export default function LoginPage() {
   const router = useRouter()
   const { login, isLoading, isAuthenticated, user } = useAuth()
-  const [username, setUsername] = useState('')
+  const [username, setUsername] = useState('gustavo')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [companyLogo, setCompanyLogo] = useState<string | null>(null)
   const [companyName, setCompanyName] = useState(APP_DISPLAY_NAME)
+  const [health, setHealth] = useState<HealthChecks | null>(null)
 
   const postLoginPath = (mustChange?: boolean) =>
     mustChange ? '/dashboard/perfil?force=1' : '/dashboard'
@@ -34,18 +45,26 @@ export default function LoginPage() {
       try {
         const response = await fetch('/api/company/logo')
         const data = await response.json()
-        if (data.logo) {
-          setCompanyLogo(data.logo)
-        }
+        if (data.logo) setCompanyLogo(data.logo)
         if (data.name) {
           setCompanyName(data.name)
           document.title = `${data.name} — Acesso`
         }
-      } catch (error) {
-        console.error('Error fetching company info:', error)
+      } catch {
+        // ignore
+      }
+    }
+    const fetchHealth = async () => {
+      try {
+        const res = await fetch('/api/health', { cache: 'no-store' })
+        const data = (await res.json()) as HealthChecks
+        setHealth(data)
+      } catch {
+        setHealth({ ok: false })
       }
     }
     fetchCompanyInfo()
+    fetchHealth()
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -59,12 +78,13 @@ export default function LoginPage() {
 
     const result = await login(username, password)
     if (result.success) {
-      // mustChangePassword: o AuthProvider já atualizou o user; proxy/shell reforçam
       router.push('/dashboard')
     } else {
       setError(result.error || 'Usuario ou senha invalidos')
     }
   }
+
+  const healthBad = health && health.ok === false
 
   return (
     <div className="relative flex min-h-dvh flex-col bg-muted/30">
@@ -91,16 +111,41 @@ export default function LoginPage() {
         <Card className="w-full max-w-md border border-border/80 shadow-lg shadow-foreground/5">
           <CardHeader className="space-y-1 pb-2 text-center sm:text-left">
             <CardTitle className="text-lg font-semibold">Entrar</CardTitle>
-            <CardDescription>Use suas credenciais corporativas.</CardDescription>
+            <CardDescription>Usuario: gustavo</CardDescription>
           </CardHeader>
           <CardContent>
+            {healthBad && (
+              <div className="mb-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-950">
+                <p className="font-medium">Servidor com problema de configuracao</p>
+                <ul className="mt-1 list-inside list-disc space-y-0.5">
+                  <li>DATABASE_URL: {health?.checks?.databaseUrl ? 'ok' : 'ERRADA/AUSENTE'}</li>
+                  <li>Sessao: {health?.checks?.sessionSecret ? 'ok' : 'falta'}</li>
+                  <li>
+                    Banco:{' '}
+                    {health?.checks?.databaseReachable === true
+                      ? 'ok'
+                      : health?.checks?.databaseReachable === false
+                        ? 'NAO CONECTA'
+                        : 'nao testado'}
+                  </li>
+                </ul>
+                <p className="mt-2">
+                  Corrija na Vercel → Settings → Environment Variables → Redeploy. Depois use{' '}
+                  <Link href="/reset" className="underline">
+                    /reset
+                  </Link>
+                  .
+                </p>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="username">Usuário</Label>
                 <Input
                   id="username"
                   type="text"
-                  placeholder="Identificador"
+                  placeholder="gustavo"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="bg-background"
@@ -130,7 +175,7 @@ export default function LoginPage() {
                   className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
                 >
                   <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>{error}</span>
+                  <span className="break-words">{error}</span>
                 </div>
               )}
 
@@ -146,8 +191,11 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <p className="mt-6 border-t border-border pt-4 text-center text-xs leading-relaxed text-muted-foreground">
-              Uso restrito a pessoas autorizadas. O acesso é monitorado.
+            <p className="mt-4 text-center text-xs text-muted-foreground">
+              Esqueceu a senha?{' '}
+              <Link href="/reset" className="underline">
+                Resetar acesso
+              </Link>
             </p>
           </CardContent>
         </Card>
