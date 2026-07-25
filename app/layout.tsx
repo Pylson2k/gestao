@@ -1,6 +1,6 @@
-import React from "react"
+import React from 'react'
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Plus_Jakarta_Sans, Instrument_Sans, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { AuthProvider } from '@/contexts/auth-context'
 import { AppFrame } from '@/components/auth/app-frame'
@@ -12,8 +12,23 @@ import { Toaster } from '@/components/ui/sonner'
 import { APP_DISPLAY_NAME, APP_TITLE_SUFFIX } from '@/lib/app-constants'
 import './globals.css'
 
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  variable: '--font-plus-jakarta',
+  display: 'swap',
+})
+
+const instrumentSans = Instrument_Sans({
+  subsets: ['latin'],
+  variable: '--font-instrument',
+  display: 'swap',
+})
+
+const geistMono = Geist_Mono({
+  subsets: ['latin'],
+  variable: '--font-geist-mono',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: `${APP_DISPLAY_NAME} - ${APP_TITLE_SUFFIX}`,
@@ -57,7 +72,7 @@ export const viewport = {
   userScalable: true,
   viewportFit: 'cover',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: light)', color: '#fafbfc' },
     { media: '(prefers-color-scheme: dark)', color: '#0f172a' },
   ],
 }
@@ -68,11 +83,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" className={`${plusJakarta.variable} ${instrumentSans.variable} ${geistMono.variable}`}>
       <head>
         <link rel="manifest" href="/api/manifest" />
         <link rel="icon" href="/api/company/favicon" type="image/png" />
-        <meta name="theme-color" content="#3b82f6" />
+        <meta name="theme-color" content="#3d4f6f" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />

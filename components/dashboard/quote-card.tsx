@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { Link } from '@/components/app-link'
-import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -173,50 +172,48 @@ export function QuoteCard({ quote }: QuoteCardProps) {
   }
 
   return (
-    <Card className="border-border/80 transition-shadow hover:border-primary/25">
-      <CardContent className="p-4 sm:p-5">
+    <div className="surface-card rounded-lg border border-border/80 bg-card">
+      <div className="p-4 sm:p-5">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
             <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10 sm:h-10 sm:w-10">
-                <FileText className="w-6 h-6 sm:w-5 sm:h-5 text-primary" />
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/8 sm:h-9 sm:w-9">
+                <FileText className="w-4 h-4 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-2 mb-1 sm:mb-2">
-                  <h3 className="font-semibold text-base sm:text-sm text-foreground truncate">{quote.number}</h3>
-                  <Badge variant="secondary" className={cn('text-xs font-medium px-2 py-0.5 shrink-0', status.className)}>
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <h3 className="font-display font-semibold text-sm text-foreground truncate">{quote.number}</h3>
+                  <Badge variant="secondary" className={cn('text-[10px] font-medium px-1.5 py-0 shrink-0', status.className)}>
                     {status.label}
                   </Badge>
-                  <Badge variant="secondary" className={cn('text-xs font-medium px-2 py-0.5 shrink-0', paymentStatus.className)}>
+                  <Badge variant="secondary" className={cn('text-[10px] font-medium px-1.5 py-0 shrink-0', paymentStatus.className)}>
                     {paymentStatus.label}
                   </Badge>
                 </div>
-                <p className="text-sm sm:text-base font-medium text-foreground truncate mb-1">{quote.client.name}</p>
-                <p className="text-xs sm:text-sm text-muted-foreground">{formattedDate}</p>
+                <p className="text-sm font-medium text-foreground truncate">{quote.client.name}</p>
+                <p className="text-xs text-muted-foreground">{formattedDate}</p>
               </div>
             </div>
             <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
               <div className="text-left sm:text-right">
-                <p className="font-semibold text-lg sm:text-xl tracking-tight text-foreground">{formattedTotal}</p>
+                <p className="font-display font-semibold text-lg tabular-nums tracking-tight text-foreground">{formattedTotal}</p>
               </div>
               
-              {/* Ação rápida: Registrar pagamento (aprovado, em serviço ou finalizado) */}
               {(quote.status === 'approved' || quote.status === 'in_progress' || quote.status === 'completed') && quote.total > 0 && (
                 <Button
                   variant="outline"
                   size="sm"
                   asChild
-                  className="shrink-0 text-green-600 border-green-600 hover:bg-green-50 min-h-[40px] sm:min-h-[36px] text-sm touch-manipulation"
+                  className="shrink-0 min-h-[36px] text-sm"
                 >
                   <Link
-                    href={`/dashboard/pagamentos?quoteId=${quote.id}&openDialog=1`}
+                    href={`/financeiro/pagamentos?quoteId=${quote.id}&openDialog=1`}
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <CreditCard className="w-4 h-4 sm:w-3 sm:h-3 mr-1" />
+                    <CreditCard className="w-3.5 h-3.5 mr-1" />
                     <span className="hidden sm:inline">Pagamento</span>
                   </Link>
                 </Button>
               )}
-              {/* Botões de ação para orçamentos aprovados */}
               {quote.status === 'approved' && (
                 <div className="flex gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                   <Button
@@ -227,9 +224,9 @@ export function QuoteCard({ quote }: QuoteCardProps) {
                       e.stopPropagation()
                       handleStartServiceClick()
                     }}
-                    className="text-blue-600 border-blue-600 hover:bg-blue-50 min-h-[40px] sm:min-h-[36px] text-sm touch-manipulation"
+                    className="min-h-[36px] text-sm"
                   >
-                    <Play className="w-4 h-4 sm:w-3 sm:h-3 mr-1" />
+                    <Play className="w-3.5 h-3.5 mr-1" />
                     <span className="hidden sm:inline">Iniciar</span>
                   </Button>
                   <Button
@@ -240,15 +237,14 @@ export function QuoteCard({ quote }: QuoteCardProps) {
                       e.stopPropagation()
                       handleCancelService()
                     }}
-                    className="text-orange-600 border-orange-600 hover:bg-orange-50 min-h-[40px] sm:min-h-[36px] text-sm touch-manipulation"
+                    className="min-h-[36px] text-sm text-muted-foreground"
                   >
-                    <X className="w-4 h-4 sm:w-3 sm:h-3 mr-1" />
+                    <X className="w-3.5 h-3.5 mr-1" />
                     <span className="hidden sm:inline">Cancelar</span>
                   </Button>
                 </div>
               )}
 
-              {/* Botão para finalizar quando em serviço */}
               {quote.status === 'in_progress' && (
                 <Button
                   variant="outline"
@@ -258,9 +254,9 @@ export function QuoteCard({ quote }: QuoteCardProps) {
                     e.stopPropagation()
                     handleCompleteService()
                   }}
-                  className="text-green-600 border-green-600 hover:bg-green-50 min-h-[40px] sm:min-h-[36px] text-sm touch-manipulation"
+                  className="min-h-[36px] text-sm"
                 >
-                  <CheckCircle2 className="w-4 h-4 sm:w-3 sm:h-3 mr-1" />
+                  <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
                   <span className="hidden sm:inline">Finalizar</span>
                 </Button>
               )}
@@ -269,10 +265,10 @@ export function QuoteCard({ quote }: QuoteCardProps) {
                 variant="ghost"
                 size="icon"
                 asChild
-                className="text-muted-foreground hover:text-foreground min-w-[48px] min-h-[48px] sm:min-w-[40px] sm:min-h-[40px] touch-manipulation shrink-0"
+                className="text-muted-foreground hover:text-foreground h-9 w-9 shrink-0"
               >
-                <Link href={`/dashboard/orcamento/${quote.id}`} aria-label="Abrir detalhes do orçamento">
-                  <ChevronRight className="w-6 h-6 sm:w-5 sm:h-5" />
+                <Link href={`/orcamentos/${quote.id}`} aria-label="Abrir detalhes do orçamento">
+                  <ChevronRight className="w-5 h-5" />
                 </Link>
               </Button>
             </div>
@@ -293,7 +289,7 @@ export function QuoteCard({ quote }: QuoteCardProps) {
                     id="hasDiscount"
                     checked={hasDiscount}
                     onChange={(e) => setHasDiscount(e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300"
+                    className="h-4 w-4 rounded border-border"
                   />
                   <Label htmlFor="hasDiscount" className="cursor-pointer">
                     Sim, houve desconto
@@ -377,14 +373,13 @@ export function QuoteCard({ quote }: QuoteCardProps) {
                         isNaN(parseFloat(discountValue)) ||
                         parseFloat(discountValue) <= 0))
                   }
-                  className="bg-blue-600 hover:bg-blue-700"
                 >
                   {isProcessing ? 'Processando...' : 'Confirmar e Iniciar'}
                 </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

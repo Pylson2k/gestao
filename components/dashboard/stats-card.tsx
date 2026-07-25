@@ -1,4 +1,3 @@
-import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import type { LucideIcon } from 'lucide-react'
 
@@ -20,26 +19,33 @@ export function StatsCard({
   iconClassName,
 }: StatsCardProps) {
   return (
-    <Card className={cn('border-border/80', className)}>
-      <CardContent className="p-4 sm:p-6">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1 flex-1 min-w-0">
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <p className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">{value}</p>
-            {description && (
-              <p className="text-xs sm:text-sm text-muted-foreground">{description}</p>
-            )}
-          </div>
-          <div
-            className={cn(
-              'flex items-center justify-center w-12 h-12 sm:w-10 sm:h-10 rounded-lg shrink-0 ml-3',
-              iconClassName || 'bg-primary/10'
-            )}
-          >
-            <Icon className={cn('w-6 h-6 sm:w-5 sm:h-5', iconClassName ? 'text-current' : 'text-primary')} />
-          </div>
+    <div
+      className={cn(
+        'surface-card group rounded-lg border border-border/80 bg-card p-4 sm:p-5',
+        className
+      )}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1 space-y-1">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+            {title}
+          </p>
+          <p className="font-display text-xl font-semibold tabular-nums tracking-tight text-foreground sm:text-2xl">
+            {value}
+          </p>
+          {description ? (
+            <p className="text-xs text-muted-foreground">{description}</p>
+          ) : null}
         </div>
-      </CardContent>
-    </Card>
+        <div
+          className={cn(
+            'flex h-9 w-9 shrink-0 items-center justify-center rounded-md transition-colors',
+            iconClassName || 'bg-primary/8 text-primary'
+          )}
+        >
+          <Icon className="h-4 w-4" />
+        </div>
+      </div>
+    </div>
   )
 }

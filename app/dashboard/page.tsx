@@ -277,7 +277,7 @@ export default function DashboardPage() {
         type: 'collect',
         label: 'Cobrar clientes',
         sublabel: `${overdueDebtSummary.countQuotes} orçamento(s) na lista de inadimplentes (${overdueDebtSummary.totalDebt.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
-        href: '/dashboard/inadimplentes',
+        href: '/financeiro/inadimplentes',
         count: overdueDebtSummary.countQuotes,
       })
     }
@@ -308,15 +308,23 @@ export default function DashboardPage() {
   }, [profit])
 
   return (
-    <div className="space-y-5 sm:space-y-7">
+    <div className="space-y-6 sm:space-y-8">
       {/* Header - saudação */}
-      <div className="text-balance">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
-          {greeting}, {userName}
-        </h1>
-        <p className="mt-1.5 text-sm text-muted-foreground sm:text-base">
-          Visão geral e próximos passos
-        </p>
+      <div className="flex flex-col gap-4 border-b border-border/70 pb-6 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+            {greeting}, {userName}
+          </h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            Visão geral e próximos passos
+          </p>
+        </div>
+        <Button asChild className="w-full sm:w-auto">
+          <Link href="/orcamentos/novo">
+            <Plus className="mr-2 h-4 w-4" />
+            Novo orçamento
+          </Link>
+        </Button>
       </div>
 
       {/* Próximas Ações - o cérebro sugere o que fazer */}
@@ -483,37 +491,37 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3 sm:gap-4">
         <Link href="/orcamentos/novo" className="block h-full">
-          <Card className="h-full cursor-pointer transition-shadow hover:shadow-md">
-            <CardContent className="flex min-h-[132px] flex-col items-center justify-center px-5 py-6 text-center sm:min-h-[148px]">
-              <div className="mb-3 rounded-lg bg-primary/10 p-3">
-                <Plus className="h-7 w-7 text-primary sm:h-8 sm:w-8" />
+          <Card className="surface-card h-full cursor-pointer border-border/80">
+            <CardContent className="flex min-h-[120px] flex-col items-center justify-center px-5 py-5 text-center sm:min-h-[132px]">
+              <div className="mb-3 rounded-md bg-primary/8 p-2.5">
+                <Plus className="h-5 w-5 text-primary" />
               </div>
-              <h3 className="mb-1 text-base font-semibold text-foreground sm:text-lg">Novo orçamento</h3>
-              <p className="text-xs text-muted-foreground sm:text-sm">Criar proposta comercial</p>
+              <h3 className="mb-1 font-display text-sm font-semibold text-foreground">Novo orçamento</h3>
+              <p className="text-xs text-muted-foreground">Criar proposta comercial</p>
             </CardContent>
           </Card>
         </Link>
 
         <Link href="/financeiro/despesas" className="block h-full">
-          <Card className="h-full cursor-pointer transition-shadow hover:shadow-md">
-            <CardContent className="flex min-h-[132px] flex-col items-center justify-center px-5 py-6 text-center sm:min-h-[148px]">
-              <div className="mb-3 rounded-lg bg-destructive/10 p-3">
-                <Receipt className="h-7 w-7 text-destructive sm:h-8 sm:w-8" />
+          <Card className="surface-card h-full cursor-pointer border-border/80">
+            <CardContent className="flex min-h-[120px] flex-col items-center justify-center px-5 py-5 text-center sm:min-h-[132px]">
+              <div className="mb-3 rounded-md bg-destructive/8 p-2.5">
+                <Receipt className="h-5 w-5 text-destructive" />
               </div>
-              <h3 className="mb-1 text-base font-semibold text-foreground sm:text-lg">Nova despesa</h3>
-              <p className="text-xs text-muted-foreground sm:text-sm">Registrar saída</p>
+              <h3 className="mb-1 font-display text-sm font-semibold text-foreground">Nova despesa</h3>
+              <p className="text-xs text-muted-foreground">Registrar saída</p>
             </CardContent>
           </Card>
         </Link>
 
-        <Link href="/dashboard/relatorios-financeiros" className="block h-full">
-          <Card className="h-full cursor-pointer transition-shadow hover:shadow-md">
-            <CardContent className="flex min-h-[132px] flex-col items-center justify-center px-5 py-6 text-center sm:min-h-[148px]">
-              <div className="mb-3 rounded-lg bg-chart-2/15 p-3">
-                <LayoutDashboard className="h-7 w-7 text-chart-2 sm:h-8 sm:w-8" />
+        <Link href="/financeiro/relatorios" className="block h-full">
+          <Card className="surface-card h-full cursor-pointer border-border/80">
+            <CardContent className="flex min-h-[120px] flex-col items-center justify-center px-5 py-5 text-center sm:min-h-[132px]">
+              <div className="mb-3 rounded-md bg-chart-2/12 p-2.5">
+                <LayoutDashboard className="h-5 w-5 text-chart-2" />
               </div>
-              <h3 className="mb-1 text-base font-semibold text-foreground sm:text-lg">Relatórios</h3>
-              <p className="text-xs text-muted-foreground sm:text-sm">Análise financeira</p>
+              <h3 className="mb-1 font-display text-sm font-semibold text-foreground">Relatórios</h3>
+              <p className="text-xs text-muted-foreground">Análise financeira</p>
             </CardContent>
           </Card>
         </Link>
@@ -649,23 +657,25 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <Card>
+      <Card className="border-border/80 shadow-[var(--shadow-soft)]">
         <CardContent className="p-4 sm:p-6">
-          <div className="mb-4 flex flex-col items-start justify-between gap-3 sm:mb-6 sm:flex-row sm:items-center">
-            <h2 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">Orçamentos recentes</h2>
+          <div className="mb-4 flex flex-col items-start justify-between gap-3 sm:mb-5 sm:flex-row sm:items-center">
+            <h2 className="font-display text-lg font-semibold tracking-tight text-foreground">
+              Orçamentos recentes
+            </h2>
             <Button variant="outline" size="sm" asChild>
               <Link href="/orcamentos/historico">Ver todos</Link>
             </Button>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {recentQuotes.length > 0 ? (
               recentQuotes.map((quote) => <QuoteCard key={quote.id} quote={quote} />)
             ) : (
               <div className="py-12 text-center">
-                <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                  <FileText className="h-8 w-8 text-muted-foreground/50" />
+                <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+                  <FileText className="h-6 w-6 text-muted-foreground/50" />
                 </div>
-                <p className="mb-4 font-medium text-muted-foreground">Nenhum orçamento criado ainda</p>
+                <p className="mb-4 text-sm font-medium text-muted-foreground">Nenhum orçamento criado ainda</p>
                 <Button variant="outline" asChild>
                   <Link href="/orcamentos/novo">Criar primeiro orçamento</Link>
                 </Button>

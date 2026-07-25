@@ -35,8 +35,11 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-muted/30">
-        <div className="animate-pulse text-sm text-muted-foreground">Carregando…</div>
+      <div className="flex min-h-dvh items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-pulse rounded-lg bg-primary/15" />
+          <p className="text-sm text-muted-foreground">Carregando…</p>
+        </div>
       </div>
     )
   }
@@ -47,8 +50,8 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
   if (user?.mustChangePassword && pathname !== '/dashboard/perfil') {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-muted/30">
-        <div className="animate-pulse text-sm text-muted-foreground">Redirecionando…</div>
+      <div className="flex min-h-dvh items-center justify-center bg-background">
+        <p className="text-sm text-muted-foreground">Redirecionando…</p>
       </div>
     )
   }
@@ -57,7 +60,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     <div className="min-h-dvh bg-background">
       <Sidebar />
       <main className="min-h-dvh lg:pl-[var(--sidebar-width)]">
-        <div className="app-shell-pad app-page py-4 pt-[calc(4.75rem+env(safe-area-inset-top))] sm:py-6 sm:pt-[calc(5rem+env(safe-area-inset-top))] lg:py-8 lg:pt-8">
+        <div className="app-shell-pad app-page py-5 pt-[calc(4.5rem+env(safe-area-inset-top))] sm:py-7 sm:pt-[calc(4.75rem+env(safe-area-inset-top))] lg:py-8 lg:pt-8">
           {children}
         </div>
       </main>
