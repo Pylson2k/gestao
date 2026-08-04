@@ -20,7 +20,7 @@ export function buildRustTarget(req: NextRequest): URL | null {
   if (!baseUrl) return null
   const rustBase = new URL(baseUrl)
   const url = new URL(req.url)
-  return new URL(url.pathname.replace('/api/v2', '') + url.search, rustBase)
+  return new URL(url.pathname.replace('/api', '') + url.search, rustBase)
 }
 
 export function shouldUseRust(req: NextRequest): boolean {

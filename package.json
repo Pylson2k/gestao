@@ -23,7 +23,8 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "db:setup": "tsx scripts/setup-database.ts",
-    "db:test": "tsx scripts/test-database.ts"
+    "db:test": "tsx scripts/test-database.ts",
+    "db:parity": "tsx scripts/parity-check.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

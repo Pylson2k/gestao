@@ -15,3 +15,10 @@
 - Backend Rust inicial: `backend-rust/*`
 - Workflow CI Rust: `.github/workflows/rust-quality.yml`
 - Migração expand inicial: `prisma/migrations/20260428_expand_coexistence/migration.sql`
+
+## Domínios implementados no Rust
+- `clients` — CRUD `/v2/clients` com paridade ao legado, busca, `_count.quotes` e auditoria.
+- `services` — CRUD `/v2/services` com paridade ao legado, filtros `isActive`/`search`, escopo por proprietário e auditoria.
+- Teste de paridade (shadow traffic): `npm run db:parity` (`scripts/parity-check.ts`) compara leituras do legado (`/api/*` via Next) com o Rust (`/v2/*`) e reporta divergências.
+
+Próximo passo: ligar rollout `MIGRATION_CLIENTS_ROLLOUT=100` / `MIGRATION_SERVICES_ROLLOUT=100` + `RUST_API_BASE_URL` e executar `npm run db:parity` com ambos os serviços de pé.

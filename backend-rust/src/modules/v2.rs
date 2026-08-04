@@ -17,5 +17,8 @@ async fn status(State(_state): State<AppState>) -> Json<V2Status> {
 }
 
 pub fn router() -> Router<AppState> {
-    Router::new().route("/status", get(status))
+    Router::new()
+        .route("/status", get(status))
+        .nest("/clients", super::clients::router())
+        .nest("/services", super::services::router())
 }
