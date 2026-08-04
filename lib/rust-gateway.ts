@@ -7,6 +7,8 @@ const DOMAIN_BY_PATH: Array<{ startsWith: string; domain: DomainKey }> = [
   { startsWith: '/api/v2/services', domain: 'services' },
   { startsWith: '/api/v2/quotes', domain: 'quotes' },
   { startsWith: '/api/v2/payments', domain: 'payments' },
+  { startsWith: '/api/v2/expenses', domain: 'expenses' },
+  { startsWith: '/api/v2/cash-closings', domain: 'cash-closings' },
   { startsWith: '/api/v2/material-lists', domain: 'materials' },
 ]
 

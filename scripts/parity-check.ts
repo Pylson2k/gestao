@@ -115,6 +115,36 @@ const CHECKS: Check[] = [
     rustPath: '/v2/quotes/cmsemj34q0001egv0qwiflbgu',
     normalize: (body) => stripVolatile(body),
   },
+  {
+    name: 'payments (list)',
+    legacyPath: '/api/payments',
+    rustPath: '/v2/payments',
+    normalize: (body) => sortById(stripVolatile(body)),
+  },
+  {
+    name: 'expenses (list)',
+    legacyPath: '/api/expenses',
+    rustPath: '/v2/expenses',
+    normalize: (body) => sortById(stripVolatile(body)),
+  },
+  {
+    name: 'expenses (category pagamento_funcionario)',
+    legacyPath: '/api/expenses?category=pagamento_funcionario',
+    rustPath: '/v2/expenses?category=pagamento_funcionario',
+    normalize: (body) => sortById(stripVolatile(body)),
+  },
+  {
+    name: 'cash-closings (list)',
+    legacyPath: '/api/cash-closings',
+    rustPath: '/v2/cash-closings',
+    normalize: (body) => sortById(stripVolatile(body)),
+  },
+  {
+    name: 'material-lists (list)',
+    legacyPath: '/api/material-lists',
+    rustPath: '/v2/material-lists',
+    normalize: (body) => sortById(stripVolatile(body)),
+  },
 ]
 
 let failures = 0

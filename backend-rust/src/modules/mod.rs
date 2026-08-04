@@ -1,6 +1,10 @@
+pub mod cash_closings;
 pub mod clients;
 pub mod common;
+pub mod expenses;
 pub mod health;
+pub mod material_lists;
+pub mod payments;
 pub mod quotes;
 pub mod services;
 pub mod users;

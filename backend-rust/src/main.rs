@@ -1,9 +1,5 @@
-mod modules;
-mod state;
-
-use axum::{routing::get, Router};
-use state::AppState;
-use tower_http::{cors::CorsLayer, trace::TraceLayer};
+use gestao_rust_api::build_app;
+use gestao_rust_api::state::AppState;
 use tracing::info;
 
 #[tokio::main]
@@ -17,13 +13,7 @@ async fn main() -> anyhow::Result<()> {
         .init();
 
     let state = AppState::new_from_env().await?;
-
-    let app = Router::new()
-        .route("/health", get(modules::health::health))
-        .nest("/v2", modules::v2::router())
-        .layer(TraceLayer::new_for_http())
-        .layer(CorsLayer::permissive())
-        .with_state(state);
+    let app = build_app(state);
 
     let bind = std::env::var("RUST_API_BIND")
         .or_else(|_| std::env::var("PORT").map(|p| format!("0.0.0.0:{p}")))

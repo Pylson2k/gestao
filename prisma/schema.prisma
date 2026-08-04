@@ -320,3 +320,18 @@ model AuditLog {
   @@index([createdAt])
   @@map("audit_logs")
 }
+
+/// Chave de idempotência para fluxos de escrita financeiros (evita duplicação em retries).
+model IdempotencyKey {
+  key          String
+  userId       String
+  route        String
+  requestHash  String
+  statusCode   Int
+  responseBody Json
+  createdAt    DateTime @default(now())
+
+  @@id([key, userId])
+  @@index([userId, createdAt])
+  @@map("idempotency_keys")
+}

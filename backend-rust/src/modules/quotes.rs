@@ -11,110 +11,11 @@ use sqlx::{FromRow, PgPool};
 use uuid::Uuid;
 
 use crate::modules::common::{
-    fmt_dt, fmt_dt_opt, require_user, write_audit_log, ApiError, AuditEntry,
+    fmt_dt, fmt_dt_opt, is_unique_violation, require_user, resolve_material_quantity,
+    resolve_material_unit, write_audit_log, ApiError, AuditEntry,
 };
 use crate::modules::users::{owner_db_user_ids, resolve_db_user_id};
 use crate::state::AppState;
-
-const DEFAULT_MATERIAL_UNIT: &str = "unidade";
-const MATERIAL_UNITS: [&str; 12] = [
-    "unidade",
-    "metro",
-    "metro_quadrado",
-    "metro_cubico",
-    "kg",
-    "litro",
-    "caixa",
-    "rolo",
-    "saco",
-    "par",
-    "galao",
-    "metro_linear",
-];
-
-/// Normaliza unidade de material (default "unidade").
-fn resolve_material_unit(raw: Option<&str>) -> String {
-    match raw.map(str::trim).filter(|s| !s.is_empty()) {
-        Some(t) if MATERIAL_UNITS.contains(&t) => t.to_string(),
-        _ => DEFAULT_MATERIAL_UNIT.to_string(),
-    }
-}
-
-/// Interpreta texto/número de quantidade (espelha `parseQuantityInput`).
-fn parse_quantity_input(raw: &str) -> Option<f64> {
-    let s = raw.split_whitespace().collect::<Vec<_>>().join(" ");
-    if s.is_empty() {
-        return None;
-    }
-
-    if let Some(caps) = regex_mixed_fraction(&s) {
-        return Some(caps);
-    }
-    if let Some(caps) = regex_fraction(&s) {
-        return Some(caps);
-    }
-
-    let last_comma = s.rfind(',');
-    let last_dot = s.rfind('.');
-    let normalized = match (last_comma, last_dot) {
-        (Some(c), Some(d)) if c > d => s.replace('.', "").replace(',', "."),
-        (Some(_), Some(_)) => s.replace(',', ""),
-        (Some(_), None) => s.replace('.', "").replace(',', "."),
-        (None, Some(_)) => s.replace(',', ""),
-        _ => s,
-    };
-    normalized.trim().parse::<f64>().ok()
-}
-
-fn regex_mixed_fraction(s: &str) -> Option<f64> {
-    let parts: Vec<&str> = s.split_whitespace().collect();
-    if parts.len() != 2 {
-        return None;
-    }
-    let whole = parts[0].parse::<f64>().ok()?;
-    let frac: Vec<&str> = parts[1].split('/').collect();
-    if frac.len() != 2 {
-        return None;
-    }
-    let num = frac[0].parse::<f64>().ok()?;
-    let den = frac[1].parse::<f64>().ok()?;
-    if den == 0.0 {
-        return None;
-    }
-    Some(whole + num / den)
-}
-
-fn regex_fraction(s: &str) -> Option<f64> {
-    let frac: Vec<&str> = s.split('/').collect();
-    if frac.len() != 2 {
-        return None;
-    }
-    let num = frac[0].trim().parse::<f64>().ok()?;
-    let den = frac[1].trim().parse::<f64>().ok()?;
-    if den == 0.0 {
-        return None;
-    }
-    Some(num / den)
-}
-
-fn normalize_stored_quantity(parsed: f64) -> f64 {
-    if parsed.is_finite() && parsed > 0.0 {
-        (parsed * 10000.0).round() / 10000.0
-    } else {
-        1.0
-    }
-}
-
-fn resolve_material_quantity(raw: &serde_json::Value) -> f64 {
-    match raw {
-        serde_json::Value::Number(n) => n.as_f64().map(normalize_stored_quantity),
-        serde_json::Value::String(s) => Some(normalize_stored_quantity(
-            parse_quantity_input(s).unwrap_or(1.0),
-        )),
-        _ => None,
-    }
-    .unwrap_or(1.0)
-}
 
 #[derive(FromRow)]
 struct ClientRow {
@@ -954,13 +855,6 @@ fn max_seq(numbers: &[String]) -> i64 {
     max
 }
 
-fn is_unique_violation(e: &sqlx::Error) -> bool {
-    match e {
-        sqlx::Error::Database(db) => db.code().as_deref() == Some("23505"),
-        _ => false,
-    }
-}
-
 async fn insert_service_items(
     pool: &PgPool,
     quote_id: &str,
@@ -1436,34 +1330,6 @@ pub fn router() -> Router<AppState> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn resolve_material_unit_keeps_valid_and_defaults() {
-        assert_eq!(resolve_material_unit(Some("metro")), "metro");
-        assert_eq!(resolve_material_unit(Some("caixa")), "caixa");
-        assert_eq!(resolve_material_unit(Some("METRO")), "unidade");
-        assert_eq!(resolve_material_unit(Some("invalido")), "unidade");
-        assert_eq!(resolve_material_unit(None), "unidade");
-        assert_eq!(resolve_material_unit(Some("  ")), "unidade");
-    }
-
-    #[test]
-    fn parse_quantity_input_handles_fractions_and_decimals() {
-        assert_eq!(parse_quantity_input("1/2"), Some(0.5));
-        assert_eq!(parse_quantity_input("1 1/2"), Some(1.5));
-        assert_eq!(parse_quantity_input("0,5"), Some(0.5));
-        assert_eq!(parse_quantity_input("0.5"), Some(0.5));
-        assert_eq!(parse_quantity_input("1.999"), Some(1.999));
-        assert_eq!(parse_quantity_input("abc"), None);
-        assert_eq!(parse_quantity_input(""), None);
-    }
-
-    #[test]
-    fn normalize_stored_quantity_clamps_zero() {
-        assert_eq!(normalize_stored_quantity(0.0), 1.0);
-        assert_eq!(normalize_stored_quantity(-2.0), 1.0);
-        assert_eq!(normalize_stored_quantity(1.23456), 1.2346);
-    }
 
     #[test]
     fn max_seq_parses_numbers() {

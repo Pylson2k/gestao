@@ -4,6 +4,8 @@ export type DomainKey =
   | 'services'
   | 'quotes'
   | 'payments'
+  | 'expenses'
+  | 'cash-closings'
   | 'materials'
 
 function normalizePercent(value: string | undefined, fallback: number): number {

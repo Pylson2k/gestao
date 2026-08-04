@@ -58,12 +58,14 @@ impl From<ServiceRow> for ServiceDto {
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct ServiceQuery {
     is_active: Option<String>,
     search: Option<String>,
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct CreateServiceRequest {
     name: String,
     description: Option<String>,
@@ -73,6 +75,7 @@ struct CreateServiceRequest {
 }
 
 #[derive(Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
 struct UpdateServiceRequest {
     name: Option<String>,
     description: Option<String>,

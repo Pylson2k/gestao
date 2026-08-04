@@ -22,4 +22,8 @@ pub fn router() -> Router<AppState> {
         .nest("/clients", super::clients::router())
         .nest("/services", super::services::router())
         .nest("/quotes", super::quotes::router())
+        .nest("/payments", super::payments::router())
+        .nest("/expenses", super::expenses::router())
+        .nest("/cash-closings", super::cash_closings::router())
+        .nest("/material-lists", super::material_lists::router())
 }
