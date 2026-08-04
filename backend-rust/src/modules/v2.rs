@@ -21,4 +21,5 @@ pub fn router() -> Router<AppState> {
         .route("/status", get(status))
         .nest("/clients", super::clients::router())
         .nest("/services", super::services::router())
+        .nest("/quotes", super::quotes::router())
 }
