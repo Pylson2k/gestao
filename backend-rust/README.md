@@ -11,6 +11,13 @@ Serviço Axum para migração por domínio via `/api/v2` com gateway no Next.js.
 cargo run
 ```
 
+## Deploy em nuvem (Render + Neon)
+- O banco é o Neon (mesmo `DATABASE_URL` do Next.js).
+- `render.yaml` + `Dockerfile` preparam um web service Docker gratuito.
+- No painel do Render, crie um Blueprint a partir de `backend-rust/render.yaml`,
+  defina `DATABASE_URL` com a connection string do Neon e o serviço expõe `/v2/*`.
+- A porta lida com `PORT` (Render) ou `RUST_API_BIND` (custom).
+
 ## Endpoints iniciais
 - `GET /health`
 - `GET /v2/status`

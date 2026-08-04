@@ -25,7 +25,9 @@ async fn main() -> anyhow::Result<()> {
         .layer(CorsLayer::permissive())
         .with_state(state);
 
-    let bind = std::env::var("RUST_API_BIND").unwrap_or_else(|_| "0.0.0.0:4000".to_string());
+    let bind = std::env::var("RUST_API_BIND")
+        .or_else(|_| std::env::var("PORT").map(|p| format!("0.0.0.0:{p}")))
+        .unwrap_or_else(|_| "0.0.0.0:4000".to_string());
     let listener = tokio::net::TcpListener::bind(&bind).await?;
     info!("rust api listening on {}", bind);
     axum::serve(listener, app).await?;

@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: gestao-rust-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend-rust/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: PORT
+        value: 4000
