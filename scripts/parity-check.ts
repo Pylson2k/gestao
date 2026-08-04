@@ -97,6 +97,24 @@ const CHECKS: Check[] = [
     rustPath: '/v2/services?search=tomada',
     normalize: (body) => sortById(stripVolatile(body)),
   },
+  {
+    name: 'quotes (list)',
+    legacyPath: '/api/quotes',
+    rustPath: '/v2/quotes',
+    normalize: (body) => sortById(stripVolatile(body)),
+  },
+  {
+    name: 'quotes (status draft)',
+    legacyPath: '/api/quotes?status=draft',
+    rustPath: '/v2/quotes?status=draft',
+    normalize: (body) => sortById(stripVolatile(body)),
+  },
+  {
+    name: 'quotes (single first)',
+    legacyPath: '/api/quotes/cmsemj34q0001egv0qwiflbgu',
+    rustPath: '/v2/quotes/cmsemj34q0001egv0qwiflbgu',
+    normalize: (body) => stripVolatile(body),
+  },
 ]
 
 let failures = 0
