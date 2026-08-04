@@ -15,7 +15,7 @@ function normalizePercent(value: string | undefined, fallback: number): number {
 }
 
 export function getDomainRolloutPercent(domain: DomainKey): number {
-  const envKey = `MIGRATION_${domain.toUpperCase()}_ROLLOUT`
+  const envKey = `MIGRATION_${domain.toUpperCase().replaceAll('-', '_')}_ROLLOUT`
   return normalizePercent(process.env[envKey], 0)
 }
 

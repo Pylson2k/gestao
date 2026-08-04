@@ -53,6 +53,16 @@ test('rollout at 50 buckets seeds deterministically and partially', () => {
   })
 })
 
+test('cash-closings reads its underscore env var (Vercel forbids hyphens)', () => {
+  withEnv({ MIGRATION_CASH_CLOSINGS_ROLLOUT: '100' }, () => {
+    assert.equal(isRustDomainEnabled('cash-closings'), true)
+    assert.equal(getDomainRolloutPercent('cash-closings'), 100)
+  })
+  withEnv({ MIGRATION_CASH_CLOSINGS_ROLLOUT: undefined }, () => {
+    assert.equal(getDomainRolloutPercent('cash-closings'), 0)
+  })
+})
+
 test('invalid rollout values fall back to safe defaults', () => {
   withEnv({ MIGRATION_CLIENTS_ROLLOUT: 'abc' }, () => {
     assert.equal(getDomainRolloutPercent('clients'), 0)
