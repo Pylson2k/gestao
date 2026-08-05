@@ -104,6 +104,16 @@ async fn material_lists_crud_contract() {
     assert_eq!(body["clientId"].as_str(), Some(client_id.as_str()));
     assert_eq!(body["items"].as_array().map(Vec::len), Some(2));
 
+    let (status, body) = send(&mut app, Method::GET, "/v2/material-lists", None, &headers).await;
+    assert_eq!(status, StatusCode::OK, "list should return 200: {body}");
+    let lists = body.as_array().expect("list should return an array");
+    let created = lists
+        .iter()
+        .find(|l| l["id"].as_str() == Some(list_id.as_str()))
+        .expect("created list should appear in list");
+    assert_eq!(created["items"].as_array().map(Vec::len), Some(2));
+    assert_eq!(created["client"]["id"].as_str(), Some(client_id.as_str()));
+
     let (status, body) = send(
         &mut app,
         Method::GET,

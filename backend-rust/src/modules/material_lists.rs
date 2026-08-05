@@ -7,6 +7,7 @@ use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sqlx::{FromRow, PgPool};
+use std::collections::HashMap;
 use uuid::Uuid;
 
 use crate::modules::common::{
@@ -65,15 +66,6 @@ struct ClientFullRow {
     email: Option<String>,
     created_at: chrono::NaiveDateTime,
     updated_at: chrono::NaiveDateTime,
-}
-
-#[derive(FromRow)]
-struct ItemBriefRow {
-    id: String,
-    name: String,
-    quantity: f64,
-    unit: String,
-    unit_price: f64,
 }
 
 #[derive(FromRow)]
@@ -242,22 +234,6 @@ fn max_lm_seq(numbers: &[String]) -> i64 {
         .unwrap_or(0)
 }
 
-async fn fetch_client_brief(pool: &PgPool, client_id: &str) -> Result<ClientBriefRow, ApiError> {
-    sqlx::query_as::<_, ClientBriefRow>(
-        r#"SELECT id, name, phone, address, email FROM clients WHERE id = $1"#,
-    )
-    .bind(client_id)
-    .fetch_optional(pool)
-    .await
-    .map_err(|e| {
-        ApiError::new(
-            StatusCode::INTERNAL_SERVER_ERROR,
-            format!("Erro ao carregar cliente: {}", e),
-        )
-    })?
-    .ok_or_else(|| ApiError::new(StatusCode::NOT_FOUND, "Cliente nao encontrado"))
-}
-
 async fn fetch_client_full(pool: &PgPool, client_id: &str) -> Result<ClientFullRow, ApiError> {
     sqlx::query_as::<_, ClientFullRow>(
         r#"SELECT id, name, document, phone, address, email, "createdAt" AS created_at,
@@ -276,22 +252,6 @@ async fn fetch_client_full(pool: &PgPool, client_id: &str) -> Result<ClientFullR
     .ok_or_else(|| ApiError::new(StatusCode::NOT_FOUND, "Cliente nao encontrado"))
 }
 
-async fn fetch_items_brief(pool: &PgPool, list_id: &str) -> Result<Vec<ItemBriefRow>, ApiError> {
-    sqlx::query_as::<_, ItemBriefRow>(
-        r#"SELECT id, name, quantity, unit, "unitPrice" AS unit_price
-           FROM material_list_items WHERE "materialListId" = $1 ORDER BY id"#,
-    )
-    .bind(list_id)
-    .fetch_all(pool)
-    .await
-    .map_err(|e| {
-        ApiError::new(
-            StatusCode::INTERNAL_SERVER_ERROR,
-            format!("Erro ao carregar materiais: {}", e),
-        )
-    })
-}
-
 async fn fetch_items_full(pool: &PgPool, list_id: &str) -> Result<Vec<ItemFullRow>, ApiError> {
     sqlx::query_as::<_, ItemFullRow>(
         r#"SELECT id, "materialListId" AS material_list_id, name, quantity, unit,
@@ -306,42 +266,6 @@ async fn fetch_items_full(pool: &PgPool, list_id: &str) -> Result<Vec<ItemFullRo
             StatusCode::INTERNAL_SERVER_ERROR,
             format!("Erro ao carregar materiais: {}", e),
         )
-    })
-}
-
-async fn build_list_dto(
-    pool: &PgPool,
-    row: MaterialListRow,
-) -> Result<MaterialListListDto, ApiError> {
-    let client = fetch_client_brief(pool, &row.client_id).await?;
-    let items = fetch_items_brief(pool, &row.id).await?;
-    Ok(MaterialListListDto {
-        id: row.id,
-        number: row.number,
-        user_id: row.user_id,
-        client_id: row.client_id,
-        title: row.title,
-        observations: row.observations,
-        include_prices: row.include_prices,
-        created_at: fmt_dt(row.created_at),
-        updated_at: fmt_dt(row.updated_at),
-        client: ClientBriefDto {
-            id: client.id,
-            name: client.name,
-            phone: client.phone,
-            address: client.address,
-            email: client.email,
-        },
-        items: items
-            .into_iter()
-            .map(|i| ItemBriefDto {
-                id: i.id,
-                name: i.name,
-                quantity: i.quantity,
-                unit: i.unit,
-                unit_price: i.unit_price,
-            })
-            .collect(),
     })
 }
 
@@ -541,12 +465,82 @@ async fn list(
     })?;
 
     let mut out = Vec::with_capacity(rows.len());
+    if rows.is_empty() {
+        return Ok(Json(out));
+    }
+
+    let client_ids: Vec<String> = rows.iter().map(|r| r.client_id.clone()).collect();
+    let list_ids: Vec<String> = rows.iter().map(|r| r.id.clone()).collect();
+
+    let clients = sqlx::query_as::<_, ClientBriefRow>(
+        r#"SELECT id, name, phone, address, email FROM clients WHERE id = ANY($1)"#,
+    )
+    .bind(&client_ids)
+    .fetch_all(&state.db)
+    .await
+    .map_err(|e| {
+        ApiError::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Erro ao carregar clientes das listas: {}", e),
+        )
+    })?;
+
+    let items = sqlx::query_as::<_, ItemFullRow>(
+        r#"SELECT id, "materialListId" AS material_list_id, name, quantity, unit,
+                  "unitPrice" AS unit_price
+           FROM material_list_items WHERE "materialListId" = ANY($1) ORDER BY id"#,
+    )
+    .bind(&list_ids)
+    .fetch_all(&state.db)
+    .await
+    .map_err(|e| {
+        ApiError::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Erro ao carregar materiais das listas: {}", e),
+        )
+    })?;
+
+    let client_by_id: HashMap<String, ClientBriefRow> =
+        clients.into_iter().map(|c| (c.id.clone(), c)).collect();
+
+    let mut items_by_list: HashMap<String, Vec<ItemBriefDto>> = HashMap::new();
+    for item in items {
+        items_by_list
+            .entry(item.material_list_id)
+            .or_default()
+            .push(ItemBriefDto {
+                id: item.id,
+                name: item.name,
+                quantity: item.quantity,
+                unit: item.unit,
+                unit_price: item.unit_price,
+            });
+    }
+
     for row in rows {
-        match build_list_dto(&state.db, row).await {
-            Ok(dto) => out.push(dto),
-            Err(e) if e.status == StatusCode::NOT_FOUND => continue,
-            Err(e) => return Err(e),
-        }
+        let Some(client) = client_by_id.get(&row.client_id) else {
+            continue;
+        };
+        let items = items_by_list.remove(&row.id).unwrap_or_default();
+        out.push(MaterialListListDto {
+            id: row.id,
+            number: row.number,
+            user_id: row.user_id,
+            client_id: row.client_id,
+            title: row.title,
+            observations: row.observations,
+            include_prices: row.include_prices,
+            created_at: fmt_dt(row.created_at),
+            updated_at: fmt_dt(row.updated_at),
+            client: ClientBriefDto {
+                id: client.id.clone(),
+                name: client.name.clone(),
+                phone: client.phone.clone(),
+                address: client.address.clone(),
+                email: client.email.clone(),
+            },
+            items,
+        });
     }
     Ok(Json(out))
 }

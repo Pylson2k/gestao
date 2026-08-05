@@ -1,0 +1,13 @@
+name: keep-alive
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render free instance
+        run: curl -sf --max-time 60 -o /dev/null https://gestao-rust-api.onrender.com/health
