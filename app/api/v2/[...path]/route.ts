@@ -33,6 +33,11 @@ async function proxyToRust(req: NextRequest): Promise<NextResponse> {
     correlationId,
   })
   const responseHeaders = new Headers(upstream.headers)
+  // O corpo foi re-lido via upstream.text() (já descomprimido); descartar
+  // headers de compressão/encoding para não quebrar a resposta no navegador.
+  responseHeaders.delete('content-encoding')
+  responseHeaders.delete('content-length')
+  responseHeaders.delete('transfer-encoding')
   responseHeaders.set('x-correlation-id', correlationId)
   return new NextResponse(text, {
     status: upstream.status,
