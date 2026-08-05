@@ -3,6 +3,7 @@ services:
     name: gestao-rust-api
     runtime: docker
     plan: free
+    dockerContext: ./backend-rust
     dockerfilePath: ./backend-rust/Dockerfile
     healthCheckPath: /health
     envVars:
