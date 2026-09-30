@@ -869,8 +869,8 @@ export default function QuoteDetailPage({
             <CardTitle className="text-xl sm:text-2xl font-bold tracking-tight">Serviços</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto rounded-lg border border-border/50">
-              <table className="w-full text-base sm:text-sm">
+            <div role="region" tabIndex={0} aria-label="Tabela de serviços do orçamento. Use a rolagem horizontal para ver todas as colunas." className="overflow-x-auto rounded-lg border border-border/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <table className="w-full min-w-[36rem] text-base sm:text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/60">
                     <th className="px-4 py-4 text-left text-sm font-semibold uppercase tracking-wider text-foreground sm:px-3 sm:py-3 sm:text-xs">Descrição</th>
@@ -912,8 +912,8 @@ export default function QuoteDetailPage({
             <CardTitle className="text-xl sm:text-2xl font-bold tracking-tight">Materiais</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto rounded-lg border border-border/50">
-              <table className="w-full text-base sm:text-sm">
+            <div role="region" tabIndex={0} aria-label="Tabela de materiais do orçamento. Use a rolagem horizontal para ver todas as colunas." className="overflow-x-auto rounded-lg border border-border/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <table className="w-full min-w-[36rem] text-base sm:text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/60">
                     <th className="px-4 py-4 text-left text-sm font-semibold uppercase tracking-wider text-foreground sm:px-3 sm:py-3 sm:text-xs">Descrição</th>
