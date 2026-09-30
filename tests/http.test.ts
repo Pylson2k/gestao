@@ -1,6 +1,19 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { Button } from '@/components/ui/button'
 import { readApiError } from '@/modules/core/http'
+
+test('Button não envia formulários acidentalmente', () => {
+  const markup = renderToStaticMarkup(createElement(Button, null, 'Ação'))
+  assert.match(markup, /<button[^>]*type="button"/)
+})
+
+test('Button preserva submit quando solicitado explicitamente', () => {
+  const markup = renderToStaticMarkup(createElement(Button, { type: 'submit' }, 'Salvar'))
+  assert.match(markup, /<button[^>]*type="submit"/)
+})
 
 test('readApiError prioritizes structured error payload', async () => {
   const response = new Response(JSON.stringify({ error: 'Falha validada' }), {

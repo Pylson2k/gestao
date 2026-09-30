@@ -6,12 +6,7 @@ import { OWNER_USERNAME } from '@/lib/owner-user'
 function readAdminSecret(request: Request): string | null {
   const header = request.headers.get('x-admin-secret')
   if (header) return header
-  try {
-    const { searchParams } = new URL(request.url)
-    return searchParams.get('key')
-  } catch {
-    return null
-  }
+  return null
 }
 
 /**

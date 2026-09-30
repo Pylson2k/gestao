@@ -30,8 +30,12 @@ npx prisma db push
      `error with configuration: relative URL without a base` (parse do sqlx) ou
      `pool timed out while waiting for an open connection` (host inacessível).
 4. Anotar a URL do serviço (ex.: `https://gestao-rust-api.onrender.com`).
-5. Verificar saúde: `curl https://<rust-url>/health` → `{"status":"ok"}`,
-   e uma rota real com header `x-user-id: <qualquer>`: `GET /v2/material-lists` → 200.
+5. Gere um segredo com `openssl rand -hex 32` e configure o mesmo valor como
+   `RUST_GATEWAY_SECRET` no Render e na Vercel. O serviço Rust falha fechado
+   para `/v2/*` sem esse segredo; não envie a chave em URLs ou no navegador.
+6. Verificar saúde: `curl https://<rust-url>/health` → `{"status":"ok"}`.
+   Uma chamada direta a `/v2/material-lists` sem `x-gateway-secret` deve responder
+   401; teste rotas de negócio autenticado por `/api/v2/*` no Next.js.
 
 ## Passo 3 — Env vars no Vercel (Next)
 Definir no projeto (`v0-saa-s-service-app`):

@@ -120,6 +120,18 @@ export async function POST(request: NextRequest) {
     }
 
     const payment = await prisma.$transaction(async (tx) => {
+      // Serializa pagamentos simultâneos do mesmo orçamento para que ambos não
+      // leiam o mesmo saldo e ultrapassem o total aprovado.
+      const lockedQuote = await tx.$queryRaw<Array<{ id: string }>>`
+        SELECT "id" FROM "quotes"
+        WHERE "id" = ${quoteId} AND "userId" = ${dbUserId}
+        FOR UPDATE
+      `
+
+      if (lockedQuote.length === 0) {
+        throw Object.assign(new Error('Orcamento nao encontrado'), { status: 404 })
+      }
+
       const quote = await tx.quote.findFirst({
         where: {
           id: quoteId,

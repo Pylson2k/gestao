@@ -3,7 +3,7 @@
 Serviço Axum para migração por domínio via `/api/v2` com gateway no Next.js.
 
 ## Executar local
-1. Configure `DATABASE_URL`
+1. Configure `DATABASE_URL` e `RUST_GATEWAY_SECRET` (segredo aleatório com pelo menos 32 caracteres, também configurado no Next.js).
 2. (Opcional) Configure `RUST_API_BIND` (default `0.0.0.0:4000`)
 3. Rode:
 
@@ -40,14 +40,14 @@ CRUD de clientes com paridade com o legado `/api/clients`:
 - Lista com busca (`?search=`), contagem de orçamentos (`_count.quotes`) e ordenação por nome.
 - Criação/edição/exclusão com validações idênticas ao legado.
 - Trilha de auditoria (`audit_logs`) best-effort para criar/editar/excluir.
-- Auth por header `x-user-id` (injetado pelo proxy Next.js após validar a sessão).
+- Auth por segredo compartilhado entre o gateway Next.js e o backend, além de `x-user-id` injetado após validar a sessão.
 
 ## Domínio Services
 CRUD de serviços com paridade com o legado `/api/services`:
 - Lista com filtros `?isActive=` e `?search=`, restrito ao usuário proprietário.
 - Criação/edição/exclusão com validações idênticas (nome obrigatório, preço >= 0).
 - Trilha de auditoria best-effort.
-- Auth por header `x-user-id`.
+- Auth validada pelo gateway Next.js com `RUST_GATEWAY_SECRET`.
 
 ## Domínio Payments
 CRUD de pagamentos com paridade com o legado `/api/payments`:

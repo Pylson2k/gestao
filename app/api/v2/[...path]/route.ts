@@ -3,6 +3,14 @@ import { buildRustTarget, shouldUseRust } from '@/lib/rust-gateway'
 import { logger } from '@/lib/logger'
 
 async function proxyToRust(req: NextRequest): Promise<NextResponse> {
+  const gatewaySecret = process.env.RUST_GATEWAY_SECRET
+  if (!gatewaySecret || gatewaySecret.trim().length < 32) {
+    return NextResponse.json(
+      { error: 'RUST_GATEWAY_SECRET nao configurado corretamente no Next.js' },
+      { status: 503 }
+    )
+  }
+
   const target = buildRustTarget(req)
   if (!target) {
     return NextResponse.json(
@@ -13,6 +21,8 @@ async function proxyToRust(req: NextRequest): Promise<NextResponse> {
 
   const body = req.method === 'GET' || req.method === 'HEAD' ? undefined : await req.text()
   const headers = new Headers(req.headers)
+  headers.delete('x-gateway-secret')
+  headers.set('x-gateway-secret', gatewaySecret)
   const correlationId = req.headers.get('x-correlation-id') ?? crypto.randomUUID()
   headers.set('x-source-gateway', 'next-v2')
   headers.set('x-correlation-id', correlationId)

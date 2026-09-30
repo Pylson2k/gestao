@@ -261,7 +261,7 @@ async fn create_expense(
     let db_user_id_ref = &db_user_id;
 
     run_with_idempotency(
-        pool,
+        &state.idempotency_db,
         &db_user_id,
         "/v2/expenses",
         &headers,
