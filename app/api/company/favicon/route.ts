@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
       return new NextResponse(imageBuffer, {
         headers: {
           'Content-Type': `image/${mimeType}`,
-          'Cache-Control': 'public, max-age=3600, must-revalidate',
+          'Cache-Control': 'private, no-store',
         },
       })
     }
