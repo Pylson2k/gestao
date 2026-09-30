@@ -192,9 +192,11 @@
       background-color 200ms ease;
   }
 
-  .surface-card:hover {
-    border-color: color-mix(in oklch, var(--border) 60%, var(--primary));
-    box-shadow: var(--shadow-panel);
+  @media (hover: hover) and (pointer: fine) {
+    .surface-card:hover {
+      border-color: color-mix(in oklch, var(--border) 60%, var(--primary));
+      box-shadow: var(--shadow-panel);
+    }
   }
 
   .login-enter {
@@ -372,14 +374,6 @@
     }
   }
 
-  @media (pointer: coarse) {
-    button,
-    [role='button'] {
-      min-height: 44px;
-      touch-action: manipulation;
-    }
-  }
-
   button,
   [role='button'] {
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0.06);
@@ -393,5 +387,38 @@
   button,
   [role='button'] {
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0.06);
+  }
+}
+
+/* Keep touch controls comfortably tappable even when desktop breakpoint utilities apply. */
+@media (pointer: coarse) {
+  [data-slot='button'],
+  [role='button'],
+  nav a,
+  input:not([type='checkbox']):not([type='radio']),
+  textarea,
+  select,
+  [data-slot='select-trigger'],
+  [role='tab'] {
+    min-width: 44px;
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .login-enter {
+    animation: none;
+  }
+
+  [data-slot='dialog-content'],
+  [data-slot='alert-dialog-content'],
+  [data-slot='sheet-content'] {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }

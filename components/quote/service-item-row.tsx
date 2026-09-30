@@ -54,8 +54,9 @@ export function ServiceItemRow({
   }
 
   return (
-    <div className="grid grid-cols-12 gap-2 items-center">
-      <div className="col-span-12 sm:col-span-5">
+    <div className="grid grid-cols-12 items-end gap-x-2 gap-y-3 rounded-lg border border-border/70 bg-muted/15 p-3 md:items-center md:gap-2 md:rounded-none md:border-0 md:bg-transparent md:p-0">
+      <div className="col-span-12 md:col-span-5">
+        <span className="mb-1 block text-[11px] font-medium text-muted-foreground md:hidden">Descrição</span>
         <Input
           ref={nameRef}
           placeholder="Descrição do serviço (opcional)"
@@ -65,7 +66,8 @@ export function ServiceItemRow({
           className="bg-background min-h-[40px]"
         />
       </div>
-      <div className="col-span-4 sm:col-span-2">
+      <div className="col-span-3 md:col-span-2">
+        <span className="mb-1 block text-[11px] font-medium text-muted-foreground md:hidden">Quantidade</span>
         <Input
           ref={qtyRef}
           type="number"
@@ -81,7 +83,8 @@ export function ServiceItemRow({
           aria-label="Quantidade do serviço"
         />
       </div>
-      <div className="col-span-4 sm:col-span-2">
+      <div className="col-span-3 md:col-span-2">
+        <span className="mb-1 block text-[11px] font-medium text-muted-foreground md:hidden">Valor unitário</span>
         <Input
           ref={priceRef}
           type="number"
@@ -97,19 +100,20 @@ export function ServiceItemRow({
           aria-label="Valor unitário do serviço"
         />
       </div>
-      <div className="col-span-3 sm:col-span-2 text-right">
+      <div className="col-span-4 text-right md:col-span-2">
+        <span className="mb-1 block text-[11px] font-medium text-muted-foreground md:hidden">Total</span>
         <span className="text-sm font-medium text-foreground">
           {total > 0 ? total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}
         </span>
       </div>
-      <div className="col-span-1">
+      <div className="col-span-2 flex justify-end md:col-span-1">
         <Button
           type="button"
           variant="ghost"
           size="icon"
           onClick={onRemove}
-          className="text-muted-foreground hover:text-destructive"
-          aria-label="Remover linha"
+          className="min-h-11 min-w-11 text-muted-foreground hover:text-destructive"
+          aria-label={`Remover serviço ${item.name || 'sem descrição'}`}
         >
           <Trash2 className="w-4 h-4" />
         </Button>

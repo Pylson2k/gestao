@@ -18,7 +18,7 @@ export function PageHeader({ title, description, className, children, actions }:
   return (
     <div
       className={cn(
-        'flex min-w-0 flex-col gap-4 border-b border-border/70 pb-6 sm:flex-row sm:items-end sm:justify-between sm:gap-6',
+        'flex min-w-0 flex-col gap-4 border-b border-border/70 pb-6 md:flex-row md:items-end md:justify-between md:gap-6',
         className
       )}
     >
@@ -31,7 +31,7 @@ export function PageHeader({ title, description, className, children, actions }:
         ) : null}
       </div>
       {rightSide ? (
-        <div className="flex min-w-0 shrink-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+        <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-start md:w-auto md:shrink-0 md:justify-end">
           {rightSide}
         </div>
       ) : null}
