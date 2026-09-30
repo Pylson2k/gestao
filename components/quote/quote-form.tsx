@@ -301,9 +301,9 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
 
       {/* Services */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-4">
+        <CardHeader className="flex flex-col gap-3 pb-4 md:flex-row md:items-center md:justify-between">
           <CardTitle className="text-xl font-bold tracking-tight">Serviços</CardTitle>
-          <div className="flex gap-2">
+          <div className="flex min-w-0 flex-col gap-2 md:flex-row md:flex-wrap md:justify-end">
             {catalogServices.length > 0 && (
               <Select
                 onValueChange={(serviceId) => {
@@ -319,7 +319,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
                   }
                 }}
               >
-                <SelectTrigger className="w-[200px]">
+                <SelectTrigger className="w-full md:w-[200px]">
                   <SelectValue placeholder="Adicionar do catálogo" />
                 </SelectTrigger>
                 <SelectContent>
@@ -331,12 +331,12 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
                 </SelectContent>
               </Select>
             )}
-            <Button type="button" variant="outline" size="sm" onClick={addService}>
+            <Button type="button" variant="outline" size="sm" onClick={addService} className="w-full md:w-auto">
               <Plus className="w-4 h-4 mr-2" />
               Adicionar Manual
             </Button>
             {catalogServices.length === 0 && (
-              <Button variant="outline" size="sm" asChild>
+              <Button variant="outline" size="sm" asChild className="w-full md:w-auto">
                 <Link href="/operacao/servicos">Cadastrar serviços</Link>
               </Button>
             )}
@@ -346,7 +346,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
           <p className="text-xs text-muted-foreground -mt-1">
             Enter: descrição → quantidade → valor; na última linha, Enter no valor adiciona outro serviço.
           </p>
-          <div className="hidden sm:grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground px-1">
+          <div className="hidden md:grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground px-1">
             <div className="col-span-5">Descricao</div>
             <div className="col-span-2">Quantidade</div>
             <div className="col-span-2">Valor Unit.</div>
@@ -368,21 +368,21 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
 
       {/* Materials */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-4">
+        <CardHeader className="flex flex-col gap-3 pb-4 md:flex-row md:items-center md:justify-between">
           <CardTitle className="text-xl font-bold tracking-tight">Materiais</CardTitle>
-          <Button type="button" variant="outline" size="sm" onClick={addMaterial}>
+          <Button type="button" variant="outline" size="sm" onClick={addMaterial} className="w-full md:w-auto">
             <Plus className="w-4 h-4 mr-2" />
             Adicionar
           </Button>
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-xs text-muted-foreground -mt-1">{QUANTITY_HELP_TEXT}</p>
-          <div className="hidden sm:grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground px-1">
+          <div className="hidden md:grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground px-1">
             <div className="col-span-3">Descricao</div>
-            <div className="col-span-3">Quantidade</div>
+            <div className="col-span-2">Quantidade</div>
             <div className="col-span-2">Unidade</div>
             <div className="col-span-2">Valor Unit.</div>
-            <div className="col-span-1 text-right">Total</div>
+            <div className="col-span-2 text-right">Total</div>
             <div className="col-span-1" />
           </div>
           {materials.map((item, index) => (
@@ -400,7 +400,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
       </Card>
 
       {/* Commercial Terms */}
-      <Card className="border-y border-r border-border/80 border-l-4 border-l-primary">
+      <Card className="border border-border/80">
         <CardHeader className="pb-4">
           <CardTitle className="text-xl font-bold tracking-tight">Proposta Comercial</CardTitle>
           <p className="text-sm text-muted-foreground">
@@ -455,7 +455,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
 
       {/* Summary & Observations */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="border-y border-r border-border/80 border-l-4 border-l-amber-500/50 bg-muted/20">
+        <Card className="border border-border/80 bg-muted/20">
           <CardHeader className="pb-4">
             <CardTitle className="text-xl font-bold tracking-tight text-foreground">Observações</CardTitle>
           </CardHeader>
@@ -470,7 +470,7 @@ export function QuoteForm({ initialData }: QuoteFormProps) {
           </CardContent>
         </Card>
 
-        <Card className="border-y border-r border-border/80 border-l-4 border-l-primary">
+        <Card className="border border-border/80">
           <CardHeader className="pb-4">
             <CardTitle className="text-xl font-bold tracking-tight">Resumo Financeiro</CardTitle>
           </CardHeader>
