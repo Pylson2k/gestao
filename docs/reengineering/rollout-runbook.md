@@ -98,5 +98,7 @@ NEXT_BASE_URL=https://<app>.vercel.app RUST_BASE_URL=https://<rust-url> npm run 
 
 ## Lembretes de segurança
 - Nunca commitar `.env` (contém `DATABASE_URL`/`ADMIN_OPERATIONS_SECRET`).
+- O build da Vercel não altera o schema do banco. Mudanças no Prisma devem ser aplicadas
+  em uma etapa de banco controlada, separada do build e do deploy de preview.
 - O gateway só roteia com `RUST_API_BASE_URL` presente; sem ela, `/api/v2/*` responde 503
   (nunca cai para o legado automaticamente — falha fechada).
