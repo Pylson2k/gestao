@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireOwnerOr401 } from '@/lib/require-auth'
-
-function isIsoDate(v: string) {
-  return /^\d{4}-\d{2}-\d{2}$/.test(v)
-}
+import { isValidIsoDate } from '@/modules/getao/lib/date'
+import { parseNonNegativeMoney } from '@/modules/getao/lib/money'
 
 export async function GET(request: Request) {
   const denied = requireOwnerOr401(request)
@@ -12,12 +10,16 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url)
   const funcionarioIdRaw = searchParams.get('funcionario_id')
-  const funcionarioId = funcionarioIdRaw ? Number(funcionarioIdRaw) : null
+  const funcionarioId = funcionarioIdRaw === null ? null : Number(funcionarioIdRaw)
+
+  if (funcionarioIdRaw !== null && (funcionarioId === null || !Number.isInteger(funcionarioId) || funcionarioId <= 0)) {
+    return NextResponse.json({ error: 'funcionario_id inválido' }, { status: 400 })
+  }
 
   const list = await prisma.vale.findMany({
     where:
-      funcionarioIdRaw && Number.isFinite(funcionarioId)
-        ? { funcionarioId: funcionarioId as number }
+      funcionarioId !== null
+        ? { funcionarioId }
         : undefined,
     include: { funcionario: true },
     orderBy: [{ data: 'desc' }, { id: 'desc' }],
@@ -43,19 +45,29 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as any
   const funcionarioId = Number(body?.funcionario_id)
   const valorRaw = body?.valor
-  const valor =
-    typeof valorRaw === 'number' ? valorRaw : Number(String(valorRaw ?? '').replace(',', '.'))
+  const valor = parseNonNegativeMoney(valorRaw)
+  if (valor === null) {
+    return NextResponse.json({ error: 'valor inválido' }, { status: 400 })
+  }
   const data = String(body?.data || '')
   const descricao = typeof body?.descricao === 'string' ? body.descricao.trim() || null : null
 
-  if (!Number.isFinite(funcionarioId)) {
+  if (!Number.isInteger(funcionarioId) || funcionarioId <= 0) {
     return NextResponse.json({ error: 'funcionario_id inválido' }, { status: 400 })
   }
-  if (!Number.isFinite(valor) || valor < 0) {
-    return NextResponse.json({ error: 'valor inválido' }, { status: 400 })
-  }
-  if (!isIsoDate(data)) {
+  if (!isValidIsoDate(data)) {
     return NextResponse.json({ error: 'data inválida (use YYYY-MM-DD)' }, { status: 400 })
+  }
+
+  const funcionario = await prisma.funcionario.findUnique({
+    where: { id: funcionarioId },
+    select: { id: true, status: true },
+  })
+  if (!funcionario) {
+    return NextResponse.json({ error: 'Funcionário não encontrado' }, { status: 404 })
+  }
+  if (funcionario.status !== 'ativo') {
+    return NextResponse.json({ error: 'Não é possível lançar vale para funcionário inativo' }, { status: 409 })
   }
 
   const created = await prisma.vale.create({

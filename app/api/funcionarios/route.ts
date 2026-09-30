@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireOwnerOr401 } from '@/lib/require-auth'
+import { parseNonNegativeMoney } from '@/modules/getao/lib/money'
 
 function isNonEmptyString(v: unknown): v is string {
   return typeof v === 'string' && v.trim().length > 0
@@ -30,7 +31,7 @@ export async function GET(request: Request) {
       list.map((f) => ({
         id: f.id,
         nome: f.nome,
-        valor_diaria: f.valorDiaria ? Number(f.valorDiaria) : null,
+        valor_diaria: f.valorDiaria === null ? null : Number(f.valorDiaria),
         funcao: f.funcao ?? null,
         status: f.status,
       }))
@@ -58,11 +59,10 @@ export async function POST(request: Request) {
     const valorDiaria =
       valorDiariaRaw === null || typeof valorDiariaRaw === 'undefined'
         ? null
-        : typeof valorDiariaRaw === 'number'
-          ? valorDiariaRaw
-          : Number(String(valorDiariaRaw).replace(',', '.'))
+        : parseNonNegativeMoney(valorDiariaRaw)
 
-    if (valorDiaria !== null && (!Number.isFinite(valorDiaria) || valorDiaria < 0)) {
+    const diariaVazia = typeof valorDiariaRaw === 'string' && valorDiariaRaw.trim() === ''
+    if (valorDiariaRaw !== null && typeof valorDiariaRaw !== 'undefined' && valorDiaria === null && !diariaVazia) {
       return NextResponse.json({ error: 'valor_diaria inválido' }, { status: 400 })
     }
 
@@ -79,7 +79,7 @@ export async function POST(request: Request) {
       {
         id: created.id,
         nome: created.nome,
-        valor_diaria: created.valorDiaria ? Number(created.valorDiaria) : null,
+        valor_diaria: created.valorDiaria === null ? null : Number(created.valorDiaria),
         funcao: created.funcao ?? null,
         status: created.status,
       },

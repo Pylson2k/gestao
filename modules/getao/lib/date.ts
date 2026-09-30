@@ -6,6 +6,19 @@ export function toIsoDate(d: Date): string {
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
 }
 
+export function isValidIsoDate(input: string): boolean {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(input)
+  if (!match) return false
+
+  const year = Number(match[1])
+  const month = Number(match[2])
+  const day = Number(match[3])
+  if (year < 2000 || year > 2100) return false
+
+  const date = new Date(year, month - 1, day)
+  return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day
+}
+
 export function parseBrDate(input: string): string | null {
   const v = input.trim()
   const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(v)
@@ -13,10 +26,8 @@ export function parseBrDate(input: string): string | null {
   const dd = Number(m[1])
   const mm = Number(m[2])
   const yyyy = Number(m[3])
-  if (yyyy < 2000 || yyyy > 2100) return null
-  const dt = new Date(yyyy, mm - 1, dd)
-  if (dt.getFullYear() !== yyyy || dt.getMonth() !== mm - 1 || dt.getDate() !== dd) return null
-  return toIsoDate(dt)
+  const iso = `${yyyy}-${pad2(mm)}-${pad2(dd)}`
+  return isValidIsoDate(iso) ? iso : null
 }
 
 export function toBrDate(iso: string): string {

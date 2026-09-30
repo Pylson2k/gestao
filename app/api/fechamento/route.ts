@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireOwnerOr401 } from '@/lib/require-auth'
-
-function isIsoDate(v: string) {
-  return /^\d{4}-\d{2}-\d{2}$/.test(v)
-}
+import { isValidIsoDate } from '@/modules/getao/lib/date'
 
 export async function GET(request: Request) {
   const denied = requireOwnerOr401(request)
@@ -15,8 +12,11 @@ export async function GET(request: Request) {
   const fim = String(searchParams.get('fim') || '')
   const apenasAtivos = String(searchParams.get('apenas_ativos') || 'false') === 'true'
 
-  if (!isIsoDate(inicio) || !isIsoDate(fim)) {
+  if (!isValidIsoDate(inicio) || !isValidIsoDate(fim)) {
     return NextResponse.json({ error: 'inicio/fim inválidos (use YYYY-MM-DD)' }, { status: 400 })
+  }
+  if (inicio > fim) {
+    return NextResponse.json({ error: 'A data inicial deve ser anterior ou igual à data final' }, { status: 400 })
   }
 
   // SQL (Postgres): agrega presenças e vales pendentes no período.
