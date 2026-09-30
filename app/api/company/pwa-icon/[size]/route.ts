@@ -40,7 +40,7 @@ export async function GET(
       return new NextResponse(imageBuffer, {
         headers: {
           'Content-Type': `image/${mimeType}`,
-          'Cache-Control': 'public, max-age=3600, must-revalidate',
+          'Cache-Control': 'private, no-store',
         },
       })
     }

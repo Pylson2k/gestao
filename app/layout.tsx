@@ -4,7 +4,6 @@ import { Plus_Jakarta_Sans, Instrument_Sans, Geist_Mono } from 'next/font/google
 import { Analytics } from '@vercel/analytics/next'
 import { AuthProvider } from '@/contexts/auth-context'
 import { AppFrame } from '@/components/auth/app-frame'
-import { DynamicFavicon } from '@/components/dynamic-favicon'
 import { DynamicTitle } from '@/components/dynamic-title'
 import { PWARegister } from '@/components/pwa-register'
 import { AppReturnButton } from '@/components/layout/app-return-button'
@@ -95,7 +94,6 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/api/company/pwa-icon/180" />
       </head>
       <body className="font-sans antialiased">
-        <DynamicFavicon />
         <DynamicTitle />
         <AuthProvider>
           <AppFrame>{children}</AppFrame>
