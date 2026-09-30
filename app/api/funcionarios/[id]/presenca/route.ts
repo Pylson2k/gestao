@@ -30,7 +30,7 @@ export async function GET(request: Request, ctx: { params: Promise<{ id: string 
 
   const params = await ctx.params
   const funcionarioId = Number(params.id)
-  if (!Number.isFinite(funcionarioId)) {
+  if (!Number.isInteger(funcionarioId) || funcionarioId <= 0) {
     return NextResponse.json({ error: 'ID inválido' }, { status: 400 })
   }
 

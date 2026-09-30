@@ -53,6 +53,8 @@ export function GetaoCadastroPage() {
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Funcionario | null>(null)
   const [form, setForm] = useState<FormState>(emptyForm())
+  const [saving, setSaving] = useState(false)
+  const [deletingId, setDeletingId] = useState<number | null>(null)
 
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase()
@@ -120,6 +122,7 @@ export function GetaoCadastroPage() {
       status: form.ativo ? ('ativo' as const) : ('inativo' as const),
     }
 
+    setSaving(true)
     try {
       if (editing) {
         await getaoApi.funcionarios.patch(editing.id, payload)
@@ -131,17 +134,22 @@ export function GetaoCadastroPage() {
       toast.success(editing ? 'Funcionário atualizado com sucesso.' : 'Funcionário cadastrado com sucesso.')
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : 'Erro ao salvar')
+    } finally {
+      setSaving(false)
     }
   }
 
   async function onDelete(f: Funcionario) {
-    if (!confirm(`Excluir ${f.nome}? Isso removerá também presenças e vales (cascade).`)) return
+    if (!confirm(`Excluir ${f.nome}? Se houver histórico, a exclusão será bloqueada. Nesse caso, inative o cadastro para preservar os registros.`)) return
+    setDeletingId(f.id)
     try {
       await getaoApi.funcionarios.delete(f.id)
       await refresh()
       toast.success('Funcionário excluído com sucesso.')
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : 'Erro ao excluir')
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -164,15 +172,22 @@ export function GetaoCadastroPage() {
                 <DialogDescription>Nome e diária são os campos mais importantes.</DialogDescription>
               </DialogHeader>
 
-              <div className="space-y-4">
+              <form
+                className="space-y-4"
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  void onSubmit()
+                }}
+              >
                 <div className="space-y-2">
-                  <Label>Nome *</Label>
-                  <Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
+                  <Label htmlFor="funcionario-nome">Nome *</Label>
+                  <Input id="funcionario-nome" maxLength={120} autoComplete="name" required value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label>Diária (R$)</Label>
+                    <Label htmlFor="funcionario-diaria">Diária (R$)</Label>
                     <Input
+                      id="funcionario-diaria"
                       value={form.valor_diaria}
                       onChange={(e) => setForm({ ...form, valor_diaria: e.target.value })}
                       placeholder="Ex.: 150"
@@ -180,8 +195,8 @@ export function GetaoCadastroPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Função</Label>
-                    <Input value={form.funcao} onChange={(e) => setForm({ ...form, funcao: e.target.value })} />
+                    <Label htmlFor="funcionario-funcao">Função</Label>
+                    <Input id="funcionario-funcao" maxLength={80} value={form.funcao} onChange={(e) => setForm({ ...form, funcao: e.target.value })} />
                   </div>
                 </div>
 
@@ -190,16 +205,18 @@ export function GetaoCadastroPage() {
                     <p className="text-sm font-medium">Ativo</p>
                     <p className="text-xs text-muted-foreground">Inativos não aparecem em Presença e Vales.</p>
                   </div>
-                  <Switch checked={form.ativo} onCheckedChange={(v) => setForm({ ...form, ativo: v })} />
+                  <Switch aria-label="Status ativo do funcionário" checked={form.ativo} onCheckedChange={(v) => setForm({ ...form, ativo: v })} />
                 </div>
 
                 <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setOpen(false)}>
+                  <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={saving}>
                     Cancelar
                   </Button>
-                  <Button onClick={onSubmit}>{editing ? 'Salvar' : 'Cadastrar'}</Button>
+                  <Button type="submit" disabled={saving}>
+                    {saving ? 'Salvando…' : editing ? 'Salvar' : 'Cadastrar'}
+                  </Button>
                 </div>
-              </div>
+              </form>
             </DialogContent>
           </Dialog>
         }
@@ -214,12 +231,15 @@ export function GetaoCadastroPage() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
-        <p className="text-sm text-muted-foreground">{filtered.length} resultado(s)</p>
+        <p className="text-sm text-muted-foreground" aria-live="polite">{filtered.length} resultado(s)</p>
       </div>
 
       {error ? (
-        <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
-          {error}
+        <div className="flex flex-col gap-3 rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive sm:flex-row sm:items-center sm:justify-between">
+          <span role="alert">{error}</span>
+          <Button type="button" size="sm" variant="outline" onClick={() => void refresh()} disabled={loading}>
+            {loading ? 'Carregando…' : 'Tentar novamente'}
+          </Button>
         </div>
       ) : null}
 
@@ -227,7 +247,9 @@ export function GetaoCadastroPage() {
         {loading ? (
           <div className="p-10 text-center text-sm text-muted-foreground">Carregando…</div>
         ) : filtered.length === 0 ? (
-          <div className="p-10 text-center text-sm text-muted-foreground">Nenhum funcionário.</div>
+          <div className="p-10 text-center text-sm text-muted-foreground">
+            {q.trim() ? 'Nenhum funcionário corresponde à busca.' : 'Nenhum funcionário cadastrado.'}
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <Table>
@@ -253,10 +275,10 @@ export function GetaoCadastroPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => openEdit(f)} aria-label="Editar">
+                        <Button variant="ghost" size="icon" onClick={() => openEdit(f)} aria-label={`Editar ${f.nome}`}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => void onDelete(f)} aria-label="Excluir">
+                        <Button variant="ghost" size="icon" onClick={() => void onDelete(f)} disabled={deletingId === f.id} aria-label={`Excluir ${f.nome}`}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>

@@ -29,6 +29,11 @@ function csvBOM() {
   return '\uFEFF'
 }
 
+function csvText(value: string) {
+  const safe = /^[\s]*[=+@-]/.test(value) ? `'${value}` : value
+  return `"${safe.replaceAll('"', '""')}"`
+}
+
 function downloadCsv(filename: string, content: string) {
   const blob = new Blob([content], { type: 'text/csv;charset=utf-8' })
   const url = URL.createObjectURL(blob)
@@ -47,7 +52,9 @@ export function GetaoFechamentoPage() {
   const [fimBr, setFimBr] = useState(() => toBrDate(toIsoDate(today)))
   const [apenasAtivos, setApenasAtivos] = useState(true)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [rows, setRows] = useState<FechamentoRow[]>([])
+  const [periodoGerado, setPeriodoGerado] = useState<{ inicio: string; fim: string } | null>(null)
 
   const totals = useMemo(() => {
     return rows.reduce(
@@ -68,28 +75,39 @@ export function GetaoFechamentoPage() {
       toast.error('Datas inválidas (use DD/MM/AAAA)')
       return
     }
+    if (inicio > fim) {
+      toast.error('A data inicial deve ser anterior ou igual à data final.')
+      return
+    }
     setLoading(true)
+    setError(null)
     try {
       const data = await getaoApi.fechamento.list(inicio, fim, apenasAtivos)
       setRows(data)
+      setPeriodoGerado({ inicio, fim })
       toast.success('Fechamento gerado com sucesso.')
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Erro ao gerar fechamento')
+      const message = e instanceof Error ? e.message : 'Erro ao gerar fechamento'
+      setRows([])
+      setPeriodoGerado(null)
+      setError(message)
+      toast.error(message)
     } finally {
       setLoading(false)
     }
   }
 
   function exportarCsv() {
-    const inicio = parseBrDate(inicioBr) || 'inicio'
-    const fim = parseBrDate(fimBr) || 'fim'
+    if (!periodoGerado) return
+    const inicio = periodoGerado.inicio
+    const fim = periodoGerado.fim
     const header =
       'funcionario_id;nome;funcao;diaria;presentes;meio_periodo;faltas;total_diarias;vales_pendentes;saldo_estimado'
     const lines = rows.map((r) =>
       [
         r.funcionario_id,
-        r.nome,
-        r.funcao ?? '',
+        csvText(r.nome),
+        csvText(r.funcao ?? ''),
         r.diaria,
         r.presentes,
         r.meio_periodo,
@@ -112,14 +130,21 @@ export function GetaoFechamentoPage() {
       <GetaoNav />
 
       <Card>
-        <CardContent className="grid gap-4 p-4 sm:grid-cols-4 sm:p-5">
+        <CardContent className="p-4 sm:p-5">
+          <form
+            className="grid gap-4 sm:grid-cols-4"
+            onSubmit={(event) => {
+              event.preventDefault()
+              void gerar()
+            }}
+          >
           <div className="space-y-2">
-            <Label>Início</Label>
-            <Input value={inicioBr} onChange={(e) => setInicioBr(e.target.value)} placeholder="DD/MM/AAAA" />
+            <Label htmlFor="fechamento-inicio">Início</Label>
+            <Input id="fechamento-inicio" value={inicioBr} onChange={(e) => { setInicioBr(e.target.value); setRows([]); setPeriodoGerado(null) }} placeholder="DD/MM/AAAA" required disabled={loading} />
           </div>
           <div className="space-y-2">
-            <Label>Fim</Label>
-            <Input value={fimBr} onChange={(e) => setFimBr(e.target.value)} placeholder="DD/MM/AAAA" />
+            <Label htmlFor="fechamento-fim">Fim</Label>
+            <Input id="fechamento-fim" value={fimBr} onChange={(e) => { setFimBr(e.target.value); setRows([]); setPeriodoGerado(null) }} placeholder="DD/MM/AAAA" required disabled={loading} />
           </div>
           <div className="flex items-end">
             <div className="flex w-full items-center justify-between rounded-lg border p-3">
@@ -127,19 +152,26 @@ export function GetaoFechamentoPage() {
                 <p className="text-sm font-medium">Somente ativos</p>
                 <p className="text-xs text-muted-foreground">Base de funcionários</p>
               </div>
-              <Switch checked={apenasAtivos} onCheckedChange={setApenasAtivos} />
+              <Switch aria-label="Somente funcionários ativos" checked={apenasAtivos} onCheckedChange={(checked) => { setApenasAtivos(checked); setRows([]); setPeriodoGerado(null) }} disabled={loading} />
             </div>
           </div>
           <div className="flex items-end gap-2">
-            <Button className="w-full" onClick={() => void gerar()} disabled={loading}>
+            <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Gerando…' : 'Gerar'}
             </Button>
-            <Button variant="outline" onClick={exportarCsv} disabled={rows.length === 0}>
+            <Button type="button" variant="outline" onClick={exportarCsv} disabled={rows.length === 0 || !periodoGerado || loading}>
               CSV
             </Button>
           </div>
+          </form>
         </CardContent>
       </Card>
+
+      {error ? (
+        <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+          {error}
+        </div>
+      ) : null}
 
       <Card>
         <CardContent className="p-0">
