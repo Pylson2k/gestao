@@ -151,20 +151,28 @@ export async function PUT(
     const payment = await prisma.$transaction(async (tx) => {
       if (amount !== undefined && amount !== existingPayment.amount) {
         const amountNumber = parseFloat(amount)
-        const lockedQuote = await tx.quote.findFirst({
+        const lockedQuote = await tx.$queryRaw<{ id: string }[]>`
+          SELECT "id" FROM "quotes"
+          WHERE "id" = ${existingPayment.quoteId} AND "userId" = ANY(${ownerIds})
+          FOR UPDATE
+        `
+        if (lockedQuote.length === 0) {
+          throw Object.assign(new Error('Orcamento nao encontrado'), { status: 404 })
+        }
+        const quote = await tx.quote.findFirst({
           where: { id: existingPayment.quoteId, userId: { in: ownerIds } },
           include: { payments: true },
         })
-        if (!lockedQuote) {
+        if (!quote) {
           throw Object.assign(new Error('Orcamento nao encontrado'), { status: 404 })
         }
-        const totalPaid = lockedQuote.payments
+        const totalPaid = quote.payments
           .filter((p) => p.id !== id)
           .reduce((sum, p) => sum + p.amount, 0)
-        if (totalPaid + amountNumber > lockedQuote.total) {
+        if (totalPaid + amountNumber > quote.total) {
           throw Object.assign(
             new Error(
-              `Valor excede o total do orcamento. Total: R$ ${lockedQuote.total.toFixed(2)}, Ja pago (outros): R$ ${totalPaid.toFixed(2)}, Restante: R$ ${(lockedQuote.total - totalPaid).toFixed(2)}`
+              `Valor excede o total do orcamento. Total: R$ ${quote.total.toFixed(2)}, Ja pago (outros): R$ ${totalPaid.toFixed(2)}, Restante: R$ ${(quote.total - totalPaid).toFixed(2)}`
             ),
             { status: 400 }
           )

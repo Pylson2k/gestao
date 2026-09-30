@@ -85,8 +85,7 @@ export async function POST(request: Request) {
 
     const provided =
       request.headers.get('x-admin-secret') ||
-      (typeof body.secret === 'string' ? body.secret : null) ||
-      new URL(request.url).searchParams.get('key')
+      (typeof body.secret === 'string' ? body.secret : null)
 
     const expected = process.env.ADMIN_OPERATIONS_SECRET
     if (!expected) {

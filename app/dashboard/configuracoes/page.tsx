@@ -18,7 +18,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { APP_DISPLAY_NAME, APP_TITLE_SUFFIX } from '@/lib/app-constants'
 import { Settings, Upload, X, CheckCircle2, Loader2, Database, Download, AlertTriangle } from 'lucide-react'
 
 export default function SettingsPage() {
@@ -70,57 +69,11 @@ export default function SettingsPage() {
       await updateLogo(base64String)
       setFormData((prev) => ({ ...prev, logo: base64String }))
       
-      // Atualizar favicon e PWA dinamicamente
-      updateFaviconAndPWA(base64String)
-      
       // Mostrar mensagem de sucesso
       setSuccess(true)
       setTimeout(() => setSuccess(false), 5000)
     }
     reader.readAsDataURL(file)
-  }
-
-  const updateFaviconAndPWA = (logoBase64: string) => {
-    // Remover favicons antigos
-    const oldFavicons = document.querySelectorAll("link[rel~='icon']")
-    oldFavicons.forEach(link => link.remove())
-    
-    const oldAppleIcons = document.querySelectorAll("link[rel~='apple-touch-icon']")
-    oldAppleIcons.forEach(link => link.remove())
-
-    // Criar novo favicon
-    const link = document.createElement('link')
-    link.rel = 'icon'
-    link.type = 'image/png'
-    link.href = logoBase64
-    document.getElementsByTagName('head')[0].appendChild(link)
-
-    // Criar novo apple-touch-icon
-    const appleLink = document.createElement('link')
-    appleLink.rel = 'apple-touch-icon'
-    appleLink.href = logoBase64
-    document.getElementsByTagName('head')[0].appendChild(appleLink)
-
-    // Forçar reload do manifest
-    const manifestLink = document.querySelector("link[rel='manifest']") as HTMLLinkElement
-    if (manifestLink) {
-      manifestLink.href = `/api/manifest?t=${Date.now()}`
-    } else {
-      const newManifestLink = document.createElement('link')
-      newManifestLink.rel = 'manifest'
-      newManifestLink.href = `/api/manifest?t=${Date.now()}`
-      document.getElementsByTagName('head')[0].appendChild(newManifestLink)
-    }
-
-    // Atualizar título e meta tags do PWA
-    if (formData.name && formData.name !== APP_DISPLAY_NAME) {
-      document.title = `${formData.name} - ${APP_TITLE_SUFFIX}`
-      
-      const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]')
-      if (appleTitle) {
-        appleTitle.setAttribute('content', formData.name)
-      }
-    }
   }
 
   const handleRemoveLogo = async () => {
@@ -130,29 +83,6 @@ export default function SettingsPage() {
       fileInputRef.current.value = ''
     }
     
-    // Remover favicons customizados
-    const oldFavicons = document.querySelectorAll("link[rel~='icon']")
-    oldFavicons.forEach(link => link.remove())
-    
-    const oldAppleIcons = document.querySelectorAll("link[rel~='apple-touch-icon']")
-    oldAppleIcons.forEach(link => link.remove())
-    
-    // Restaurar favicon padrão
-    const link = document.createElement('link')
-    link.rel = 'icon'
-    link.href = '/icon-192x192.png'
-    document.getElementsByTagName('head')[0].appendChild(link)
-    
-    const appleLink = document.createElement('link')
-    appleLink.rel = 'apple-touch-icon'
-    appleLink.href = '/apple-icon-180x180.png'
-    document.getElementsByTagName('head')[0].appendChild(appleLink)
-    
-    // Restaurar manifest padrão
-    const manifestLink = document.querySelector("link[rel='manifest']") as HTMLLinkElement
-    if (manifestLink) {
-      manifestLink.href = '/manifest.json'
-    }
   }
 
   const handleExportBackup = async () => {

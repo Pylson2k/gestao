@@ -1,7 +1,7 @@
 /**
  * Sincroniza o schema no Postgres durante o deploy da Vercel.
  * - Corrige aspas acidentais na DATABASE_URL
- * - Não derruba o build se a URL for inválida ou o push falhar
+ * - Falha o build se a URL estiver ausente/inválida ou se o schema não aplicar
  */
 const { execSync } = require('child_process')
 
@@ -40,8 +40,8 @@ function describeUrl(url) {
 
 const url = sanitizeDatabaseUrl(process.env.DATABASE_URL)
 if (!url) {
-  console.warn('[vercel-db] DATABASE_URL ausente — pulando prisma db push')
-  process.exit(0)
+  console.error('[vercel-db] DATABASE_URL ausente — o build não pode validar/aplicar o schema')
+  process.exit(1)
 }
 
 if (!/^postgres(ql)?:\/\//i.test(url)) {
@@ -51,8 +51,7 @@ if (!/^postgres(ql)?:\/\//i.test(url)) {
   console.error(
     '[vercel-db] No Vercel: edite DATABASE_URL, cole a URI do Neon SEM aspas, salve e redeploy.'
   )
-  console.error('[vercel-db] Continuando o build sem db push.')
-  process.exit(0)
+  process.exit(1)
 }
 
 process.env.DATABASE_URL = url
@@ -69,8 +68,5 @@ try {
 } catch (err) {
   const msg = err && err.message ? err.message : String(err)
   console.error('[vercel-db] prisma db push falhou:', msg)
-  console.error(
-    '[vercel-db] Continuando o build. Corrija DATABASE_URL no Vercel e/ou rode npm run db:push localmente.'
-  )
-  process.exit(0)
+  process.exit(1)
 }

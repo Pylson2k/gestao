@@ -9,6 +9,7 @@ use sqlx::PgPool;
 use std::collections::hash_map::DefaultHasher;
 use std::future::Future;
 use std::hash::{Hash, Hasher};
+use subtle::ConstantTimeEq;
 use uuid::Uuid;
 
 use crate::modules::users::resolve_db_user_id;
@@ -155,6 +156,17 @@ pub fn require_user(headers: &HeaderMap) -> Result<&str, ApiError> {
         .ok_or_else(|| ApiError::new(StatusCode::UNAUTHORIZED, "Usuario nao autenticado"))
 }
 
+pub fn has_valid_gateway_secret(headers: &HeaderMap, expected: &str) -> bool {
+    let Some(provided) = headers
+        .get("x-gateway-secret")
+        .and_then(|value| value.to_str().ok())
+    else {
+        return false;
+    };
+
+    provided.len() == expected.len() && bool::from(provided.as_bytes().ct_eq(expected.as_bytes()))
+}
+
 pub fn is_unique_violation(e: &sqlx::Error) -> bool {
     match e {
         sqlx::Error::Database(db) => db.code().as_deref() == Some("23505"),
@@ -174,11 +186,10 @@ pub fn request_hash<T: serde::Serialize>(value: &T) -> String {
 /// Executa uma operação de escrita com idempotência baseada no header `Idempotency-Key`.
 ///
 /// - Sem header: executa normalmente (sem persistir nada).
-/// - Com header e chave já armazenada com o mesmo payload: replay da resposta original.
-/// - Com header e chave já armazenada com payload diferente: 409 Conflict.
-/// - Com header novo: executa e, em caso de sucesso (2xx), armazena status + body para replay.
+/// - Com header, serializa a chave por usuário antes de consultar e executar a operação.
+/// - Uma chave repetida com o mesmo payload reproduz a resposta; com outro payload, retorna 409.
 pub async fn run_with_idempotency<F, Fut>(
-    pool: &PgPool,
+    idempotency_pool: &PgPool,
     user_id: &str,
     route: &str,
     headers: &HeaderMap,
@@ -199,6 +210,26 @@ where
         return op().await;
     };
 
+    // A trava transacional impede que duas tentativas concorrentes com a mesma
+    // chave executem a escrita antes de persistirem o primeiro resultado.
+    let lock_key = format!("{user_id}:{key}");
+    let mut idempotency_lock = idempotency_pool.begin().await.map_err(|e| {
+        ApiError::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Erro ao iniciar idempotencia: {e}"),
+        )
+    })?;
+    sqlx::query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))")
+        .bind(&lock_key)
+        .execute(&mut *idempotency_lock)
+        .await
+        .map_err(|e| {
+            ApiError::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Erro ao bloquear chave de idempotencia: {e}"),
+            )
+        })?;
+
     let stored: Option<(i32, String, String)> = sqlx::query_as(
         r#"SELECT "statusCode", "requestHash", "responseBody"::text
              FROM idempotency_keys
@@ -206,7 +237,7 @@ where
     )
     .bind(key)
     .bind(user_id)
-    .fetch_optional(pool)
+    .fetch_optional(&mut *idempotency_lock)
     .await
     .map_err(|e| {
         ApiError::new(
@@ -229,49 +260,74 @@ where
             )
         })?;
         let status = StatusCode::from_u16(status as u16).unwrap_or(StatusCode::OK);
+        idempotency_lock.commit().await.map_err(|e| {
+            ApiError::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Erro ao concluir replay de idempotencia: {e}"),
+            )
+        })?;
         return Ok((status, Json(value)).into_response());
     }
 
-    let result = op().await;
-
-    match result {
-        Err(e) => Err(e),
-        Ok(response) => {
-            let status = response.status().as_u16();
-            if !(200..300).contains(&status) {
-                return Ok(response);
-            }
-
-            let (parts, body) = response.into_parts();
-            let bytes = match to_bytes(body, 2 * 1024 * 1024).await {
-                Ok(b) => b,
-                Err(e) => {
-                    tracing::warn!("idempotency: falha ao ler corpo da resposta: {e}");
-                    return Ok(Response::from_parts(parts, Body::empty()));
-                }
-            };
-
-            let body_str = String::from_utf8_lossy(&bytes).into_owned();
-            let insert = sqlx::query(
-                r#"INSERT INTO idempotency_keys ("key", "userId", "route", "requestHash", "statusCode", "responseBody")
-                   VALUES ($1, $2, $3, $4, $5, $6::jsonb)
-                   ON CONFLICT ("key", "userId") DO NOTHING"#,
-            )
-            .bind(key)
-            .bind(user_id)
-            .bind(route)
-            .bind(request_hash)
-            .bind(status as i32)
-            .bind(&body_str)
-            .execute(pool)
-            .await;
-            if let Err(e) = insert {
-                tracing::warn!("idempotency: falha ao armazenar resultado: {e}");
-            }
-
-            Ok(Response::from_parts(parts, Body::from(bytes)))
+    let result = match op().await {
+        Ok(response) => response,
+        Err(error) => {
+            let _ = idempotency_lock.rollback().await;
+            return Err(error);
         }
+    };
+
+    let status = result.status().as_u16();
+    if !(200..300).contains(&status) {
+        idempotency_lock.commit().await.map_err(|e| {
+            ApiError::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Erro ao liberar chave de idempotencia: {e}"),
+            )
+        })?;
+        return Ok(result);
     }
+
+    let (parts, body) = result.into_parts();
+    let bytes = match to_bytes(body, 2 * 1024 * 1024).await {
+        Ok(b) => b,
+        Err(e) => {
+            let _ = idempotency_lock.rollback().await;
+            return Err(ApiError::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Falha ao armazenar resposta idempotente: {e}"),
+            ));
+        }
+    };
+
+    let body_str = String::from_utf8_lossy(&bytes).into_owned();
+    sqlx::query(
+        r#"INSERT INTO idempotency_keys ("key", "userId", "route", "requestHash", "statusCode", "responseBody")
+           VALUES ($1, $2, $3, $4, $5, $6::jsonb)"#,
+    )
+    .bind(key)
+    .bind(user_id)
+    .bind(route)
+    .bind(request_hash)
+    .bind(status as i32)
+    .bind(&body_str)
+    .execute(&mut *idempotency_lock)
+    .await
+    .map_err(|e| {
+        ApiError::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Erro ao armazenar resposta idempotente: {e}"),
+        )
+    })?;
+
+    idempotency_lock.commit().await.map_err(|e| {
+        ApiError::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Erro ao concluir transacao de idempotencia: {e}"),
+        )
+    })?;
+
+    Ok(Response::from_parts(parts, Body::from(bytes)))
 }
 
 fn metadata(headers: &HeaderMap) -> (Option<String>, Option<String>) {
@@ -366,5 +422,18 @@ mod tests {
         assert_eq!(normalize_stored_quantity(0.0), 1.0);
         assert_eq!(normalize_stored_quantity(-2.0), 1.0);
         assert_eq!(normalize_stored_quantity(1.23456), 1.2346);
+    }
+
+    #[test]
+    fn gateway_secret_is_required_and_must_match() {
+        let expected = "a-test-secret-that-is-long-enough";
+        let mut headers = HeaderMap::new();
+        assert!(!has_valid_gateway_secret(&headers, expected));
+
+        headers.insert("x-gateway-secret", "wrong-secret".parse().unwrap());
+        assert!(!has_valid_gateway_secret(&headers, expected));
+
+        headers.insert("x-gateway-secret", expected.parse().unwrap());
+        assert!(has_valid_gateway_secret(&headers, expected));
     }
 }

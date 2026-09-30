@@ -432,31 +432,6 @@ async fn create_payment(
         .filter(|m| VALID_PAYMENT_METHODS.contains(m))
         .ok_or_else(|| ApiError::new(StatusCode::BAD_REQUEST, "Metodo de pagamento invalido"))?;
 
-    let quote: Option<(String, f64, f64)> = sqlx::query_as(
-        r#"SELECT id, total, COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p."quoteId" = quotes.id), 0) FROM quotes WHERE id = $1 AND "userId" = ANY($2)"#,
-    )
-    .bind(quote_id)
-    .bind(&owner_db_user_ids(pool).await)
-    .fetch_optional(pool)
-    .await
-    .map_err(|e| {
-        ApiError::new(
-            StatusCode::INTERNAL_SERVER_ERROR,
-            format!("Erro ao buscar orcamento: {}", e),
-        )
-    })?;
-
-    let Some((_quote_id, quote_total, total_paid)) = quote else {
-        return Err(ApiError::new(
-            StatusCode::NOT_FOUND,
-            "Orcamento nao encontrado",
-        ));
-    };
-
-    if total_paid + amount > quote_total {
-        return Ok(overflow_response(quote_total, total_paid).into_response());
-    }
-
     let observations = body
         .observations
         .as_deref()
@@ -469,12 +444,39 @@ async fn create_payment(
     let db_user_id_ref = &db_user_id;
 
     run_with_idempotency(
-        pool,
+        &state.idempotency_db,
         &db_user_id,
         "/v2/payments",
         &headers,
         &idem_hash,
         || async move {
+            // Check after the idempotency key lookup/lock. A replay must return
+            // its stored response even when the first payment filled the quote.
+            let quote: Option<(String, f64, f64)> = sqlx::query_as(
+                r#"SELECT id, total, COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p."quoteId" = quotes.id), 0) FROM quotes WHERE id = $1 AND "userId" = ANY($2)"#,
+            )
+            .bind(quote_id)
+            .bind(&owner_db_user_ids(pool).await)
+            .fetch_optional(pool)
+            .await
+            .map_err(|e| {
+                ApiError::new(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("Erro ao buscar orcamento: {}", e),
+                )
+            })?;
+
+            let Some((_quote_id, quote_total, total_paid)) = quote else {
+                return Err(ApiError::new(
+                    StatusCode::NOT_FOUND,
+                    "Orcamento nao encontrado",
+                ));
+            };
+
+            if total_paid + amount > quote_total {
+                return Ok(overflow_response(quote_total, total_paid).into_response());
+            }
+
             let payment_id = Uuid::new_v4().to_string();
             let now = now_naive();
 
