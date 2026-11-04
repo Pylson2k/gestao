@@ -1390,7 +1390,8 @@ async function tryWebSharePdf(pdf: Blob, filename: string): Promise<boolean> {
     return true
   } catch (e) {
     const name = (e as { name?: string }).name
-    if (name === 'AbortError') return true
+    // Cancelar o seletor de compartilhamento não significa que o arquivo foi salvo.
+    if (name === 'AbortError') return false
     return false
   }
 }
@@ -1529,18 +1530,32 @@ function showMobilePdfSaveOverlay(pdf: Blob, filename: string): void {
   document.body.appendChild(backdrop)
 }
 
-function normalizePdfBlob(out: unknown): Blob | null {
+async function normalizePdfBlob(out: unknown): Promise<Blob | null> {
+  let blob: Blob | null = null
+
   if (out instanceof Blob) {
-    return new Blob([out], { type: 'application/pdf' })
+    blob = new Blob([out], { type: 'application/pdf' })
+  } else if (out instanceof ArrayBuffer) {
+    blob = new Blob([out], { type: 'application/pdf' })
+  } else if (out instanceof Uint8Array) {
+    const bytes = new Uint8Array(out.byteLength)
+    bytes.set(out)
+    blob = new Blob([bytes], { type: 'application/pdf' })
   }
-  if (out instanceof ArrayBuffer) {
-    return new Blob([out], { type: 'application/pdf' })
-  }
-  if (out instanceof Uint8Array) {
-    const ab = out.buffer.slice(out.byteOffset, out.byteOffset + out.byteLength) as ArrayBuffer
-    return new Blob([ab], { type: 'application/pdf' })
-  }
-  return null
+
+  if (!blob || blob.size < 100) return null
+
+  // Não basta o Blob ter tamanho: confirma o cabeçalho e o marcador final do PDF
+  // antes de permitir download/compartilhamento.
+  const bytes = new Uint8Array(await blob.slice(0, 5).arrayBuffer())
+  const header = new TextDecoder().decode(bytes)
+  if (header !== '%PDF-') return null
+
+  const tail = new Uint8Array(await blob.slice(Math.max(0, blob.size - 4096)).arrayBuffer())
+  const tailText = new TextDecoder().decode(tail)
+  if (!tailText.includes('%%EOF')) return null
+
+  return blob
 }
 
 /** Download via &lt;a download&gt; — não usar display:none (Firefox); não revogar URL na mesma tarefa (Chrome cancela o download). */
@@ -1768,7 +1783,9 @@ export async function downloadPDF(html: string, filename: string = 'orcamento.pd
       html2canvas: {
         scale: canvasScale,
         useCORS: true,
-        allowTaint: true,
+        // Evita gerar canvas contaminado por imagens cross-origin sem CORS.
+        // Imagens sem permissão CORS são ignoradas pelo html2canvas em vez de invalidar o PDF.
+        allowTaint: false,
         logging: false,
         letterRendering: false,
         backgroundColor: '#ffffff',
@@ -1782,12 +1799,12 @@ export async function downloadPDF(html: string, filename: string = 'orcamento.pd
     let blob: Blob | null = null
     try {
       const out = await html2pdf().set(opt as unknown).from(container).outputPdf('blob')
-      blob = normalizePdfBlob(out)
+      blob = await normalizePdfBlob(out)
     } catch (e) {
       console.warn('html2pdf outputPdf(blob) falhou, tentando .save()', e)
     }
 
-    if (blob && blob.size > 80) {
+    if (blob) {
       await savePdfBlobToDisk(blob, safeFilename)
       return
     }
