@@ -1538,9 +1538,8 @@ async function normalizePdfBlob(out: unknown): Promise<Blob | null> {
   } else if (out instanceof ArrayBuffer) {
     blob = new Blob([out], { type: 'application/pdf' })
   } else if (out instanceof Uint8Array) {
-    const bytes = new Uint8Array(out.byteLength)
-    bytes.set(out)
-    blob = new Blob([bytes], { type: 'application/pdf' })
+    const buffer = out.buffer.slice(out.byteOffset, out.byteOffset + out.byteLength) as ArrayBuffer
+    blob = new Blob([buffer], { type: 'application/pdf' })
   }
 
   if (!blob || blob.size < 100) return null
