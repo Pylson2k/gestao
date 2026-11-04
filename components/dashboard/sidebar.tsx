@@ -87,8 +87,30 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     label: 'Visão geral',
     items: [
       { name: 'Painel', href: '/dashboard', icon: LayoutDashboard, showBadge: true },
+    ],
+  },
+  {
+    label: 'Comercial',
+    items: [
       { name: 'Novo orçamento', href: '/orcamentos/novo', icon: FileText },
-      { name: 'Histórico', href: '/orcamentos/historico', icon: History },
+      { name: 'Orçamentos', href: '/orcamentos/historico', icon: History },
+      { name: 'Clientes', href: '/operacao/clientes', icon: UserCircle },
+      { name: 'Listas de materiais', href: '/operacao/listas-materiais', icon: Package },
+    ],
+  },
+  {
+    label: 'Operação',
+    items: [
+      { name: 'Serviços', href: '/operacao/servicos', icon: Wrench },
+    ],
+  },
+  {
+    label: 'Equipe',
+    items: [
+      { name: 'Funcionários', href: '/getao/cadastro', icon: Users },
+      { name: 'Presença', href: '/getao/presenca', icon: Calendar },
+      { name: 'Vales', href: '/getao/vales', icon: Wallet },
+      { name: 'Fechamento da equipe', href: '/getao/fechamento', icon: Receipt },
     ],
   },
   {
@@ -98,22 +120,13 @@ const navGroups: { label: string; items: NavItem[] }[] = [
       { name: 'Pagamentos', href: '/financeiro/pagamentos', icon: CreditCard },
       { name: 'Inadimplentes', href: '/financeiro/inadimplentes', icon: AlertTriangle },
       { name: 'Despesas', href: '/financeiro/despesas', icon: Receipt },
-      { name: 'Relatórios', href: '/financeiro/relatorios', icon: BarChart3 },
-    ],
-  },
-  {
-    label: 'Operação',
-    items: [
-      { name: 'Listas de materiais', href: '/operacao/listas-materiais', icon: Package },
-      { name: 'Clientes', href: '/operacao/clientes', icon: UserCircle },
-      { name: 'Serviços', href: '/operacao/servicos', icon: Wrench },
-      { name: 'Gestão de equipe', href: '/getao/cadastro', icon: Users },
       { name: 'Fechamento de caixa', href: '/operacao/fechamento-caixa', icon: Wallet },
+      { name: 'Relatórios financeiros', href: '/financeiro/relatorios', icon: BarChart3 },
       { name: 'Relatórios de fechamentos', href: '/operacao/relatorios-fechamentos', icon: Calendar },
     ],
   },
   {
-    label: 'Sistema',
+    label: 'Administração',
     items: [
       { name: 'Auditoria', href: '/dashboard/auditoria', icon: Shield },
       { name: 'Configurações', href: '/dashboard/configuracoes', icon: Settings },
